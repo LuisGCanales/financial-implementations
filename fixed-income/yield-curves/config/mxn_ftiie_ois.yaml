@@ -1,0 +1,145 @@
+curve:
+  id: MXN_FTIIE_OIS
+  currency: MXN
+  benchmark: FTIIE
+  floating_index: MXN_TIIE_ON_OIS_COMPOUND
+
+  architecture:
+    projection_curve: MXN_FTIIE_OIS
+    discount_curve: MXN_FTIIE_OIS
+    same_curve_assumption: true
+
+  reference_date:
+    type: EFFECTIVE_DATE
+
+instrument:
+  type: OIS
+
+  effective_date:
+    settlement_lag_business_days: 2
+    calendar: MXMC
+
+  schedule:
+    frequency: 28D
+    roll_convention: NONE
+
+    start_date_adjustment: FOLLOWING
+    maturity_date_adjustment: FOLLOWING
+    calculation_period_adjustment: FOLLOWING
+
+  accrual:
+    day_count: ACT_360
+
+  payment:
+    relative_to: END_PERIOD
+    adjustment: FOLLOWING
+    lag_business_days: 2
+    calendar: MXMC
+
+  floating_leg:
+    index_tenor: 1D
+
+    fixing:
+      offset_business_days: 0
+      day_type: BUSINESS
+      adjustment: PRECEDING
+
+    compounding:
+      method: ISDA_STANDARD
+      spread_treatment: SPREAD_EXCLUSIVE
+
+    spread: 0.0
+
+calibration:
+  notional: 1.0
+
+  instruments:
+    - tenor: 1M
+      type: FTIIE_OIS
+
+    - tenor: 2M
+      type: FTIIE_OIS
+
+    - tenor: 3M
+      type: FTIIE_OIS
+
+    - tenor: 6M
+      type: FTIIE_OIS
+
+    - tenor: 9M
+      type: FTIIE_OIS
+
+    - tenor: 1Y
+      type: FTIIE_OIS
+
+    - tenor: 2Y
+      type: FTIIE_OIS
+
+    - tenor: 3Y
+      type: FTIIE_OIS
+
+    - tenor: 4Y
+      type: FTIIE_OIS
+
+    - tenor: 5Y
+      type: FTIIE_OIS
+
+    - tenor: 7Y
+      type: FTIIE_OIS
+
+    - tenor: 10Y
+      type: FTIIE_OIS
+
+    - tenor: 15Y
+      type: FTIIE_OIS
+
+    - tenor: 20Y
+      type: FTIIE_OIS
+
+    - tenor: 30Y
+      type: FTIIE_OIS
+
+curve_representation:
+  state_variable: DISCOUNT_FACTOR
+
+  zero_rate:
+    compounding: CONTINUOUS
+
+  interpolation:
+    target: LOG_DISCOUNT_FACTOR
+    method: LINEAR
+
+  extrapolation:
+    enabled: false
+
+validation:
+  repricing:
+    pass_tolerance_bp: 0.01
+    fail_tolerance_bp: 0.10
+
+  curve_status:
+    valid: VALID
+    review: REVIEW
+    invalid: INVALID
+
+  perturbation:
+    quote_bump_bp: 1.0
+
+metadata:
+  specification_version: "0.3"
+
+  assumptions:
+    - id: SAME_CURVE_PROJECTION_DISCOUNTING
+      description: >
+        Core v1 uses the canonical F-TIIE curve for both projection and
+        discounting. This is a project simplification and does not represent
+        the complete CME MXN implied-discounting architecture.
+
+  sources:
+    S1: "Banco de Mexico — TIIE de Fondeo a un dia"
+    S2: "CME — MXN F-TIIE OIS Market Standard Attributes"
+    S3: "CME Clearing Advisory 26-167"
+    S4: "CME — F-TIIE OIS Conversion Curve Construction"
+    S5: "CME — Conversion Pricing for Cleared MXN 28D TIIE Swaps"
+    S6: "CME Clearing Advisory 25-005"
+    S7: "Banco de Mexico / GTTR — standardized F-TIIE swap documentation"
