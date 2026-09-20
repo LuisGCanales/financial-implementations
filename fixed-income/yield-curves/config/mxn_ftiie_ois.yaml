@@ -38,6 +38,10 @@ instrument:
 
   floating_leg:
     index_tenor: 1D
+    reset:
+      frequency: 28D
+      relative_to: END_PERIOD
+      adjustment: FOLLOWING
 
     fixing:
       offset_business_days: 0
