@@ -1,0 +1,60 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+
+[project]
+name = "yield-curves"
+version = "0.1.0"
+description = "Transparent construction, calibration, and validation of interest-rate curves for financial valuation."
+readme = "README.md"
+requires-python = ">=3.11"
+
+authors = [
+    { name = "Luis Gerardo Canales Ocampo" }
+]
+
+keywords = [
+    "yield-curves",
+    "fixed-income",
+    "interest-rates",
+    "ois",
+    "f-tiie",
+    "bootstrapping",
+    "valuation",
+    "financial-engineering"
+]
+
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Financial and Insurance Industry",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Office/Business :: Financial",
+    "Topic :: Scientific/Engineering :: Mathematics"
+]
+
+dependencies = [
+    "PyYAML>=6.0"
+]
+
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0"
+]
+
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = [
+    "-ra",
+    "--strict-config",
+    "--strict-markers"
+]
