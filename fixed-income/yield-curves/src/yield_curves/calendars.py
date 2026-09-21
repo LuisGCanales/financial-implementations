@@ -209,3 +209,13 @@ def build_mxmc_calendar(
         name="MXMC",
         holidays=holidays,
     )
+    
+    
+def build_mxmc_calendar_from_csv(
+    path: str | Path,
+) -> BusinessCalendar:
+    """Build the project MXMC calendar from a frozen holiday dataset."""
+
+    holidays = load_holidays_csv(path)
+
+    return build_mxmc_calendar(holidays)
