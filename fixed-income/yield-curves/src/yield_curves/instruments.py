@@ -201,6 +201,22 @@ class FTiieOIS:
 
         return len(self.fixed_leg)
 
+    @property
+    def final_payment_date(self) -> date:
+        """Return latest contractual payment date."""
+
+        return self.fixed_leg[-1].payment_date
+
+
+    @property
+    def last_relevant_date(self) -> date:
+        """Return latest date currently required for OIS valuation."""
+
+        return max(
+            self.adjusted_maturity_date,
+            self.final_payment_date,
+        )
+
 
 def build_ftiie_ois(
     *,

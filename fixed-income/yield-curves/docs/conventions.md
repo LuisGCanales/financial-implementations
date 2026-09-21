@@ -592,7 +592,70 @@ calibration universe.
 
 ---
 
-# 19. Curve-State Representation
+## 19. Market-Tenor Resolution
+
+For the synthetic reference framework, calibration labels such as:
+
+```text
+1M
+2M
+3M
+...
+30Y
+```
+
+are mapped to unadjusted contractual maturity dates using calendar-month
+or calendar-year offsets from the effective date.
+
+Examples:
+
+```text
+effective date + 1M
+effective date + 12M
+effective date + 30Y
+```
+
+Business-day adjustment is then performed by the normal instrument
+schedule logic.
+
+**Provenance:** `PROJECT DECISION`
+
+This convention is sufficient for the controlled synthetic calibration
+experiment.
+
+It is not yet claimed to reproduce the exact maturity-generation logic
+used by CME's production curve helpers. The convention must be independently
+verified before using observed CME market quotes in the real-market case.
+
+
+## 20. Long-Horizon Calendar Policy
+
+The frozen `mxmc_2026.csv` dataset contains verified 2026 holiday data.
+
+Long-dated synthetic instruments require calendar coverage beyond currently
+verified annual datasets.
+
+For synthetic experiments only, the project therefore uses a deterministic:
+
+```text
+MXMC_PROJECTED
+```
+
+calendar that extrapolates recurring Mexican financial-sector holiday rules.
+
+**Provenance:** `PROJECT CALENDAR MODEL`
+
+The projected calendar:
+
+* reproduces the verified 2026 holiday set;
+* provides deterministic long-horizon schedule generation;
+* is not represented as an official CNBV, CME, or BMV calendar for future
+  years;
+* must not replace verified calendar data in the real-market implementation.
+
+---
+
+# 21. Curve-State Representation
 
 The canonical calibrated curve state is represented using:
 
@@ -608,7 +671,7 @@ They are not treated as the underlying curve state.
 
 ---
 
-# 20. Zero-Rate Convention
+# 22. Zero-Rate Convention
 
 Zero rates are reported using continuously compounded rates:
 
@@ -626,7 +689,7 @@ It does not imply that F-TIIE OIS market quotes use continuous compounding.
 
 ---
 
-# 21. Forward-Rate Convention
+# 23. Forward-Rate Convention
 
 For a period:
 
@@ -659,7 +722,7 @@ Every forward output must include its period and rate convention.
 
 ---
 
-# 22. Interpolation
+# 24. Interpolation
 
 Canonical interpolation:
 
@@ -691,7 +754,7 @@ It is not claimed to reproduce CME or Bloomberg production interpolation.
 
 ---
 
-# 23. Extrapolation
+# 25. Extrapolation
 
 Core-v1 policy:
 
@@ -711,7 +774,7 @@ OUT_OF_CURVE_RANGE
 
 ---
 
-# 24. Core-v1 Simplification Summary
+# 26. Core-v1 Simplification Summary
 
 The canonical implementation deliberately assumes:
 
@@ -738,7 +801,7 @@ introducing the institutional multi-curve discounting architecture.
 
 ---
 
-# 25. Future Multi-Curve Extension
+# 27. Future Multi-Curve Extension
 
 The future architecture may separate:
 
@@ -767,7 +830,7 @@ This extension is explicitly outside Core v1.
 
 ---
 
-# 26. Implementation Requirement
+# 28. Implementation Requirement
 
 No material convention documented above should rely solely on a third-party
 library default.
@@ -792,7 +855,7 @@ where important financial behavior is inherited implicitly.
 
 ---
 
-# 27. Testing Requirement
+# 29. Testing Requirement
 
 Every convention that changes generated dates or cash flows should receive
 an explicit test.
@@ -821,7 +884,7 @@ The test suite should verify financial behavior, not only code execution.
 
 ---
 
-# 28. Source Register
+# 30. Source Register
 
 ## S1 — Banco de México — TIIE de Fondeo a un día
 
