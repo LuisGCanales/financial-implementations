@@ -273,3 +273,73 @@ def write_synthetic_ois_quotes_csv(
                     ),
                 }
             )
+            
+            
+def read_synthetic_ois_quotes_csv(
+    path: str | Path,
+) -> tuple[SyntheticOISQuote, ...]:
+    """Read frozen synthetic OIS quotes from CSV."""
+
+    path = Path(path)
+
+    quotes: list[SyntheticOISQuote] = []
+
+    with path.open(
+        "r",
+        encoding="utf-8",
+        newline="",
+    ) as file:
+        reader = csv.DictReader(file)
+
+        for row in reader:
+            quotes.append(
+                SyntheticOISQuote(
+                    scenario_id=row[
+                        "scenario_id"
+                    ],
+                    data_class=row[
+                        "data_class"
+                    ],
+                    tenor=row["tenor"],
+                    trade_date=date.fromisoformat(
+                        row["trade_date"]
+                    ),
+                    effective_date=date.fromisoformat(
+                        row["effective_date"]
+                    ),
+                    contractual_maturity_date=(
+                        date.fromisoformat(
+                            row[
+                                "contractual_maturity_date"
+                            ]
+                        )
+                    ),
+                    adjusted_maturity_date=(
+                        date.fromisoformat(
+                            row[
+                                "adjusted_maturity_date"
+                            ]
+                        )
+                    ),
+                    final_payment_date=(
+                        date.fromisoformat(
+                            row[
+                                "final_payment_date"
+                            ]
+                        )
+                    ),
+                    number_of_periods=int(
+                        row[
+                            "number_of_periods"
+                        ]
+                    ),
+                    quote_type=row[
+                        "quote_type"
+                    ],
+                    par_rate=float(
+                        row["par_rate"]
+                    ),
+                )
+            )
+
+    return tuple(quotes)

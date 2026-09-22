@@ -9,9 +9,10 @@ instrument pricing and, later, calibration can be tested.
 
 from __future__ import annotations
 
+from bisect import bisect_left
 from dataclasses import dataclass
 from datetime import date
-from math import exp, isfinite
+from math import exp, isfinite, log
 from typing import Protocol, runtime_checkable
 
 from .conventions import act_360
@@ -290,6 +291,224 @@ class SmoothSyntheticZeroCurve:
         end_date: date,
     ) -> float:
         """Return simple ACT/360 forward implied by the curve."""
+
+        if start_date < self.reference_date:
+            raise ValueError(
+                "Forward start cannot precede curve reference date."
+            )
+
+        if end_date <= start_date:
+            raise ValueError(
+                "Forward end must follow forward start."
+            )
+
+        p_start = self.discount_factor(
+            start_date
+        )
+
+        p_end = self.discount_factor(
+            end_date
+        )
+
+        tau = act_360(
+            start_date,
+            end_date,
+        )
+
+        return (
+            p_start / p_end - 1.0
+        ) / tau
+        
+
+@dataclass(frozen=True, slots=True)
+class LogLinearDiscountCurve:
+    """Nodal discount-factor curve with log-linear interpolation.
+
+    State variable
+    --------------
+    Discount factors.
+
+    Interpolation
+    -------------
+    Piecewise linear interpolation in:
+
+        ln P(T)
+
+    between the curve reference date and calibrated node dates.
+
+    The curve does not extrapolate beyond its final node.
+    """
+
+    reference_date: date
+
+    node_dates: tuple[date, ...]
+    discount_factors: tuple[float, ...]
+
+    def __post_init__(self) -> None:
+        if len(self.node_dates) != len(
+            self.discount_factors
+        ):
+            raise ValueError(
+                "Node dates and discount factors must "
+                "have equal length."
+            )
+
+        if not self.node_dates:
+            raise ValueError(
+                "Curve must contain at least one node."
+            )
+
+        previous_date = self.reference_date
+
+        for node_date in self.node_dates:
+            if node_date <= previous_date:
+                raise ValueError(
+                    "Curve node dates must be strictly increasing "
+                    "and follow the reference date."
+                )
+
+            previous_date = node_date
+
+        for discount_factor in self.discount_factors:
+            if (
+                not isfinite(discount_factor)
+                or discount_factor <= 0
+            ):
+                raise ValueError(
+                    "Discount factors must be finite and positive."
+                )
+
+    @property
+    def last_node_date(self) -> date:
+        """Return final supported curve date."""
+
+        return self.node_dates[-1]
+
+    def discount_factor(
+        self,
+        target_date: date,
+    ) -> float:
+        """Return discount factor using log-linear interpolation."""
+
+        if target_date < self.reference_date:
+            raise ValueError(
+                "Target date cannot precede curve reference date."
+            )
+
+        if target_date == self.reference_date:
+            return 1.0
+
+        if target_date > self.last_node_date:
+            raise ValueError(
+                "OUT_OF_CURVE_RANGE: "
+                f"{target_date.isoformat()} exceeds "
+                f"{self.last_node_date.isoformat()}."
+            )
+
+        index = bisect_left(
+            self.node_dates,
+            target_date,
+        )
+
+        # Exact calibrated node.
+        if (
+            index < len(self.node_dates)
+            and self.node_dates[index] == target_date
+        ):
+            return self.discount_factors[index]
+
+        if index == 0:
+            left_date = self.reference_date
+            left_df = 1.0
+        else:
+            left_date = self.node_dates[
+                index - 1
+            ]
+            left_df = self.discount_factors[
+                index - 1
+            ]
+
+        right_date = self.node_dates[index]
+        right_df = self.discount_factors[index]
+
+        t_left = act_360(
+            self.reference_date,
+            left_date,
+        )
+
+        t_right = act_360(
+            self.reference_date,
+            right_date,
+        )
+
+        t_target = act_360(
+            self.reference_date,
+            target_date,
+        )
+
+        weight = (
+            (t_target - t_left)
+            / (t_right - t_left)
+        )
+
+        log_left = log(left_df)
+        log_right = log(right_df)
+
+        interpolated_log_df = (
+            log_left
+            + weight
+            * (log_right - log_left)
+        )
+
+        return exp(
+            interpolated_log_df
+        )
+
+    def zero_rate(
+        self,
+        target_date: date,
+    ) -> float:
+        """Return continuously compounded ACT/360 zero rate."""
+
+        if target_date < self.reference_date:
+            raise ValueError(
+                "Target date cannot precede curve reference date."
+            )
+
+        if target_date == self.reference_date:
+            first_date = self.node_dates[0]
+            first_df = self.discount_factors[0]
+
+            tau = act_360(
+                self.reference_date,
+                first_date,
+            )
+
+            return (
+                -log(first_df)
+                / tau
+            )
+
+        df = self.discount_factor(
+            target_date
+        )
+
+        tau = act_360(
+            self.reference_date,
+            target_date,
+        )
+
+        return (
+            -log(df)
+            / tau
+        )
+
+    def forward_rate(
+        self,
+        start_date: date,
+        end_date: date,
+    ) -> float:
+        """Return simple ACT/360 forward rate."""
 
         if start_date < self.reference_date:
             raise ValueError(

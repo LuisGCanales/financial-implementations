@@ -655,7 +655,44 @@ The projected calendar:
 
 ---
 
-# 21. Curve-State Representation
+# 21. Calibration Pillar Convention
+
+For Core-v1 sequential calibration, each OIS contributes one curve node at:
+
+```text
+pillar_date = final_payment_date
+```
+
+rather than at the adjusted maturity date.
+
+**Provenance:** `PROJECT DECISION`
+
+### Rationale
+
+The market-standard F-TIIE OIS profile includes a two-business-day payment
+lag.
+
+Therefore:
+
+```text
+adjusted maturity
+<
+final payment date
+```
+
+in general.
+
+Placing the calibration node at the final payment date ensures that every
+cash flow required to value the calibration instrument falls inside the
+curve domain.
+
+This avoids introducing implicit extrapolation during calibration.
+
+The convention is a project calibration design choice and is not claimed
+to reproduce CME's internal production curve-helper pillar methodology.
+
+
+# 22. Curve-State Representation
 
 The canonical calibrated curve state is represented using:
 
@@ -671,7 +708,7 @@ They are not treated as the underlying curve state.
 
 ---
 
-# 22. Zero-Rate Convention
+# 23. Zero-Rate Convention
 
 Zero rates are reported using continuously compounded rates:
 
@@ -689,7 +726,7 @@ It does not imply that F-TIIE OIS market quotes use continuous compounding.
 
 ---
 
-# 23. Forward-Rate Convention
+# 24. Forward-Rate Convention
 
 For a period:
 
@@ -722,7 +759,7 @@ Every forward output must include its period and rate convention.
 
 ---
 
-# 24. Interpolation
+# 25. Interpolation
 
 Canonical interpolation:
 
@@ -754,7 +791,7 @@ It is not claimed to reproduce CME or Bloomberg production interpolation.
 
 ---
 
-# 25. Extrapolation
+# 26. Extrapolation
 
 Core-v1 policy:
 
@@ -774,7 +811,7 @@ OUT_OF_CURVE_RANGE
 
 ---
 
-# 26. Core-v1 Simplification Summary
+# 27. Core-v1 Simplification Summary
 
 The canonical implementation deliberately assumes:
 
@@ -801,7 +838,7 @@ introducing the institutional multi-curve discounting architecture.
 
 ---
 
-# 27. Future Multi-Curve Extension
+# 28. Future Multi-Curve Extension
 
 The future architecture may separate:
 
@@ -830,7 +867,7 @@ This extension is explicitly outside Core v1.
 
 ---
 
-# 28. Implementation Requirement
+# 29. Implementation Requirement
 
 No material convention documented above should rely solely on a third-party
 library default.
@@ -855,7 +892,7 @@ where important financial behavior is inherited implicitly.
 
 ---
 
-# 29. Testing Requirement
+# 30. Testing Requirement
 
 Every convention that changes generated dates or cash flows should receive
 an explicit test.
@@ -884,7 +921,7 @@ The test suite should verify financial behavior, not only code execution.
 
 ---
 
-# 30. Source Register
+# 31. Source Register
 
 ## S1 — Banco de México — TIIE de Fondeo a un día
 
