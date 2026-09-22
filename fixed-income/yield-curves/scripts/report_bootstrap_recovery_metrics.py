@@ -16,6 +16,11 @@ from yield_curves.synthetic import (
     build_synthetic_known_truth_curve,
     read_synthetic_ois_quotes_csv,
 )
+from yield_curves.recovery import (
+    ErrorSummary,
+    calculate_horizon_recovery_metrics,
+    calculate_recovery_metrics,
+)
 
 
 PROJECT_ROOT = (
@@ -74,6 +79,59 @@ def print_metric(
     print()
 
 
+
+def print_horizon_metrics_table(
+    horizon_metrics,
+) -> None:
+    """Print compact recovery comparison by maturity horizon."""
+
+    print(
+        "Recovery Metrics by Horizon"
+    )
+
+    print()
+
+    header = (
+        f"{'Horizon':<18}"
+        f"{'DF RMSE':>12}"
+        f"{'DF RMSE':>14}"
+        f"{'Zero RMSE':>14}"
+        f"{'Zero Max':>12}"
+        f"{'Fwd RMSE':>14}"
+        f"{'Fwd Max':>12}"
+    )
+
+    units = (
+        f"{'':<18}"
+        f"{'(abs)':>12}"
+        f"{'(ppm)':>14}"
+        f"{'(bp)':>14}"
+        f"{'(bp)':>12}"
+        f"{'(bp)':>14}"
+        f"{'(bp)':>12}"
+    )
+
+    print(header)
+    print(units)
+
+    print(
+        "-" * len(header)
+    )
+
+    for item in horizon_metrics:
+        print(
+            f"{item.horizon.name:<18}"
+            f"{item.dense_df_absolute.rmse:>12.8f}"
+            f"{item.dense_df_relative_ppm.rmse:>14.3f}"
+            f"{item.zero_rate_bp.rmse:>14.4f}"
+            f"{item.zero_rate_bp.max_abs_error:>12.4f}"
+            f"{item.forward_28d_bp.rmse:>14.4f}"
+            f"{item.forward_28d_bp.max_abs_error:>12.4f}"
+        )
+
+    print()
+
+
 def main() -> None:
     quotes = read_synthetic_ois_quotes_csv(
         QUOTES_PATH
@@ -116,6 +174,18 @@ def main() -> None:
         ),
         dense_grid_step_days=7,
         forward_period_days=28,
+    )
+
+    horizon_metrics = (
+        calculate_horizon_recovery_metrics(
+            true_curve=true_curve,
+            recovered_curve=recovered_curve,
+            last_supported_date=(
+                recovered_curve.last_node_date
+            ),
+            dense_grid_step_days=7,
+            forward_period_days=28,
+        )
     )
 
     print(
@@ -185,6 +255,16 @@ def main() -> None:
         decimals=4,
     )
 
+    print(
+        "=" * 100
+    )
+
+    print()
+
+    print_horizon_metrics_table(
+        horizon_metrics
+    )
 
 if __name__ == "__main__":
     main()
+    
