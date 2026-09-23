@@ -9,9 +9,10 @@ instrument pricing and, later, calibration can be tested.
 
 from __future__ import annotations
 
-from bisect import bisect_left
+from bisect import bisect_left, bisect_right
 from dataclasses import dataclass
 from datetime import date
+from enum import StrEnum
 from math import exp, isfinite, log
 from typing import Protocol, runtime_checkable
 
@@ -536,3 +537,320 @@ class LogLinearDiscountCurve:
         return (
             p_start / p_end - 1.0
         ) / tau
+        
+        
+
+class CurveInterpolationMethod(StrEnum):
+    """Supported nodal curve interpolation methods."""
+
+    LOG_LINEAR_DF = "LOG_LINEAR_DF"
+    LINEAR_CONTINUOUS_ZERO = "LINEAR_CONTINUOUS_ZERO"
+    
+
+@dataclass(frozen=True, slots=True)
+class LinearContinuousZeroCurve:
+    """Nodal curve with linear interpolation in continuous zero rates.
+
+    The supplied state variables remain node discount factors.
+
+    For each node:
+
+        z_i = -ln(P_i) / t_i
+
+    where t_i is ACT/360 time from the reference date.
+
+    Between adjacent nodes, continuously compounded zero rates are
+    interpolated linearly:
+
+        z(t)
+        =
+        (1-w) z_i
+        +
+        w z_{i+1}
+
+    and discount factors are reconstructed as:
+
+        P(t) = exp(-z(t) t)
+
+    First segment
+    -------------
+    Between the reference date and the first calibrated node, the
+    first-node zero rate is held constant.
+
+    This is an explicit project convention required because a zero
+    rate at t=0 is not independently observable from the nodal input.
+
+    Extrapolation beyond the final node is not permitted.
+    """
+
+    reference_date: date
+    node_dates: tuple[date, ...]
+    discount_factors: tuple[float, ...]
+
+    def __post_init__(self) -> None:
+        if not self.node_dates:
+            raise ValueError(
+                "At least one curve node is required."
+            )
+
+        if (
+            len(self.node_dates)
+            != len(self.discount_factors)
+        ):
+            raise ValueError(
+                "Node dates and discount factors "
+                "must have equal length."
+            )
+
+        previous_date = self.reference_date
+
+        for node_date, discount_factor in zip(
+            self.node_dates,
+            self.discount_factors,
+        ):
+            if node_date <= previous_date:
+                raise ValueError(
+                    "Curve node dates must be strictly "
+                    "increasing and later than the "
+                    "reference date."
+                )
+
+            if (
+                not isfinite(discount_factor)
+                or discount_factor <= 0.0
+            ):
+                raise ValueError(
+                    "Discount factors must be finite "
+                    "and strictly positive."
+                )
+
+            previous_date = node_date
+
+    @property
+    def last_node_date(self) -> date:
+        return self.node_dates[-1]
+
+    @property
+    def node_times(self) -> tuple[float, ...]:
+        return tuple(
+            (
+                node_date
+                - self.reference_date
+            ).days
+            / 360.0
+            for node_date in self.node_dates
+        )
+
+    @property
+    def node_zero_rates(self) -> tuple[float, ...]:
+        return tuple(
+            -log(discount_factor)
+            / time
+            for discount_factor, time in zip(
+                self.discount_factors,
+                self.node_times,
+            )
+        )
+
+    def _time(
+        self,
+        target_date: date,
+    ) -> float:
+        return (
+            target_date
+            - self.reference_date
+        ).days / 360.0
+
+    def _interpolated_zero_rate(
+        self,
+        target_date: date,
+    ) -> float:
+        if target_date < self.reference_date:
+            raise ValueError(
+                "Target date cannot precede "
+                "curve reference date."
+            )
+
+        if target_date > self.last_node_date:
+            raise ValueError(
+                "OUT_OF_CURVE_RANGE"
+            )
+
+        node_times = self.node_times
+        zero_rates = self.node_zero_rates
+
+        target_time = self._time(
+            target_date
+        )
+
+        # Explicit reference-date / first-segment convention.
+        if target_time <= node_times[0]:
+            return zero_rates[0]
+
+        index = bisect_right(
+            self.node_dates,
+            target_date,
+        )
+
+        # Exact final node.
+        if index >= len(
+            self.node_dates
+        ):
+            return zero_rates[-1]
+
+        left_index = index - 1
+        right_index = index
+
+        left_time = node_times[
+            left_index
+        ]
+
+        right_time = node_times[
+            right_index
+        ]
+
+        left_zero = zero_rates[
+            left_index
+        ]
+
+        right_zero = zero_rates[
+            right_index
+        ]
+
+        weight = (
+            target_time
+            - left_time
+        ) / (
+            right_time
+            - left_time
+        )
+
+        return (
+            (1.0 - weight)
+            * left_zero
+            + weight
+            * right_zero
+        )
+
+    def discount_factor(
+        self,
+        target_date: date,
+    ) -> float:
+        if target_date == self.reference_date:
+            return 1.0
+
+        zero_rate = (
+            self._interpolated_zero_rate(
+                target_date
+            )
+        )
+
+        time = self._time(
+            target_date
+        )
+
+        return exp(
+            -zero_rate
+            * time
+        )
+
+    def zero_rate(
+        self,
+        target_date: date,
+    ) -> float:
+        return (
+            self._interpolated_zero_rate(
+                target_date
+            )
+        )
+
+    def forward_rate(
+        self,
+        start_date: date,
+        end_date: date,
+    ) -> float:
+        if end_date <= start_date:
+            raise ValueError(
+                "Forward end date must follow "
+                "forward start date."
+            )
+
+        if start_date < self.reference_date:
+            raise ValueError(
+                "Forward start date cannot precede "
+                "curve reference date."
+            )
+
+        if end_date > self.last_node_date:
+            raise ValueError(
+                "OUT_OF_CURVE_RANGE"
+            )
+
+        start_df = self.discount_factor(
+            start_date
+        )
+
+        end_df = self.discount_factor(
+            end_date
+        )
+
+        accrual = (
+            end_date
+            - start_date
+        ).days / 360.0
+
+        return (
+            start_df
+            / end_df
+            - 1.0
+        ) / accrual
+        
+
+NodalCurve = (
+    LogLinearDiscountCurve
+    | LinearContinuousZeroCurve
+)        
+
+
+def build_nodal_curve(
+    *,
+    method: CurveInterpolationMethod,
+    reference_date: date,
+    node_dates: tuple[date, ...],
+    discount_factors: tuple[float, ...],
+) -> NodalCurve:
+    """Build one supported nodal curve representation."""
+
+    if (
+        method
+        == CurveInterpolationMethod.LOG_LINEAR_DF
+    ):
+        return LogLinearDiscountCurve(
+            reference_date=(
+                reference_date
+            ),
+            node_dates=node_dates,
+            discount_factors=(
+                discount_factors
+            ),
+        )
+
+    if (
+        method
+        == CurveInterpolationMethod
+        .LINEAR_CONTINUOUS_ZERO
+    ):
+        return LinearContinuousZeroCurve(
+            reference_date=(
+                reference_date
+            ),
+            node_dates=node_dates,
+            discount_factors=(
+                discount_factors
+            ),
+        )
+
+    raise ValueError(
+        "Unsupported interpolation method: "
+        f"{method}"
+    )
