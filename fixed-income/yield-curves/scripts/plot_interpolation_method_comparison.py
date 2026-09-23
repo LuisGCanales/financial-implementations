@@ -6,9 +6,28 @@ Compares:
     2. Canonical log-linear discount-factor interpolation
     3. Linear continuously compounded zero-rate interpolation
 
-All recovered curves are calibrated from the same frozen OIS quotes.
+All recovered curves are calibrated from the same frozen OIS quotes
+using the sequential bootstrap.
+
 The true curve is introduced only after calibration for recovery
 analysis.
+
+Persistent outputs
+------------------
+Figures:
+    reports/figures/06_interpolation_comparison/
+        discount_factor_recovery_two_methods.png
+        discount_factor_recovery_two_methods.svg
+        zero_rate_recovery_two_methods.png
+        zero_rate_recovery_two_methods.svg
+        forward_28d_recovery_two_methods.png
+        forward_28d_recovery_two_methods.svg
+
+Tables:
+    reports/tables/06_interpolation_comparison/
+        discount_factor_recovery_two_methods_dense.csv
+        zero_rate_recovery_two_methods_dense.csv
+        forward_28d_recovery_two_methods_dense.csv
 """
 
 from __future__ import annotations
@@ -27,6 +46,10 @@ from yield_curves.calendars import (
 from yield_curves.curves import (
     CurveInterpolationMethod,
 )
+from yield_curves.reporting import (
+    save_csv,
+    save_figure,
+)
 from yield_curves.synthetic import (
     build_synthetic_known_truth_curve,
     read_synthetic_ois_quotes_csv,
@@ -43,6 +66,13 @@ QUOTES_PATH = (
     / "synthetic"
     / "ftiie_ois_quotes_v1.csv"
 )
+
+REPORT_SECTION = (
+    "06_interpolation_comparison"
+)
+
+DENSE_GRID_STEP_DAYS = 7
+FORWARD_PERIOD_DAYS = 28
 
 
 def act_360(
@@ -61,7 +91,7 @@ def build_date_grid(
     *,
     start_date: date,
     end_date: date,
-    step_days: int = 7,
+    step_days: int = DENSE_GRID_STEP_DAYS,
 ) -> tuple[date, ...]:
     """Build deterministic date grid including final date."""
 
@@ -177,7 +207,7 @@ def plot_discount_factors(
     linear_zero_curve,
     true_curve,
 ) -> None:
-    """Compare recovered discount-factor functions."""
+    """Compare and persist recovered discount-factor functions."""
 
     reference_date = (
         log_linear_curve.reference_date
@@ -191,7 +221,7 @@ def plot_discount_factors(
     dates = build_date_grid(
         start_date=reference_date,
         end_date=last_date,
-        step_days=7,
+        step_days=DENSE_GRID_STEP_DAYS,
     )
 
     times = [
@@ -222,6 +252,52 @@ def plot_discount_factors(
         )
         for target_date in dates
     ]
+
+    # --------------------------------------------------------------
+    # Persist dense numerical series.
+    # --------------------------------------------------------------
+
+    save_csv(
+        section=REPORT_SECTION,
+        stem=(
+            "discount_factor_recovery_"
+            "two_methods_dense"
+        ),
+        header=(
+            "date",
+            "act360_years",
+            "true_discount_factor",
+            "log_linear_discount_factor",
+            "linear_continuous_zero_discount_factor",
+            "log_linear_error",
+            "linear_continuous_zero_error",
+        ),
+        rows=(
+            (
+                target_date.isoformat(),
+                times[index],
+                true_values[index],
+                log_linear_values[index],
+                linear_zero_values[index],
+                (
+                    log_linear_values[index]
+                    - true_values[index]
+                ),
+                (
+                    linear_zero_values[index]
+                    - true_values[index]
+                ),
+            )
+            for index, target_date
+            in enumerate(
+                dates
+            )
+        ),
+    )
+
+    # --------------------------------------------------------------
+    # Plot.
+    # --------------------------------------------------------------
 
     fig, ax = plt.subplots(
         figsize=(10, 5.5)
@@ -271,6 +347,12 @@ def plot_discount_factors(
 
     fig.tight_layout()
 
+    save_figure(
+        fig=fig,
+        section=REPORT_SECTION,
+        stem="discount_factor_recovery_two_methods",
+    )
+
     plt.show()
 
 
@@ -280,7 +362,7 @@ def plot_zero_rates(
     linear_zero_curve,
     true_curve,
 ) -> None:
-    """Compare continuously compounded zero curves."""
+    """Compare and persist continuously compounded zero curves."""
 
     reference_date = (
         log_linear_curve.reference_date
@@ -297,7 +379,7 @@ def plot_zero_rates(
             + timedelta(days=1)
         ),
         end_date=last_date,
-        step_days=7,
+        step_days=DENSE_GRID_STEP_DAYS,
     )
 
     times = [
@@ -308,11 +390,11 @@ def plot_zero_rates(
         for target_date in dates
     ]
 
+    # Raw decimal rates are kept for persistence.
     true_values = [
         true_curve.zero_rate(
             target_date
         )
-        * 100.0
         for target_date in dates
     ]
 
@@ -320,7 +402,6 @@ def plot_zero_rates(
         log_linear_curve.zero_rate(
             target_date
         )
-        * 100.0
         for target_date in dates
     ]
 
@@ -328,8 +409,70 @@ def plot_zero_rates(
         linear_zero_curve.zero_rate(
             target_date
         )
-        * 100.0
         for target_date in dates
+    ]
+
+    # --------------------------------------------------------------
+    # Persist dense numerical series.
+    # --------------------------------------------------------------
+
+    save_csv(
+        section=REPORT_SECTION,
+        stem=(
+            "zero_rate_recovery_"
+            "two_methods_dense"
+        ),
+        header=(
+            "date",
+            "act360_years",
+            "true_zero_rate",
+            "log_linear_zero_rate",
+            "linear_continuous_zero_rate",
+            "log_linear_error_bp",
+            "linear_continuous_zero_error_bp",
+        ),
+        rows=(
+            (
+                target_date.isoformat(),
+                times[index],
+                true_values[index],
+                log_linear_values[index],
+                linear_zero_values[index],
+                (
+                    log_linear_values[index]
+                    - true_values[index]
+                )
+                * 10_000.0,
+                (
+                    linear_zero_values[index]
+                    - true_values[index]
+                )
+                * 10_000.0,
+            )
+            for index, target_date
+            in enumerate(
+                dates
+            )
+        ),
+    )
+
+    # --------------------------------------------------------------
+    # Convert to percentage points only for presentation.
+    # --------------------------------------------------------------
+
+    true_values_pct = [
+        value * 100.0
+        for value in true_values
+    ]
+
+    log_linear_values_pct = [
+        value * 100.0
+        for value in log_linear_values
+    ]
+
+    linear_zero_values_pct = [
+        value * 100.0
+        for value in linear_zero_values
     ]
 
     fig, ax = plt.subplots(
@@ -338,14 +481,14 @@ def plot_zero_rates(
 
     ax.plot(
         times,
-        true_values,
+        true_values_pct,
         linewidth=2.2,
         label="True synthetic zero curve",
     )
 
     ax.plot(
         times,
-        log_linear_values,
+        log_linear_values_pct,
         linewidth=1.8,
         linestyle="--",
         label="Log-linear DF",
@@ -353,7 +496,7 @@ def plot_zero_rates(
 
     ax.plot(
         times,
-        linear_zero_values,
+        linear_zero_values_pct,
         linewidth=1.8,
         linestyle=":",
         label="Linear continuous zero",
@@ -380,6 +523,12 @@ def plot_zero_rates(
 
     fig.tight_layout()
 
+    save_figure(
+        fig=fig,
+        section=REPORT_SECTION,
+        stem="zero_rate_recovery_two_methods",
+    )
+
     plt.show()
 
 
@@ -388,9 +537,9 @@ def plot_forward_rates(
     log_linear_curve,
     linear_zero_curve,
     true_curve,
-    forward_days: int = 28,
+    forward_days: int = FORWARD_PERIOD_DAYS,
 ) -> None:
-    """Compare 28-day simple forward curves."""
+    """Compare and persist 28-day simple forward curves."""
 
     reference_date = (
         log_linear_curve.reference_date
@@ -411,7 +560,7 @@ def plot_forward_rates(
     start_dates = build_date_grid(
         start_date=reference_date,
         end_date=last_start_date,
-        step_days=7,
+        step_days=DENSE_GRID_STEP_DAYS,
     )
 
     times = [
@@ -421,6 +570,8 @@ def plot_forward_rates(
         )
         for start_date in start_dates
     ]
+
+    end_dates: list[date] = []
 
     true_values: list[float] = []
     log_linear_values: list[float] = []
@@ -434,12 +585,15 @@ def plot_forward_rates(
             )
         )
 
+        end_dates.append(
+            end_date
+        )
+
         true_values.append(
             true_curve.forward_rate(
                 start_date,
                 end_date,
             )
-            * 100.0
         )
 
         log_linear_values.append(
@@ -447,7 +601,6 @@ def plot_forward_rates(
                 start_date,
                 end_date,
             )
-            * 100.0
         )
 
         linear_zero_values.append(
@@ -455,8 +608,73 @@ def plot_forward_rates(
                 start_date,
                 end_date,
             )
-            * 100.0
         )
+
+    # --------------------------------------------------------------
+    # Persist raw decimal-rate forward series.
+    # --------------------------------------------------------------
+
+    save_csv(
+        section=REPORT_SECTION,
+        stem=(
+            "forward_28d_recovery_"
+            "two_methods_dense"
+        ),
+        header=(
+            "start_date",
+            "end_date",
+            "start_act360_years",
+            "true_forward_rate",
+            "log_linear_forward_rate",
+            "linear_continuous_zero_forward_rate",
+            "log_linear_error_bp",
+            "linear_continuous_zero_error_bp",
+        ),
+        rows=(
+            (
+                start_dates[index].isoformat(),
+                end_dates[index].isoformat(),
+                times[index],
+                true_values[index],
+                log_linear_values[index],
+                linear_zero_values[index],
+                (
+                    log_linear_values[index]
+                    - true_values[index]
+                )
+                * 10_000.0,
+                (
+                    linear_zero_values[index]
+                    - true_values[index]
+                )
+                * 10_000.0,
+            )
+            for index in range(
+                len(
+                    start_dates
+                )
+            )
+        ),
+    )
+
+    # --------------------------------------------------------------
+    # Convert to percentage points only for presentation.
+    # --------------------------------------------------------------
+
+    true_values_pct = [
+        value * 100.0
+        for value in true_values
+    ]
+
+    log_linear_values_pct = [
+        value * 100.0
+        for value in log_linear_values
+    ]
+
+    linear_zero_values_pct = [
+        value * 100.0
+        for value in linear_zero_values
+    ]
 
     fig, ax = plt.subplots(
         figsize=(10, 5.5)
@@ -464,14 +682,14 @@ def plot_forward_rates(
 
     ax.plot(
         times,
-        true_values,
+        true_values_pct,
         linewidth=2.2,
         label="True synthetic 28D forward",
     )
 
     ax.plot(
         times,
-        log_linear_values,
+        log_linear_values_pct,
         linewidth=1.8,
         linestyle="--",
         label="Log-linear DF",
@@ -479,7 +697,7 @@ def plot_forward_rates(
 
     ax.plot(
         times,
-        linear_zero_values,
+        linear_zero_values_pct,
         linewidth=1.8,
         linestyle=":",
         label="Linear continuous zero",
@@ -505,6 +723,12 @@ def plot_forward_rates(
     ax.legend()
 
     fig.tight_layout()
+
+    save_figure(
+        fig=fig,
+        section=REPORT_SECTION,
+        stem="forward_28d_recovery_two_methods",
+    )
 
     plt.show()
 
@@ -540,7 +764,7 @@ def main() -> None:
         log_linear_curve=log_linear_curve,
         linear_zero_curve=linear_zero_curve,
         true_curve=true_curve,
-        forward_days=28,
+        forward_days=FORWARD_PERIOD_DAYS,
     )
 
 

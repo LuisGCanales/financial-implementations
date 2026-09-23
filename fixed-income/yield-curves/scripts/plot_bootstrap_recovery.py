@@ -4,6 +4,26 @@ The bootstrap receives only the frozen synthetic OIS quotes.
 
 The known-truth curve is loaded only after calibration and is used
 exclusively for recovery validation.
+
+Persistent outputs
+------------------
+Figures:
+    reports/figures/02_bootstrap_recovery/
+        discount_factor_recovery.png
+        discount_factor_recovery.svg
+        discount_factor_error_by_pillar.png
+        discount_factor_error_by_pillar.svg
+        zero_rate_recovery.png
+        zero_rate_recovery.svg
+        forward_28d_recovery.png
+        forward_28d_recovery.svg
+
+Tables:
+    reports/tables/02_bootstrap_recovery/
+        discount_factor_recovery_dense.csv
+        discount_factor_error_by_pillar.csv
+        zero_rate_recovery_dense.csv
+        forward_28d_recovery_dense.csv
 """
 
 from __future__ import annotations
@@ -19,6 +39,10 @@ from yield_curves.bootstrap import (
 from yield_curves.calendars import (
     build_projected_mxmc_calendar,
 )
+from yield_curves.reporting import (
+    save_csv,
+    save_figure,
+)
 from yield_curves.synthetic import (
     build_synthetic_known_truth_curve,
     read_synthetic_ois_quotes_csv,
@@ -33,6 +57,13 @@ QUOTES_PATH = (
     / "synthetic"
     / "ftiie_ois_quotes_v1.csv"
 )
+
+REPORT_SECTION = (
+    "02_bootstrap_recovery"
+)
+
+DENSE_GRID_STEP_DAYS = 7
+FORWARD_PERIOD_DAYS = 28
 
 
 def year_fraction_act_360(
@@ -50,9 +81,14 @@ def build_date_grid(
     *,
     start_date: date,
     end_date: date,
-    step_days: int = 7,
+    step_days: int = DENSE_GRID_STEP_DAYS,
 ) -> list[date]:
     """Build dense deterministic date grid."""
+
+    if step_days <= 0:
+        raise ValueError(
+            "Grid step must be positive."
+        )
 
     if end_date < start_date:
         raise ValueError(
@@ -64,11 +100,18 @@ def build_date_grid(
     current = start_date
 
     while current < end_date:
-        dates.append(current)
-        current += timedelta(days=step_days)
+        dates.append(
+            current
+        )
+
+        current += timedelta(
+            days=step_days
+        )
 
     if not dates or dates[-1] != end_date:
-        dates.append(end_date)
+        dates.append(
+            end_date
+        )
 
     return dates
 
@@ -112,7 +155,7 @@ def plot_discount_factor_recovery(
     true_curve,
     recovered_curve,
 ) -> None:
-    """Plot true and recovered discount-factor curves."""
+    """Plot and persist true vs recovered discount-factor curves."""
 
     reference_date = (
         recovered_curve.reference_date
@@ -125,7 +168,7 @@ def plot_discount_factor_recovery(
     dates = build_date_grid(
         start_date=reference_date,
         end_date=last_date,
-        step_days=7,
+        step_days=DENSE_GRID_STEP_DAYS,
     )
 
     times = [
@@ -167,6 +210,42 @@ def plot_discount_factor_recovery(
         step.solved_discount_factor
         for step in result.steps
     ]
+
+    # --------------------------------------------------------------
+    # Persist dense numerical series.
+    # --------------------------------------------------------------
+
+    save_csv(
+        section=REPORT_SECTION,
+        stem="discount_factor_recovery_dense",
+        header=(
+            "date",
+            "act360_years",
+            "true_discount_factor",
+            "recovered_discount_factor",
+            "df_error",
+        ),
+        rows=(
+            (
+                target_date.isoformat(),
+                times[index],
+                true_dfs[index],
+                recovered_dfs[index],
+                (
+                    recovered_dfs[index]
+                    - true_dfs[index]
+                ),
+            )
+            for index, target_date
+            in enumerate(
+                dates
+            )
+        ),
+    )
+
+    # --------------------------------------------------------------
+    # Plot.
+    # --------------------------------------------------------------
 
     fig, ax = plt.subplots(
         figsize=(10, 5.5)
@@ -216,6 +295,12 @@ def plot_discount_factor_recovery(
 
     fig.tight_layout()
 
+    save_figure(
+        fig=fig,
+        section=REPORT_SECTION,
+        stem="discount_factor_recovery",
+    )
+
     plt.show()
 
 
@@ -224,15 +309,18 @@ def plot_discount_factor_errors(
     result,
     true_curve,
 ) -> None:
-    """Plot recovered-minus-true DF error at calibration pillars."""
+    """Plot and persist recovered-minus-true DF error by pillar."""
 
     reference_date = (
         result.curve.reference_date
     )
 
-    pillar_times = []
-    errors = []
-    tenors = []
+    pillar_times: list[float] = []
+    errors: list[float] = []
+    tenors: list[str] = []
+    pillar_dates: list[date] = []
+    solved_dfs: list[float] = []
+    true_dfs: list[float] = []
 
     for step in result.steps:
         true_df = (
@@ -241,9 +329,17 @@ def plot_discount_factor_errors(
             )
         )
 
-        error = (
+        solved_df = (
             step.solved_discount_factor
+        )
+
+        error = (
+            solved_df
             - true_df
+        )
+
+        pillar_dates.append(
+            step.pillar_date
         )
 
         pillar_times.append(
@@ -253,6 +349,14 @@ def plot_discount_factor_errors(
             )
         )
 
+        solved_dfs.append(
+            solved_df
+        )
+
+        true_dfs.append(
+            true_df
+        )
+
         errors.append(
             error
         )
@@ -260,6 +364,49 @@ def plot_discount_factor_errors(
         tenors.append(
             step.tenor
         )
+
+    # --------------------------------------------------------------
+    # Persist pillar-level recovery table.
+    # --------------------------------------------------------------
+
+    save_csv(
+        section=REPORT_SECTION,
+        stem="discount_factor_error_by_pillar",
+        header=(
+            "tenor",
+            "pillar_date",
+            "act360_years",
+            "solved_discount_factor",
+            "true_discount_factor",
+            "df_error",
+            "relative_error_ppm",
+        ),
+        rows=(
+            (
+                tenors[index],
+                pillar_dates[index].isoformat(),
+                pillar_times[index],
+                solved_dfs[index],
+                true_dfs[index],
+                errors[index],
+                (
+                    solved_dfs[index]
+                    / true_dfs[index]
+                    - 1.0
+                )
+                * 1_000_000.0,
+            )
+            for index in range(
+                len(
+                    tenors
+                )
+            )
+        ),
+    )
+
+    # --------------------------------------------------------------
+    # Plot.
+    # --------------------------------------------------------------
 
     fig, ax = plt.subplots(
         figsize=(10, 5.5)
@@ -310,6 +457,12 @@ def plot_discount_factor_errors(
 
     fig.tight_layout()
 
+    save_figure(
+        fig=fig,
+        section=REPORT_SECTION,
+        stem="discount_factor_error_by_pillar",
+    )
+
     plt.show()
 
 
@@ -318,7 +471,7 @@ def plot_zero_rate_recovery(
     true_curve,
     recovered_curve,
 ) -> None:
-    """Plot true and recovered continuously compounded zero curves."""
+    """Plot and persist true vs recovered continuous zero curves."""
 
     reference_date = (
         recovered_curve.reference_date
@@ -339,7 +492,7 @@ def plot_zero_rate_recovery(
     dates = build_date_grid(
         start_date=start_date,
         end_date=last_date,
-        step_days=7,
+        step_days=DENSE_GRID_STEP_DAYS,
     )
 
     times = [
@@ -350,11 +503,11 @@ def plot_zero_rate_recovery(
         for target_date in dates
     ]
 
+    # Raw decimal rates are persisted.
     true_zero_rates = [
         true_curve.zero_rate(
             target_date
         )
-        * 100
         for target_date in dates
     ]
 
@@ -362,8 +515,54 @@ def plot_zero_rate_recovery(
         recovered_curve.zero_rate(
             target_date
         )
-        * 100
         for target_date in dates
+    ]
+
+    # --------------------------------------------------------------
+    # Persist dense zero-rate series.
+    # --------------------------------------------------------------
+
+    save_csv(
+        section=REPORT_SECTION,
+        stem="zero_rate_recovery_dense",
+        header=(
+            "date",
+            "act360_years",
+            "true_zero_rate",
+            "recovered_zero_rate",
+            "error_bp",
+        ),
+        rows=(
+            (
+                target_date.isoformat(),
+                times[index],
+                true_zero_rates[index],
+                recovered_zero_rates[index],
+                (
+                    recovered_zero_rates[index]
+                    - true_zero_rates[index]
+                )
+                * 10_000.0,
+            )
+            for index, target_date
+            in enumerate(
+                dates
+            )
+        ),
+    )
+
+    # --------------------------------------------------------------
+    # Convert to percentage points only for presentation.
+    # --------------------------------------------------------------
+
+    true_zero_rates_pct = [
+        rate * 100.0
+        for rate in true_zero_rates
+    ]
+
+    recovered_zero_rates_pct = [
+        rate * 100.0
+        for rate in recovered_zero_rates
     ]
 
     fig, ax = plt.subplots(
@@ -372,14 +571,14 @@ def plot_zero_rate_recovery(
 
     ax.plot(
         times,
-        true_zero_rates,
+        true_zero_rates_pct,
         linewidth=2,
         label="True synthetic zero curve",
     )
 
     ax.plot(
         times,
-        recovered_zero_rates,
+        recovered_zero_rates_pct,
         linewidth=2,
         linestyle="--",
         label="Recovered zero curve",
@@ -406,6 +605,12 @@ def plot_zero_rate_recovery(
 
     fig.tight_layout()
 
+    save_figure(
+        fig=fig,
+        section=REPORT_SECTION,
+        stem="zero_rate_recovery",
+    )
+
     plt.show()
 
 
@@ -414,23 +619,27 @@ def plot_forward_rate_recovery(
     true_curve,
     recovered_curve,
 ) -> None:
-    """Plot true and recovered 28-day simple forward curves."""
+    """Plot and persist true vs recovered 28-day simple forwards."""
 
     reference_date = (
         recovered_curve.reference_date
     )
 
-    forward_days = 28
+    forward_days = (
+        FORWARD_PERIOD_DAYS
+    )
 
     last_start_date = (
         recovered_curve.last_node_date
-        - timedelta(days=forward_days)
+        - timedelta(
+            days=forward_days
+        )
     )
 
     start_dates = build_date_grid(
         start_date=reference_date,
         end_date=last_start_date,
-        step_days=7,
+        step_days=DENSE_GRID_STEP_DAYS,
     )
 
     times = [
@@ -441,13 +650,20 @@ def plot_forward_rate_recovery(
         for start_date in start_dates
     ]
 
-    true_forwards = []
-    recovered_forwards = []
+    end_dates: list[date] = []
+    true_forwards: list[float] = []
+    recovered_forwards: list[float] = []
 
     for start_date in start_dates:
         end_date = (
             start_date
-            + timedelta(days=forward_days)
+            + timedelta(
+                days=forward_days
+            )
+        )
+
+        end_dates.append(
+            end_date
         )
 
         true_forwards.append(
@@ -455,7 +671,6 @@ def plot_forward_rate_recovery(
                 start_date,
                 end_date,
             )
-            * 100
         )
 
         recovered_forwards.append(
@@ -463,8 +678,57 @@ def plot_forward_rate_recovery(
                 start_date,
                 end_date,
             )
-            * 100
         )
+
+    # --------------------------------------------------------------
+    # Persist raw decimal-rate forward series.
+    # --------------------------------------------------------------
+
+    save_csv(
+        section=REPORT_SECTION,
+        stem="forward_28d_recovery_dense",
+        header=(
+            "start_date",
+            "end_date",
+            "start_act360_years",
+            "true_forward_rate",
+            "recovered_forward_rate",
+            "error_bp",
+        ),
+        rows=(
+            (
+                start_dates[index].isoformat(),
+                end_dates[index].isoformat(),
+                times[index],
+                true_forwards[index],
+                recovered_forwards[index],
+                (
+                    recovered_forwards[index]
+                    - true_forwards[index]
+                )
+                * 10_000.0,
+            )
+            for index in range(
+                len(
+                    start_dates
+                )
+            )
+        ),
+    )
+
+    # --------------------------------------------------------------
+    # Convert to percentage points only for presentation.
+    # --------------------------------------------------------------
+
+    true_forwards_pct = [
+        rate * 100.0
+        for rate in true_forwards
+    ]
+
+    recovered_forwards_pct = [
+        rate * 100.0
+        for rate in recovered_forwards
+    ]
 
     fig, ax = plt.subplots(
         figsize=(10, 5.5)
@@ -472,14 +736,14 @@ def plot_forward_rate_recovery(
 
     ax.plot(
         times,
-        true_forwards,
+        true_forwards_pct,
         linewidth=2,
         label="True synthetic 28D forward",
     )
 
     ax.plot(
         times,
-        recovered_forwards,
+        recovered_forwards_pct,
         linewidth=2,
         linestyle="--",
         label="Recovered 28D forward",
@@ -505,6 +769,12 @@ def plot_forward_rate_recovery(
     ax.legend()
 
     fig.tight_layout()
+
+    save_figure(
+        fig=fig,
+        section=REPORT_SECTION,
+        stem="forward_28d_recovery",
+    )
 
     plt.show()
 
