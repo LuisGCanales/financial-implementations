@@ -180,6 +180,7 @@ def calibrate_ftiie_ois_curve_simultaneously(
     quotes: Sequence[OISCalibrationQuote],
     calendar: BusinessCalendar,
     interpolation_method: CurveInterpolationMethod,
+    initial_discount_factors: Sequence[float] | None = None,
     lower_df_bound: float = 1e-6,
     upper_df_bound: float = 2.0,
     repricing_scale_bp: float = 10_000.0,
@@ -221,26 +222,76 @@ def calibrate_ftiie_ois_curve_simultaneously(
     )
 
     # --------------------------------------------------------------
-    # Initial guess only.
+    # Initial guess.
     #
-    # This does NOT constrain the global solution to the canonical
-    # curve. It simply provides a financially sensible starting point.
+    # Default:
+    #     obtain a financially coherent initial guess from the
+    #     canonical sequential bootstrap.
+    #
+    # Optional warm start:
+    #     callers performing nearby repeated calibrations may provide
+    #     an already calibrated nodal DF vector.
     # --------------------------------------------------------------
 
-    initial_bootstrap = (
-        bootstrap_ftiie_ois_curve(
-            quotes=quotes,
-            calendar=calendar,
+    if initial_discount_factors is None:
+        initial_bootstrap = (
+            bootstrap_ftiie_ois_curve(
+                quotes=quotes,
+                calendar=calendar,
+            )
         )
-    )
+
+        initial_dfs = tuple(
+            initial_bootstrap
+            .curve
+            .discount_factors
+        )
+
+    else:
+        initial_dfs = tuple(
+            float(value)
+            for value
+            in initial_discount_factors
+        )
+
+        if (
+            len(initial_dfs)
+            != len(pillar_dates)
+        ):
+            raise ValueError(
+                "Initial discount-factor count must match "
+                "the number of calibration pillars."
+            )
+
+        for discount_factor in initial_dfs:
+            if (
+                not np.isfinite(
+                    discount_factor
+                )
+                or discount_factor <= 0.0
+            ):
+                raise ValueError(
+                    "Initial discount factors must be "
+                    "finite and strictly positive."
+                )
+
+            if not (
+                lower_df_bound
+                <= discount_factor
+                <= upper_df_bound
+            ):
+                raise ValueError(
+                    "Initial discount factors must lie "
+                    "inside the calibration bounds."
+                )
 
     initial_log_dfs = np.array(
         [
-            log(discount_factor)
+            log(
+                discount_factor
+            )
             for discount_factor
-            in initial_bootstrap
-            .curve
-            .discount_factors
+            in initial_dfs
         ],
         dtype=float,
     )

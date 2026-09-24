@@ -10,7 +10,7 @@ instrument pricing and, later, calibration can be tested.
 from __future__ import annotations
 
 from bisect import bisect_left, bisect_right
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date
 from enum import StrEnum
 from math import exp, isfinite, log
@@ -815,37 +815,108 @@ class CurveInterpolationMethod(StrEnum):
     
 @dataclass(frozen=True, slots=True)
 class CubicContinuousZeroCurve:
-    """Nodal curve using a cubic spline in continuous zero rates.
+    """Nodal curve using a natural cubic spline in continuous zero rates.
 
-    State variables remain node discount factors.
+    State representation
+    --------------------
+    The calibrated state variables remain node discount factors.
 
-    At each node:
+    At each calibrated node:
 
         z_i = -ln(P_i) / t_i
 
-    A cubic spline is then fitted to continuously compounded zero
-    rates.
+    where:
+
+        P_i = discount factor at node i
+        t_i = ACT/360 time from the curve reference date
+        z_i = continuously compounded zero rate
+
+    The interpolation rule is therefore applied to continuous zero rates,
+    while discount factors remain the underlying calibrated nodal state.
 
     Reference-date boundary convention
     ----------------------------------
-    Zero rate at t=0 is not independently identified by a discount
-    factor because P(0)=1 regardless of z(0).
+    The zero rate at t=0 is not independently identified by a discount
+    factor because:
+
+        P(0) = 1
+
+    regardless of the value assigned to z(0).
 
     PROJECT DECISION:
         use the first calibrated-node zero rate as the synthetic
         reference-date zero value.
 
-    Therefore the spline nodes are:
+    The spline knots are therefore:
 
-        (0, z_1),
-        (t_1, z_1),
-        (t_2, z_2),
+        (0,   z_1)
+        (t_1, z_1)
+        (t_2, z_2)
         ...
+        (t_n, z_n)
 
     Natural cubic-spline boundary conditions are used.
 
-    The method is intended as a methodological challenger rather than
-    the canonical production interpolation rule.
+    Global interpolation property
+    -----------------------------
+    Unlike piecewise-local interpolation rules such as log-linear discount
+    factors or linear continuous zero rates, the cubic spline is a global
+    interpolator.
+
+    Changing or adding a node may therefore affect interpolation on earlier
+    segments of the curve.
+
+    For this reason, this curve is calibrated using simultaneous nodal
+    calibration rather than the canonical sequential bootstrap.
+
+    Smoothness
+    ----------
+    The interpolated zero curve has continuous first derivatives across
+    internal knots.
+
+    Since:
+
+        P(t) = exp(-t * z(t))
+
+    the instantaneous forward rate is:
+
+        f(t) = z(t) + t * z'(t)
+
+    and is therefore continuous when z(t) and z'(t) are continuous.
+
+    This makes the method useful as a methodological challenger for studying
+    the relationship between interpolation smoothness, forward-curve shape,
+    recovery accuracy, and calibration stability.
+
+    Spline construction and caching
+    -------------------------------
+    The scipy CubicSpline object is constructed once during curve-instance
+    initialization and retained as an internal cached computational object.
+
+    Subsequent zero-rate, discount-factor, forward-rate, and instantaneous-
+    forward evaluations reuse that same spline.
+
+    This is a computational optimization only. It does not alter:
+
+        - calibrated node discount factors;
+        - zero-rate definitions;
+        - spline knots;
+        - natural boundary conditions;
+        - interpolation methodology;
+        - extrapolation policy.
+
+    Caching is particularly important for repeated valuation, calibration,
+    dense-grid diagnostics, and quote-sensitivity experiments, where the
+    same curve instance may be evaluated many thousands of times.
+
+    Intended use
+    ------------
+    The method is currently treated as a methodological challenger rather
+    than the canonical production interpolation rule.
+
+    Its performance should be evaluated using calibration fit, recovery,
+    forward behavior, sensitivity, locality, and stability diagnostics
+    rather than smoothness alone.
 
     Extrapolation beyond the final calibrated node is forbidden.
     """
@@ -853,6 +924,12 @@ class CubicContinuousZeroCurve:
     reference_date: date
     node_dates: tuple[date, ...]
     discount_factors: tuple[float, ...]
+
+    _spline_object: CubicSpline = field(
+        init=False,
+        repr=False,
+        compare=False,
+    )
 
     def __post_init__(self) -> None:
         if len(self.node_dates) < 2:
@@ -870,9 +947,14 @@ class CubicContinuousZeroCurve:
                 "must have equal length."
             )
 
-        previous_date = self.reference_date
+        previous_date = (
+            self.reference_date
+        )
 
-        for node_date, discount_factor in zip(
+        for (
+            node_date,
+            discount_factor,
+        ) in zip(
             self.node_dates,
             self.discount_factors,
         ):
@@ -884,7 +966,9 @@ class CubicContinuousZeroCurve:
                 )
 
             if (
-                not isfinite(discount_factor)
+                not isfinite(
+                    discount_factor
+                )
                 or discount_factor <= 0.0
             ):
                 raise ValueError(
@@ -892,29 +976,76 @@ class CubicContinuousZeroCurve:
                     "and strictly positive."
                 )
 
-            previous_date = node_date
+            previous_date = (
+                node_date
+            )
+
+        # ----------------------------------------------------------
+        # Build the spline ONCE for this curve instance.
+        # ----------------------------------------------------------
+
+        node_times = (
+            self.node_times
+        )
+
+        node_zeros = (
+            self.node_zero_rates
+        )
+
+        spline = CubicSpline(
+            (
+                0.0,
+                *node_times,
+            ),
+            (
+                node_zeros[0],
+                *node_zeros,
+            ),
+            bc_type="natural",
+            extrapolate=False,
+        )
+
+        object.__setattr__(
+            self,
+            "_spline_object",
+            spline,
+        )
 
     @property
-    def last_node_date(self) -> date:
-        return self.node_dates[-1]
+    def last_node_date(
+        self,
+    ) -> date:
+        return (
+            self.node_dates[-1]
+        )
 
     @property
-    def node_times(self) -> tuple[float, ...]:
+    def node_times(
+        self,
+    ) -> tuple[float, ...]:
         return tuple(
             (
                 node_date
                 - self.reference_date
             ).days
             / 360.0
-            for node_date in self.node_dates
+            for node_date
+            in self.node_dates
         )
 
     @property
-    def node_zero_rates(self) -> tuple[float, ...]:
+    def node_zero_rates(
+        self,
+    ) -> tuple[float, ...]:
         return tuple(
-            -log(discount_factor)
+            -log(
+                discount_factor
+            )
             / time
-            for discount_factor, time in zip(
+            for (
+                discount_factor,
+                time,
+            ) in zip(
                 self.discount_factors,
                 self.node_times,
             )
@@ -929,25 +1060,13 @@ class CubicContinuousZeroCurve:
             - self.reference_date
         ).days / 360.0
 
-    def _spline(self) -> CubicSpline:
-        node_times = self.node_times
-        node_zeros = self.node_zero_rates
+    def _spline(
+        self,
+    ) -> CubicSpline:
+        """Return the spline cached at curve construction."""
 
-        times = (
-            0.0,
-            *node_times,
-        )
-
-        zero_rates = (
-            node_zeros[0],
-            *node_zeros,
-        )
-
-        return CubicSpline(
-            times,
-            zero_rates,
-            bc_type="natural",
-            extrapolate=False,
+        return (
+            self._spline_object
         )
 
     def zero_rate(
@@ -965,19 +1084,24 @@ class CubicContinuousZeroCurve:
                 "OUT_OF_CURVE_RANGE"
             )
 
-        time = self._time(
-            target_date
+        time = (
+            self._time(
+                target_date
+            )
         )
 
         zero = float(
-            self._spline()(
+            self._spline_object(
                 time
             )
         )
 
-        if not isfinite(zero):
+        if not isfinite(
+            zero
+        ):
             raise RuntimeError(
-                "Cubic spline produced non-finite zero rate."
+                "Cubic spline produced "
+                "non-finite zero rate."
             )
 
         return zero
@@ -986,15 +1110,22 @@ class CubicContinuousZeroCurve:
         self,
         target_date: date,
     ) -> float:
-        if target_date == self.reference_date:
+        if (
+            target_date
+            == self.reference_date
+        ):
             return 1.0
 
-        time = self._time(
-            target_date
+        time = (
+            self._time(
+                target_date
+            )
         )
 
-        zero = self.zero_rate(
-            target_date
+        zero = (
+            self.zero_rate(
+                target_date
+            )
         )
 
         return exp(
@@ -1013,7 +1144,10 @@ class CubicContinuousZeroCurve:
                 "forward start date."
             )
 
-        if start_date < self.reference_date:
+        if (
+            start_date
+            < self.reference_date
+        ):
             raise ValueError(
                 "Forward start date cannot precede "
                 "curve reference date."
@@ -1024,12 +1158,16 @@ class CubicContinuousZeroCurve:
                 "OUT_OF_CURVE_RANGE"
             )
 
-        start_df = self.discount_factor(
-            start_date
+        start_df = (
+            self.discount_factor(
+                start_date
+            )
         )
 
-        end_df = self.discount_factor(
-            end_date
+        end_df = (
+            self.discount_factor(
+                end_date
+            )
         )
 
         accrual = (
@@ -1047,11 +1185,10 @@ class CubicContinuousZeroCurve:
         self,
         target_date: date,
     ) -> float:
-        """Return f(t) = z(t) + t z'(t)."""
-
         if target_date < self.reference_date:
             raise ValueError(
-                "Target date cannot precede reference date."
+                "Target date cannot precede "
+                "reference date."
             )
 
         if target_date > self.last_node_date:
@@ -1059,18 +1196,20 @@ class CubicContinuousZeroCurve:
                 "OUT_OF_CURVE_RANGE"
             )
 
-        time = self._time(
-            target_date
+        time = (
+            self._time(
+                target_date
+            )
         )
 
-        spline = self._spline()
-
         zero = float(
-            spline(time)
+            self._spline_object(
+                time
+            )
         )
 
         zero_derivative = float(
-            spline(
+            self._spline_object(
                 time,
                 1,
             )
