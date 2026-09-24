@@ -1,0 +1,70 @@
+Synthetic F-TIIE Curve Recovery Metrics
+====================================================================================================
+
+Reference date       : 2026-09-18
+Interpolation method : LOG_LINEAR_DF
+Dense grid           : 7 days
+Forward period       : 28 days
+Calibration pillars  : 15
+
+============================================================
+
+Pillar DF Absolute Error
+  observations : 15
+  bias         : 0.00000919 DF
+  MAE          : 0.00002593 DF
+  RMSE         : 0.00003887 DF
+  max abs error: 0.00009327 DF
+  max error at : 2036-09-22
+
+Pillar DF Relative Error
+  observations : 15
+  bias         : 13.160 ppm
+  MAE          : 78.031 ppm
+  RMSE         : 139.748 ppm
+  max abs error: 395.043 ppm
+  max error at : 2056-09-20
+
+Dense-Grid DF Absolute Error
+  observations : 1567
+  bias         : 0.00002034 DF
+  MAE          : 0.00012785 DF
+  RMSE         : 0.00016312 DF
+  max abs error: 0.00041850 DF
+  max error at : 2032-08-20
+
+Dense-Grid DF Relative Error
+  observations : 1567
+  bias         : 231.512 ppm
+  MAE          : 422.480 ppm
+  RMSE         : 537.760 ppm
+  max abs error: 1093.893 ppm
+  max error at : 2050-09-09
+
+Continuous Zero-Rate Error
+  observations : 1566
+  bias         : -0.0915 bp
+  MAE          : 0.3495 bp
+  RMSE         : 0.5136 bp
+  max abs error: 4.5197 bp
+  max error at : 2026-09-25
+
+28-Day Forward-Rate Error
+  observations : 1563
+  bias         : 0.1300 bp
+  MAE          : 2.8403 bp
+  RMSE         : 3.8110 bp
+  max abs error: 15.2374 bp
+  max error at : 2027-09-24
+
+====================================================================================================
+
+Recovery Metrics by Horizon
+
+Horizon                DF RMSE       DF RMSE     Zero RMSE    Zero Max      Fwd RMSE     Fwd Max
+                         (abs)         (ppm)          (bp)        (bp)          (bp)        (bp)
+------------------------------------------------------------------------------------------------
+0-1Y                0.00003090        32.175        1.0805      4.5197        3.9812     11.8360
+1-5Y                0.00012860       150.741        0.8691      2.3933        4.4825     15.2374
+5-10Y               0.00029257       491.916        0.6709      1.0505        6.7901     12.6910
+10Y-curve-end       0.00012321       607.147        0.2727      0.4537        2.3293      4.8659

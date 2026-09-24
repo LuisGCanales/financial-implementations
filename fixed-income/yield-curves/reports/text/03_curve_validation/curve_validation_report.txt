@@ -1,0 +1,40 @@
+F-TIIE Curve Validation Report
+========================================================================
+
+Reference date       : 2026-09-18
+Interpolation method : LOG_LINEAR_DF
+Curve status         : VALID
+Calibration quotes   : 15
+Curve nodes          : 15
+Converged steps      : 15
+PASS instruments     : 15
+REVIEW instruments   : 0
+FAIL instruments     : 0
+Max repricing error  : 0.00000000 bp
+Mean repricing error : 0.00000000 bp
+Warnings             : 0
+Critical issues      : 0
+
+Independent Repricing
+------------------------------------------------------------------------
+Tenor      Market       Model    Error(bp)       Status
+------------------------------------------------------------------------
+   1M  7.762605%  7.762605%  -0.00000000         PASS
+   2M  7.708879%  7.708879%  -0.00000000         PASS
+   3M  7.657665%  7.657665%   0.00000000         PASS
+   6M  7.518926%  7.518926%  -0.00000000         PASS
+   9M  7.397995%  7.397995%  -0.00000000         PASS
+   1Y  7.293070%  7.293070%  -0.00000000         PASS
+   2Y  7.020830%  7.020830%  -0.00000000         PASS
+   3Y  6.889012%  6.889012%   0.00000000         PASS
+   4Y  6.836258%  6.836258%   0.00000000         PASS
+   5Y  6.827073%  6.827073%   0.00000000         PASS
+   7Y  6.866151%  6.866151%  -0.00000000         PASS
+  10Y  6.953409%  6.953409%   0.00000000         PASS
+  15Y  7.051613%  7.051613%   0.00000000         PASS
+  20Y  7.094597%  7.094597%  -0.00000000         PASS
+  30Y  7.120656%  7.120656%  -0.00000000         PASS
+
+Validation Issues
+------------------------------------------------------------------------
+None.

@@ -279,3 +279,97 @@ class TextReport:
             text=text,
             reports_root=reports_root,
         )
+        
+
+def save_matrix_csv(
+    *,
+    section: str,
+    stem: str,
+    row_label_name: str,
+    row_labels: Sequence[str],
+    column_labels: Sequence[str],
+    matrix: Sequence[
+        Sequence[Any]
+    ],
+    reports_root: Path | None = None,
+) -> Path:
+    """Save a labelled rectangular matrix as CSV.
+
+    Parameters
+    ----------
+    section:
+        Report section under ``reports/tables/``.
+
+    stem:
+        Output filename without extension.
+
+    row_label_name:
+        Header name for the first column containing row labels.
+
+    row_labels:
+        Labels associated with matrix rows.
+
+    column_labels:
+        Labels associated with matrix columns.
+
+    matrix:
+        Rectangular sequence of rows.
+
+    reports_root:
+        Optional report root override, primarily useful for tests.
+
+    Returns
+    -------
+    Path
+        Path to the generated CSV file.
+    """
+
+    if len(
+        row_labels
+    ) != len(
+        matrix
+    ):
+        raise ValueError(
+            "Row-label count must match "
+            "the number of matrix rows."
+        )
+
+    expected_column_count = len(
+        column_labels
+    )
+
+    for row_index, row in enumerate(
+        matrix
+    ):
+        if len(
+            row
+        ) != expected_column_count:
+            raise ValueError(
+                "Matrix must be rectangular and each row "
+                "must match the number of column labels. "
+                f"Row {row_index} has {len(row)} values; "
+                f"expected {expected_column_count}."
+            )
+
+    rows = (
+        (
+            row_label,
+            *values,
+        )
+        for row_label, values
+        in zip(
+            row_labels,
+            matrix,
+        )
+    )
+
+    return save_csv(
+        section=section,
+        stem=stem,
+        header=(
+            row_label_name,
+            *column_labels,
+        ),
+        rows=rows,
+        reports_root=reports_root,
+    )
