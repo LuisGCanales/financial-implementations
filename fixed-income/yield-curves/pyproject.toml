@@ -53,6 +53,9 @@ where = ["src"]
 
 
 [tool.pytest.ini_options]
+markers = [
+    "slow: expensive full integration tests",
+]
 testpaths = ["tests"]
 addopts = [
     "-ra",
