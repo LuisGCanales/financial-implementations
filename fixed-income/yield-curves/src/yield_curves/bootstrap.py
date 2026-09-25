@@ -182,16 +182,18 @@ def bootstrap_ftiie_ois_curve_with_method(
     by the payment lag.
     """
 
-    if (
-        interpolation_method
-        == CurveInterpolationMethod.CUBIC_CONTINUOUS_ZERO
-    ):
+    if interpolation_method in {
+        CurveInterpolationMethod.CUBIC_CONTINUOUS_ZERO,
+        CurveInterpolationMethod.PCHIP_CONTINUOUS_ZERO,
+    }:
         raise ValueError(
-            "CUBIC_CONTINUOUS_ZERO is a global interpolation "
-            "method and is not supported by the sequential "
-            "bootstrap. Use simultaneous nodal calibration."
+            f"{interpolation_method.value} may alter "
+            "previously represented intervals when new "
+            "nodes are introduced and is not supported "
+            "by the sequential bootstrap. Use simultaneous "
+            "nodal calibration."
         )
-
+        
     if not quotes:
         raise ValueError(
             "At least one calibration quote is required."

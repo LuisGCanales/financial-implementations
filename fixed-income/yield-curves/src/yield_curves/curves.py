@@ -18,7 +18,10 @@ from typing import Protocol, runtime_checkable
 
 from .conventions import act_360
 
-from scipy.interpolate import CubicSpline
+from scipy.interpolate import (
+    CubicSpline,
+    PchipInterpolator,
+)
 
 @runtime_checkable
 class DiscountFactorCurve(Protocol):
@@ -811,7 +814,7 @@ class CurveInterpolationMethod(StrEnum):
     LOG_LINEAR_DF = "LOG_LINEAR_DF"
     LINEAR_CONTINUOUS_ZERO = "LINEAR_CONTINUOUS_ZERO"
     CUBIC_CONTINUOUS_ZERO = "CUBIC_CONTINUOUS_ZERO"
-    
+    PCHIP_CONTINUOUS_ZERO = "PCHIP_CONTINUOUS_ZERO"
     
 @dataclass(frozen=True, slots=True)
 class CubicContinuousZeroCurve:
@@ -1222,10 +1225,403 @@ class CubicContinuousZeroCurve:
         )
 
 
+@dataclass(frozen=True, slots=True)
+class PchipContinuousZeroCurve:
+    """Nodal curve using PCHIP interpolation in continuous zero rates.
+
+    State representation
+    --------------------
+    Calibrated state variables remain node discount factors.
+
+    At each calibrated node:
+
+        z_i = -ln(P_i) / t_i
+
+    A shape-preserving piecewise cubic Hermite interpolator (PCHIP) is
+    fitted to continuously compounded zero rates.
+
+    Reference-date boundary convention
+    ----------------------------------
+    As with the cubic-zero challenger, zero rate at t=0 is not
+    independently identified by P(0)=1.
+
+    PROJECT DECISION:
+
+        z(0) = z_1
+
+    Therefore interpolation knots are:
+
+        (0,   z_1)
+        (t_1, z_1)
+        (t_2, z_2)
+        ...
+        (t_n, z_n)
+
+    Smoothness and locality
+    -----------------------
+    PCHIP produces a continuously differentiable zero curve while
+    choosing derivatives from local neighbouring secant information.
+
+    Therefore:
+
+        f(t) = z(t) + t z'(t)
+
+    is continuous.
+
+    Compared with a natural cubic spline, PCHIP is intended to provide
+    a more local and shape-preserving interpolation rule with less
+    tendency toward spline overshoot.
+
+    It is nevertheless not treated as sequentially local for
+    calibration purposes because introducing a new node may alter
+    derivatives on neighbouring earlier intervals.
+
+    The method therefore uses simultaneous nodal calibration.
+
+    Computational implementation
+    ----------------------------
+    The scipy PchipInterpolator object is constructed once per curve
+    instance and cached for repeated evaluations.
+
+    Extrapolation beyond the final calibrated node is forbidden.
+
+    This method is a methodological challenger rather than the
+    canonical production interpolation rule.
+    """
+
+    reference_date: date
+
+    node_dates: tuple[
+        date,
+        ...
+    ]
+
+    discount_factors: tuple[
+        float,
+        ...
+    ]
+
+    _interpolator: PchipInterpolator = field(
+        init=False,
+        repr=False,
+        compare=False,
+    )
+
+    def __post_init__(
+        self,
+    ) -> None:
+        if len(
+            self.node_dates
+        ) < 2:
+            raise ValueError(
+                "PCHIP zero interpolation requires "
+                "at least two calibrated nodes."
+            )
+
+        if (
+            len(
+                self.node_dates
+            )
+            != len(
+                self.discount_factors
+            )
+        ):
+            raise ValueError(
+                "Node dates and discount factors "
+                "must have equal length."
+            )
+
+        previous_date = (
+            self.reference_date
+        )
+
+        for (
+            node_date,
+            discount_factor,
+        ) in zip(
+            self.node_dates,
+            self.discount_factors,
+        ):
+            if (
+                node_date
+                <= previous_date
+            ):
+                raise ValueError(
+                    "Curve node dates must be strictly "
+                    "increasing and later than the "
+                    "reference date."
+                )
+
+            if (
+                not isfinite(
+                    discount_factor
+                )
+                or discount_factor <= 0.0
+            ):
+                raise ValueError(
+                    "Discount factors must be finite "
+                    "and strictly positive."
+                )
+
+            previous_date = (
+                node_date
+            )
+
+        node_times = (
+            self.node_times
+        )
+
+        node_zeros = (
+            self.node_zero_rates
+        )
+
+        interpolator = (
+            PchipInterpolator(
+                (
+                    0.0,
+                    *node_times,
+                ),
+                (
+                    node_zeros[0],
+                    *node_zeros,
+                ),
+                extrapolate=False,
+            )
+        )
+
+        object.__setattr__(
+            self,
+            "_interpolator",
+            interpolator,
+        )
+
+    @property
+    def last_node_date(
+        self,
+    ) -> date:
+        return (
+            self.node_dates[-1]
+        )
+
+    @property
+    def node_times(
+        self,
+    ) -> tuple[
+        float,
+        ...
+    ]:
+        return tuple(
+            (
+                node_date
+                - self.reference_date
+            ).days
+            / 360.0
+            for node_date
+            in self.node_dates
+        )
+
+    @property
+    def node_zero_rates(
+        self,
+    ) -> tuple[
+        float,
+        ...
+    ]:
+        return tuple(
+            -log(
+                discount_factor
+            )
+            / time
+            for (
+                discount_factor,
+                time,
+            ) in zip(
+                self.discount_factors,
+                self.node_times,
+            )
+        )
+
+    def _time(
+        self,
+        target_date: date,
+    ) -> float:
+        return (
+            target_date
+            - self.reference_date
+        ).days / 360.0
+
+    def zero_rate(
+        self,
+        target_date: date,
+    ) -> float:
+        if (
+            target_date
+            < self.reference_date
+        ):
+            raise ValueError(
+                "Target date cannot precede "
+                "curve reference date."
+            )
+
+        if (
+            target_date
+            > self.last_node_date
+        ):
+            raise ValueError(
+                "OUT_OF_CURVE_RANGE"
+            )
+
+        zero = float(
+            self._interpolator(
+                self._time(
+                    target_date
+                )
+            )
+        )
+
+        if not isfinite(
+            zero
+        ):
+            raise RuntimeError(
+                "PCHIP interpolation produced "
+                "non-finite zero rate."
+            )
+
+        return zero
+
+    def discount_factor(
+        self,
+        target_date: date,
+    ) -> float:
+        if (
+            target_date
+            == self.reference_date
+        ):
+            return 1.0
+
+        time = (
+            self._time(
+                target_date
+            )
+        )
+
+        zero = (
+            self.zero_rate(
+                target_date
+            )
+        )
+
+        return exp(
+            -zero
+            * time
+        )
+
+    def forward_rate(
+        self,
+        start_date: date,
+        end_date: date,
+    ) -> float:
+        if (
+            end_date
+            <= start_date
+        ):
+            raise ValueError(
+                "Forward end date must follow "
+                "forward start date."
+            )
+
+        if (
+            start_date
+            < self.reference_date
+        ):
+            raise ValueError(
+                "Forward start date cannot precede "
+                "curve reference date."
+            )
+
+        if (
+            end_date
+            > self.last_node_date
+        ):
+            raise ValueError(
+                "OUT_OF_CURVE_RANGE"
+            )
+
+        start_df = (
+            self.discount_factor(
+                start_date
+            )
+        )
+
+        end_df = (
+            self.discount_factor(
+                end_date
+            )
+        )
+
+        accrual = (
+            end_date
+            - start_date
+        ).days / 360.0
+
+        return (
+            start_df
+            / end_df
+            - 1.0
+        ) / accrual
+
+    def instantaneous_forward_rate(
+        self,
+        target_date: date,
+    ) -> float:
+        if (
+            target_date
+            < self.reference_date
+        ):
+            raise ValueError(
+                "Target date cannot precede "
+                "curve reference date."
+            )
+
+        if (
+            target_date
+            > self.last_node_date
+        ):
+            raise ValueError(
+                "OUT_OF_CURVE_RANGE"
+            )
+
+        time = (
+            self._time(
+                target_date
+            )
+        )
+
+        zero = float(
+            self._interpolator(
+                time
+            )
+        )
+
+        zero_derivative = float(
+            self._interpolator(
+                time,
+                1,
+            )
+        )
+
+        return (
+            zero
+            + time
+            * zero_derivative
+        )
+
+
 NodalCurve = (
     LogLinearDiscountCurve
     | LinearContinuousZeroCurve
     | CubicContinuousZeroCurve
+    | PchipContinuousZeroCurve
 )        
 
 
@@ -1266,6 +1662,22 @@ def build_nodal_curve(
             discount_factors=discount_factors,
         )
 
+    if (
+        method
+        == CurveInterpolationMethod.PCHIP_CONTINUOUS_ZERO
+    ):
+        return PchipContinuousZeroCurve(
+            reference_date=(
+                reference_date
+            ),
+            node_dates=(
+                node_dates
+            ),
+            discount_factors=(
+                discount_factors
+            ),
+        )
+        
     raise ValueError(
         f"Unsupported interpolation method: {method}"
     )    
