@@ -1,0 +1,35 @@
+{
+  "color_scale": {
+    "center": 0.0,
+    "diverging": true,
+    "full_common_cap_bp_per_bp": 20.04398642012309,
+    "full_scale_interpretation": "Common symmetric scale across all methods using the largest absolute observed sensitivity. No values are intentionally clipped.",
+    "robust_common_cap_bp_per_bp": 11.33194135019177,
+    "robust_quantile": 0.995,
+    "robust_scale_interpretation": "Common symmetric scale across all methods using the pooled absolute sensitivity quantile. Values outside the cap are intentionally saturated."
+  },
+  "figure_outputs": [
+    "reports/figures/07_global_sensitivity/forward_sensitivity_heatmap_log_linear_df_robust_common_scale.png",
+    "reports/figures/07_global_sensitivity/forward_sensitivity_heatmap_log_linear_df_robust_common_scale.svg",
+    "reports/figures/07_global_sensitivity/forward_sensitivity_heatmap_linear_continuous_zero_robust_common_scale.png",
+    "reports/figures/07_global_sensitivity/forward_sensitivity_heatmap_linear_continuous_zero_robust_common_scale.svg",
+    "reports/figures/07_global_sensitivity/forward_sensitivity_heatmap_cubic_continuous_zero_robust_common_scale.png",
+    "reports/figures/07_global_sensitivity/forward_sensitivity_heatmap_cubic_continuous_zero_robust_common_scale.svg",
+    "reports/figures/07_global_sensitivity/forward_sensitivity_heatmap_log_linear_df_full_common_scale.png",
+    "reports/figures/07_global_sensitivity/forward_sensitivity_heatmap_log_linear_df_full_common_scale.svg",
+    "reports/figures/07_global_sensitivity/forward_sensitivity_heatmap_linear_continuous_zero_full_common_scale.png",
+    "reports/figures/07_global_sensitivity/forward_sensitivity_heatmap_linear_continuous_zero_full_common_scale.svg",
+    "reports/figures/07_global_sensitivity/forward_sensitivity_heatmap_cubic_continuous_zero_full_common_scale.png",
+    "reports/figures/07_global_sensitivity/forward_sensitivity_heatmap_cubic_continuous_zero_full_common_scale.svg"
+  ],
+  "matrix_definition": {
+    "columns": "dense 28-day forward start dates",
+    "rows": "shocked market quotes",
+    "values": "central forward sensitivity dF/dK in bp/bp"
+  },
+  "reference_date": "2026-09-18",
+  "scale_diagnostics_output": "reports/tables/07_global_sensitivity/forward_sensitivity_heatmap_scale_diagnostics.csv",
+  "scenario": "FTIIE_KNOWN_TRUTH_V1",
+  "source_forward_data": "reports/tables/07_global_sensitivity/global_forward_sensitivity_dense.csv",
+  "source_node_data": "reports/tables/07_global_sensitivity/global_node_sensitivity_long.csv"
+}
