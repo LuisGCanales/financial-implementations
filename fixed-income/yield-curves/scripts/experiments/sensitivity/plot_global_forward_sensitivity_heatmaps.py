@@ -4,7 +4,7 @@ This script performs NO calibration.
 
 It consumes the persistent outputs produced by:
 
-    scripts/report_global_sensitivity.py
+    scripts/experiments/sensitivity/report_global_sensitivity.py
 
 Specifically:
 
@@ -71,6 +71,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.colors import TwoSlopeNorm
 
+from yield_curves.project_paths import find_project_root
 from yield_curves.reporting import (
     save_csv,
     save_figure,
@@ -79,7 +80,7 @@ from yield_curves.reporting import (
 
 
 PROJECT_ROOT = (
-    Path(__file__).resolve().parents[1]
+    find_project_root(Path(__file__))
 )
 
 REPORT_SECTION = (

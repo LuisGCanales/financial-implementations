@@ -4,6 +4,7 @@ from math import exp
 import pytest
 
 from yield_curves.curves import (
+    CurveInterpolationMethod,
     FlatContinuousZeroCurve,
 )
 
@@ -82,3 +83,15 @@ def test_curve_rejects_date_before_reference() -> None:
         curve.discount_factor(
             date(2026, 1, 1)
         )
+
+
+def test_curve_interpolation_method_contains_supported_values() -> None:
+    assert tuple(
+        method.value
+        for method in CurveInterpolationMethod
+    ) == (
+        "LOG_LINEAR_DF",
+        "LINEAR_CONTINUOUS_ZERO",
+        "CUBIC_CONTINUOUS_ZERO",
+        "PCHIP_CONTINUOUS_ZERO",
+    )

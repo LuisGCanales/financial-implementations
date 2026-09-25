@@ -60,6 +60,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 
+from yield_curves.project_paths import find_project_root
 from yield_curves.global_sensitivity import (
     calculate_forward_sensitivity_locality,
 )
@@ -72,7 +73,7 @@ from yield_curves.reporting import (
 
 
 PROJECT_ROOT = (
-    Path(__file__).resolve().parents[1]
+    find_project_root(Path(__file__))
 )
 
 REPORT_SECTION = (

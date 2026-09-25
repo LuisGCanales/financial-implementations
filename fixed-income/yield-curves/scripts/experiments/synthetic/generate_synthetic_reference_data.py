@@ -3,6 +3,8 @@
 from datetime import date
 from pathlib import Path
 
+from yield_curves.project_paths import find_project_root
+
 from yield_curves.calendars import (
     build_projected_mxmc_calendar,
 )
@@ -17,7 +19,7 @@ from yield_curves.synthetic import (
 
 
 PROJECT_ROOT = (
-    Path(__file__).resolve().parents[1]
+    find_project_root(Path(__file__))
 )
 
 

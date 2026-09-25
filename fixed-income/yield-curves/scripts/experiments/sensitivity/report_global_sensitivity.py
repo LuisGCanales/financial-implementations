@@ -73,6 +73,7 @@ from time import perf_counter
 
 import matplotlib.pyplot as plt
 
+from yield_curves.project_paths import find_project_root
 from yield_curves.calendars import (
     build_projected_mxmc_calendar,
 )
@@ -95,7 +96,7 @@ from yield_curves.synthetic import (
 
 
 PROJECT_ROOT = (
-    Path(__file__).resolve().parents[1]
+    find_project_root(Path(__file__))
 )
 
 QUOTES_PATH = (

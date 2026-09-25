@@ -21,6 +21,7 @@ Basis-point and ppm transformations are used only for diagnostics.
 
 from pathlib import Path
 
+from yield_curves.project_paths import find_project_root
 from yield_curves.bootstrap import (
     bootstrap_ftiie_ois_curve,
 )
@@ -38,7 +39,7 @@ from yield_curves.synthetic import (
 
 
 PROJECT_ROOT = (
-    Path(__file__).resolve().parents[1]
+    find_project_root(Path(__file__))
 )
 
 QUOTES_PATH = (

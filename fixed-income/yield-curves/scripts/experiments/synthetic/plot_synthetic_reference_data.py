@@ -33,6 +33,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 
+from yield_curves.project_paths import find_project_root
 from yield_curves.reporting import (
     save_csv,
     save_figure,
@@ -42,7 +43,7 @@ from yield_curves.synthetic import (
 )
 
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = find_project_root(Path(__file__))
 
 QUOTES_PATH = (
     PROJECT_ROOT

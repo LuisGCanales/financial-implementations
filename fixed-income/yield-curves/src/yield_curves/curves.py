@@ -544,13 +544,6 @@ class LogLinearDiscountCurve:
         
         
 
-class CurveInterpolationMethod(StrEnum):
-    """Supported nodal curve interpolation methods."""
-
-    LOG_LINEAR_DF = "LOG_LINEAR_DF"
-    LINEAR_CONTINUOUS_ZERO = "LINEAR_CONTINUOUS_ZERO"
-    
-
 @dataclass(frozen=True, slots=True)
 class LinearContinuousZeroCurve:
     """Nodal curve with linear interpolation in continuous zero rates.
