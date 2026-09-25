@@ -1,0 +1,73 @@
+{
+  "calculation_and_reporting_elapsed_seconds_before_metadata": 2188.3654717359996,
+  "calibration_engine": "simultaneous_nodal_least_squares",
+  "dense_forward_output_reason": "Persisted because symmetric quote perturbation requires repeated global calibrations. The stored dense series supports subsequent forward-response analysis and visualization without recalibration.",
+  "forward_analysis": {
+    "forward_period_days": 28,
+    "grid_step_days": 7
+  },
+  "interpolation_methods": [
+    "LOG_LINEAR_DF",
+    "LINEAR_CONTINUOUS_ZERO",
+    "CUBIC_CONTINUOUS_ZERO"
+  ],
+  "locality_metric": {
+    "definition": "sum(abs(J_ji), j != i) / sum(abs(J_ji), all j)",
+    "name": "off_diagonal_share"
+  },
+  "matrix_definition": {
+    "columns": "calibrated zero-curve nodes",
+    "curvature_values": "central second-order zero response in bp/bp^2",
+    "rows": "shocked market quotes",
+    "sensitivity_values": "central zero sensitivity in bp/bp"
+  },
+  "outputs": {
+    "figures": [
+      "reports/figures/07_global_sensitivity/node_zero_sensitivity_heatmap_log_linear_df.png",
+      "reports/figures/07_global_sensitivity/node_zero_sensitivity_heatmap_log_linear_df.svg",
+      "reports/figures/07_global_sensitivity/node_zero_sensitivity_heatmap_linear_continuous_zero.png",
+      "reports/figures/07_global_sensitivity/node_zero_sensitivity_heatmap_linear_continuous_zero.svg",
+      "reports/figures/07_global_sensitivity/node_zero_sensitivity_heatmap_cubic_continuous_zero.png",
+      "reports/figures/07_global_sensitivity/node_zero_sensitivity_heatmap_cubic_continuous_zero.svg",
+      "reports/figures/07_global_sensitivity/off_diagonal_share_by_shock.png",
+      "reports/figures/07_global_sensitivity/off_diagonal_share_by_shock.svg",
+      "reports/figures/07_global_sensitivity/forward_sensitivity_rmse_by_shock.png",
+      "reports/figures/07_global_sensitivity/forward_sensitivity_rmse_by_shock.svg",
+      "reports/figures/07_global_sensitivity/forward_max_abs_sensitivity_by_shock.png",
+      "reports/figures/07_global_sensitivity/forward_max_abs_sensitivity_by_shock.svg"
+    ],
+    "matrix_tables": [
+      "reports/tables/07_global_sensitivity/node_zero_sensitivity_matrix_log_linear_df.csv",
+      "reports/tables/07_global_sensitivity/node_zero_curvature_matrix_log_linear_df.csv",
+      "reports/tables/07_global_sensitivity/node_zero_sensitivity_matrix_linear_continuous_zero.csv",
+      "reports/tables/07_global_sensitivity/node_zero_curvature_matrix_linear_continuous_zero.csv",
+      "reports/tables/07_global_sensitivity/node_zero_sensitivity_matrix_cubic_continuous_zero.csv",
+      "reports/tables/07_global_sensitivity/node_zero_curvature_matrix_cubic_continuous_zero.csv"
+    ],
+    "summary_tables": [
+      "reports/tables/07_global_sensitivity/global_sensitivity_summary.csv",
+      "reports/tables/07_global_sensitivity/global_node_sensitivity_long.csv",
+      "reports/tables/07_global_sensitivity/global_forward_sensitivity_dense.csv",
+      "reports/tables/07_global_sensitivity/global_calibration_diagnostics.csv"
+    ],
+    "text": [
+      "reports/text/07_global_sensitivity/global_quote_sensitivity_report.txt"
+    ]
+  },
+  "quote_count": 15,
+  "quote_source": "data/synthetic/ftiie_ois_quotes_v1.csv",
+  "reference_date": "2026-09-18",
+  "runtime_seconds": {
+    "CUBIC_CONTINUOUS_ZERO": 816.4073482559998,
+    "LINEAR_CONTINUOUS_ZERO": 1077.6813182220003,
+    "LOG_LINEAR_DF": 289.26982296999995
+  },
+  "scenario": "FTIIE_KNOWN_TRUTH_V1",
+  "shock_design": {
+    "base_calibrations_per_method": 1,
+    "bump_bp": 1.0,
+    "perturbed_calibrations_per_method": 30,
+    "shocks_per_method": 15,
+    "type": "symmetric_one_factor_at_a_time"
+  }
+}
