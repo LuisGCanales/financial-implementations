@@ -20,6 +20,7 @@ from yield_curves.global_sensitivity import (
     _forward_start_dates,
     _perturb_quotes,
     analyze_global_quote_sensitivity,
+    calculate_forward_sensitivity_locality,
 )
 from yield_curves.synthetic import (
     read_synthetic_ois_quotes_csv,
@@ -1289,4 +1290,252 @@ def test_global_sensitivity_rejects_nonpositive_grid_step(
                 .CUBIC_CONTINUOUS_ZERO
             ),
             grid_step_days=0,
+        )
+        
+def test_forward_sensitivity_locality_symmetric_response(
+) -> None:
+    reference_date = date(
+        2026,
+        1,
+        1,
+    )
+
+    start_dates = (
+        reference_date,
+        reference_date
+        + timedelta(
+            days=360
+        ),
+        reference_date
+        + timedelta(
+            days=720
+        ),
+    )
+
+    result = (
+        calculate_forward_sensitivity_locality(
+            reference_date=(
+                reference_date
+            ),
+            shock_pillar_date=(
+                reference_date
+                + timedelta(
+                    days=360
+                )
+            ),
+            forward_start_dates=(
+                start_dates
+            ),
+            sensitivities_bp_per_bp=(
+                1.0,
+                1.0,
+                1.0,
+            ),
+        )
+    )
+
+    assert (
+        result.weighted_center_years
+        == pytest.approx(
+            1.0
+        )
+    )
+
+    assert (
+        result.center_offset_from_shock_years
+        == pytest.approx(
+            0.0
+        )
+    )
+
+    assert (
+        result.weighted_spread_years
+        == pytest.approx(
+            sqrt(
+                2.0
+                / 3.0
+            )
+        )
+    )
+
+    assert (
+        result.rms_distance_from_shock_years
+        == pytest.approx(
+            sqrt(
+                2.0
+                / 3.0
+            )
+        )
+    )
+
+    assert (
+        result.sensitivity_mass_within_1y
+        == pytest.approx(
+            1.0
+        )
+    )
+
+    assert (
+        result.sensitivity_mass_within_2y
+        == pytest.approx(
+            1.0
+        )
+    )
+
+
+def test_forward_sensitivity_locality_detects_shift(
+) -> None:
+    reference_date = date(
+        2026,
+        1,
+        1,
+    )
+
+    start_dates = (
+        reference_date,
+        reference_date
+        + timedelta(
+            days=360
+        ),
+        reference_date
+        + timedelta(
+            days=720
+        ),
+    )
+
+    result = (
+        calculate_forward_sensitivity_locality(
+            reference_date=(
+                reference_date
+            ),
+            shock_pillar_date=(
+                reference_date
+                + timedelta(
+                    days=360
+                )
+            ),
+            forward_start_dates=(
+                start_dates
+            ),
+            sensitivities_bp_per_bp=(
+                0.0,
+                0.0,
+                1.0,
+            ),
+        )
+    )
+
+    assert (
+        result.weighted_center_years
+        == pytest.approx(
+            2.0
+        )
+    )
+
+    assert (
+        result.center_offset_from_shock_years
+        == pytest.approx(
+            1.0
+        )
+    )
+
+    assert (
+        result.weighted_spread_years
+        == pytest.approx(
+            0.0
+        )
+    )
+
+    assert (
+        result.rms_distance_from_shock_years
+        == pytest.approx(
+            1.0
+        )
+    )
+
+
+def test_forward_sensitivity_locality_rejects_zero_response(
+) -> None:
+    reference_date = date(
+        2026,
+        1,
+        1,
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="all sensitivities are zero",
+    ):
+        calculate_forward_sensitivity_locality(
+            reference_date=(
+                reference_date
+            ),
+            shock_pillar_date=(
+                reference_date
+                + timedelta(
+                    days=360
+                )
+            ),
+            forward_start_dates=(
+                reference_date,
+                reference_date
+                + timedelta(
+                    days=360
+                ),
+            ),
+            sensitivities_bp_per_bp=(
+                0.0,
+                0.0,
+            ),
+        )
+        
+
+@pytest.mark.slow
+def test_global_forward_locality_metrics_are_valid(
+    cubic_global_report,
+) -> None:
+    for shock in (
+        cubic_global_report.shocks
+    ):
+        locality = (
+            shock.forward_locality
+        )
+
+        assert isfinite(
+            locality.weighted_center_years
+        )
+
+        assert isfinite(
+            locality.weighted_spread_years
+        )
+
+        assert isfinite(
+            locality.rms_distance_from_shock_years
+        )
+
+        assert (
+            locality.weighted_spread_years
+            >= 0.0
+        )
+
+        assert (
+            locality.rms_distance_from_shock_years
+            >= 0.0
+        )
+
+        assert (
+            0.0
+            <= locality.sensitivity_mass_within_1y
+            <= 1.0
+        )
+
+        assert (
+            0.0
+            <= locality.sensitivity_mass_within_2y
+            <= 1.0
+        )
+
+        assert (
+            locality.sensitivity_mass_within_2y
+            >= locality.sensitivity_mass_within_1y
         )

@@ -124,7 +124,60 @@ class GlobalQuoteShockResult:
 
     plus_max_abs_repricing_error_bp: float
     minus_max_abs_repricing_error_bp: float
+    
+    forward_locality: ForwardSensitivityLocality
 
+
+@dataclass(frozen=True, slots=True)
+class ForwardSensitivityLocality:
+    """Locality diagnostics for a dense forward-sensitivity response.
+
+    The absolute central forward sensitivities are interpreted as a
+    discrete sensitivity-mass distribution across forward-start
+    maturities:
+
+        w_j = |dF_j / dK_i| / sum_k |dF_k / dK_i|
+
+    where K_i is the shocked market quote.
+
+    The primary locality metric is the RMS distance from the shocked
+    quote's calibrated pillar:
+
+        L_i = sqrt(
+            sum_j w_j * (t_j - T_i)^2
+        )
+
+    Smaller values indicate a response concentrated closer to the
+    shocked maturity.
+
+    The weighted spread around the sensitivity center and the center
+    offset from the shocked maturity are also retained because:
+
+        L_i^2
+        =
+        weighted_spread^2
+        +
+        center_offset^2
+
+    All maturity distances are expressed in ACT/360 years.
+    """
+
+    observation_count: int
+
+    shock_pillar_years: float
+
+    weighted_center_years: float
+
+    center_offset_from_shock_years: float
+
+    weighted_spread_years: float
+
+    rms_distance_from_shock_years: float
+
+    sensitivity_mass_within_1y: float
+
+    sensitivity_mass_within_2y: float
+    
 
 @dataclass(frozen=True, slots=True)
 class GlobalSensitivityReport:
@@ -465,6 +518,263 @@ def _calculate_forward_sensitivity(
     )
 
 
+def calculate_forward_sensitivity_locality(
+    *,
+    reference_date: date,
+    shock_pillar_date: date,
+    forward_start_dates: Sequence[date],
+    sensitivities_bp_per_bp: Sequence[float],
+) -> ForwardSensitivityLocality:
+    """Calculate locality diagnostics for one quote-to-forward shock.
+
+    Parameters
+    ----------
+    reference_date
+        Curve reference date.
+
+    shock_pillar_date
+        Calibrated pillar date associated with the shocked market quote.
+
+    forward_start_dates
+        Dense forward-start dates.
+
+    sensitivities_bp_per_bp
+        Central forward sensitivities corresponding one-for-one with
+        ``forward_start_dates``.
+
+    Returns
+    -------
+    ForwardSensitivityLocality
+        Absolute-sensitivity-weighted locality diagnostics.
+
+    Notes
+    -----
+    Absolute sensitivities are used as weights because positive and
+    negative compensating responses should not cancel when measuring
+    how broadly a shock propagates through the forward curve.
+
+    This metric measures propagation geometry, not total sensitivity
+    magnitude. Magnitude remains captured separately by metrics such
+    as forward sensitivity RMSE and maximum absolute sensitivity.
+    """
+
+    if not forward_start_dates:
+        raise ValueError(
+            "At least one forward sensitivity observation is required."
+        )
+
+    if (
+        len(forward_start_dates)
+        != len(sensitivities_bp_per_bp)
+    ):
+        raise ValueError(
+            "Forward-start dates and sensitivities "
+            "must have equal length."
+        )
+
+    if shock_pillar_date < reference_date:
+        raise ValueError(
+            "Shock pillar date cannot precede "
+            "the curve reference date."
+        )
+
+    times_years: list[float] = []
+
+    absolute_sensitivities: list[float] = []
+
+    for (
+        start_date,
+        sensitivity,
+    ) in zip(
+        forward_start_dates,
+        sensitivities_bp_per_bp,
+    ):
+        if start_date < reference_date:
+            raise ValueError(
+                "Forward-start dates cannot precede "
+                "the curve reference date."
+            )
+
+        sensitivity = float(
+            sensitivity
+        )
+
+        if not isfinite(
+            sensitivity
+        ):
+            raise ValueError(
+                "Forward sensitivities must be finite."
+            )
+
+        time_years = (
+            start_date
+            - reference_date
+        ).days / 360.0
+
+        times_years.append(
+            time_years
+        )
+
+        absolute_sensitivities.append(
+            abs(
+                sensitivity
+            )
+        )
+
+    total_absolute_sensitivity = (
+        fsum(
+            absolute_sensitivities
+        )
+    )
+
+    if total_absolute_sensitivity <= 0.0:
+        raise ValueError(
+            "Forward-sensitivity locality is undefined "
+            "when all sensitivities are zero."
+        )
+
+    weights = [
+        value
+        / total_absolute_sensitivity
+        for value
+        in absolute_sensitivities
+    ]
+
+    shock_pillar_years = (
+        shock_pillar_date
+        - reference_date
+    ).days / 360.0
+
+    weighted_center_years = (
+        fsum(
+            weight
+            * time_years
+            for (
+                weight,
+                time_years,
+            ) in zip(
+                weights,
+                times_years,
+            )
+        )
+    )
+
+    center_offset = (
+        weighted_center_years
+        - shock_pillar_years
+    )
+
+    weighted_variance = (
+        fsum(
+            weight
+            * (
+                time_years
+                - weighted_center_years
+            ) ** 2
+            for (
+                weight,
+                time_years,
+            ) in zip(
+                weights,
+                times_years,
+            )
+        )
+    )
+
+    weighted_spread = sqrt(
+        max(
+            weighted_variance,
+            0.0,
+        )
+    )
+
+    rms_distance = sqrt(
+        fsum(
+            weight
+            * (
+                time_years
+                - shock_pillar_years
+            ) ** 2
+            for (
+                weight,
+                time_years,
+            ) in zip(
+                weights,
+                times_years,
+            )
+        )
+    )
+
+    sensitivity_mass_within_1y = (
+        fsum(
+            weight
+            for (
+                weight,
+                time_years,
+            ) in zip(
+                weights,
+                times_years,
+            )
+            if (
+                abs(
+                    time_years
+                    - shock_pillar_years
+                )
+                <= 1.0
+            )
+        )
+    )
+
+    sensitivity_mass_within_2y = (
+        fsum(
+            weight
+            for (
+                weight,
+                time_years,
+            ) in zip(
+                weights,
+                times_years,
+            )
+            if (
+                abs(
+                    time_years
+                    - shock_pillar_years
+                )
+                <= 2.0
+            )
+        )
+    )
+
+    return ForwardSensitivityLocality(
+        observation_count=(
+            len(
+                forward_start_dates
+            )
+        ),
+        shock_pillar_years=(
+            shock_pillar_years
+        ),
+        weighted_center_years=(
+            weighted_center_years
+        ),
+        center_offset_from_shock_years=(
+            center_offset
+        ),
+        weighted_spread_years=(
+            weighted_spread
+        ),
+        rms_distance_from_shock_years=(
+            rms_distance
+        ),
+        sensitivity_mass_within_1y=(
+            sensitivity_mass_within_1y
+        ),
+        sensitivity_mass_within_2y=(
+            sensitivity_mass_within_2y
+        ),
+    )
+    
+    
 def analyze_global_quote_sensitivity(
     *,
     quotes: Sequence[OISCalibrationQuote],
@@ -929,6 +1239,60 @@ def analyze_global_quote_sensitivity(
             ),
         )
 
+        forward_locality_started = perf_counter()
+
+        forward_locality = (
+            calculate_forward_sensitivity_locality(
+                reference_date=(
+                    base_curve.reference_date
+                ),
+                shock_pillar_date=(
+                    node_results[
+                        shock_index
+                    ].node_date
+                ),
+                forward_start_dates=tuple(
+                    observation.start_date
+                    for observation
+                    in (
+                        forward_sensitivity
+                        .observations
+                    )
+                ),
+                sensitivities_bp_per_bp=tuple(
+                    observation
+                    .central_sensitivity_bp_per_bp
+                    for observation
+                    in (
+                        forward_sensitivity
+                        .observations
+                    )
+                ),
+            )
+        )
+
+        forward_locality_elapsed = (
+            perf_counter()
+            - forward_locality_started
+        )
+
+        _emit_progress(
+            progress_callback,
+            (
+                f"shock {shock_number}/{shock_count} "
+                f"[{quote.tenor}] forward locality diagnostics finished | "
+                f"elapsed={forward_locality_elapsed:.2f}s | "
+                f"rms_distance={forward_locality.rms_distance_from_shock_years:.4f}y | "
+                f"spread={forward_locality.weighted_spread_years:.4f}y | "
+                f"center_offset="
+                f"{forward_locality.center_offset_from_shock_years:+.4f}y | "
+                f"mass_within_1y="
+                f"{forward_locality.sensitivity_mass_within_1y:.2%} | "
+                f"mass_within_2y="
+                f"{forward_locality.sensitivity_mass_within_2y:.2%}"
+            ),
+        )
+        
         shocks.append(
             GlobalQuoteShockResult(
                 shock_index=shock_index,
