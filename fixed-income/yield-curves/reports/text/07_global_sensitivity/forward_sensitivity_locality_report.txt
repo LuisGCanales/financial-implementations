@@ -1,0 +1,11 @@
+F-TIIE Forward Sensitivity Locality
+==============================================================================================================
+
+Scenario: FTIIE_KNOWN_TRUTH_V1
+Reference date: 2026-09-18
+
+Method                         Mean RMS Dist    Max RMS Dist   Max Shock     Mean Spread   Mean +/-2Y Mass
+--------------------------------------------------------------------------------------------------------------
+Log-linear DF                         1.7157          5.9048         30Y          1.4639            80.84%
+Linear continuous zero                2.0727          5.3962         30Y          1.8092            79.95%
+Cubic continuous zero                 5.6227          9.0181          7Y          4.5427            56.01%

@@ -1,0 +1,26 @@
+{
+  "companion_metrics": "weighted_center_years, center_offset_from_shock_years, weighted_spread_years, sensitivity_mass_within_1y, sensitivity_mass_within_2y",
+  "outputs": {
+    "figures": [
+      "reports/figures/07_global_sensitivity/forward_sensitivity_rms_locality_by_shock.png",
+      "reports/figures/07_global_sensitivity/forward_sensitivity_rms_locality_by_shock.svg",
+      "reports/figures/07_global_sensitivity/forward_sensitivity_spread_by_shock.png",
+      "reports/figures/07_global_sensitivity/forward_sensitivity_spread_by_shock.svg",
+      "reports/figures/07_global_sensitivity/forward_sensitivity_center_offset_by_shock.png",
+      "reports/figures/07_global_sensitivity/forward_sensitivity_center_offset_by_shock.svg",
+      "reports/figures/07_global_sensitivity/forward_sensitivity_mass_within_2y_by_shock.png",
+      "reports/figures/07_global_sensitivity/forward_sensitivity_mass_within_2y_by_shock.svg"
+    ],
+    "table": "reports/tables/07_global_sensitivity/forward_sensitivity_locality.csv",
+    "text": "reports/text/07_global_sensitivity/forward_sensitivity_locality_report.txt"
+  },
+  "primary_metric": {
+    "definition": "sqrt(sum_j w_j * (t_j - T_shock)^2)",
+    "name": "rms_distance_from_shock_years",
+    "weights": "absolute central forward sensitivity normalized to sum to one"
+  },
+  "reference_date": "2026-09-18",
+  "scenario": "FTIIE_KNOWN_TRUTH_V1",
+  "source_forward_data": "reports/tables/07_global_sensitivity/global_forward_sensitivity_dense.csv",
+  "source_node_data": "reports/tables/07_global_sensitivity/global_node_sensitivity_long.csv"
+}
