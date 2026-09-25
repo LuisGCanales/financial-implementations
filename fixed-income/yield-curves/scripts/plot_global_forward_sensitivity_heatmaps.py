@@ -854,6 +854,7 @@ def save_forward_heatmap(
             pillar_year,
             row_index,
             marker="|",
+            color="black",
             markersize=12,
             markeredgewidth=1.5,
         )
