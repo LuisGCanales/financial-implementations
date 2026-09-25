@@ -1,0 +1,32 @@
+{
+  "acceptance_issues": [],
+  "accepted_for_use": true,
+  "artifact_schema_version": "1.0",
+  "baseline_identifier": "FTIIE_CUBIC_SIMULTANEOUS_V1",
+  "calendar": {
+    "coverage": "projected 2026-2057",
+    "holiday_count": 352,
+    "name": "MXMC_PROJECTED"
+  },
+  "calibration_approach": "simultaneous_nodal_calibration",
+  "curve_reference_date": "2026-09-18",
+  "interpolation_method": "CUBIC_CONTINUOUS_ZERO",
+  "max_abs_repricing_error_bp": 4.3853809472693683e-11,
+  "node_count": 15,
+  "projection_discount_assumption": "same_curve",
+  "quote_count": 15,
+  "repricing_tolerance": {
+    "fail_tolerance_bp": 0.1,
+    "pass_tolerance_bp": 0.01
+  },
+  "solver": {
+    "cost": 4.478605640926688e-21,
+    "function_evaluations": 4,
+    "jacobian_evaluations": 3,
+    "message": "`xtol` termination condition is satisfied.",
+    "optimality": 3.84353211374714e-05
+  },
+  "solver_success": true,
+  "source_classification": "SYNTHETIC_REFERENCE_DATA",
+  "source_quote_path": "data/synthetic/ftiie_ois_quotes_v1.csv"
+}
