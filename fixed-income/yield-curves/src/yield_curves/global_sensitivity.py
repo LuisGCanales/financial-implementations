@@ -1345,6 +1345,9 @@ def analyze_global_quote_sensitivity(
                 minus_max_abs_repricing_error_bp=(
                     minus.max_abs_repricing_error_bp
                 ),
+                forward_locality=(
+                    forward_locality
+                ),
             )
         )
 
