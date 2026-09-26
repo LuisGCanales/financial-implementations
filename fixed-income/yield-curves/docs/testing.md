@@ -2,11 +2,28 @@
 
 This document describes how to run the test suite for the F-TIIE yield-curve project, with special attention to expensive integration tests marked with `slow`.
 
+## Current baseline tests
+
+The current operational baseline is covered by:
+
+```bash
+pytest -q tests/calibration/test_baseline.py
+```
+
+These tests cover cubic method selection, simultaneous calibration, structural
+acceptance, independent repricing tolerance, and the distinction between
+`calibration_success` and `accepted_for_use`.
+
 ## Why `slow` exists
 
 Most tests in the project are intended to run quickly. They verify local properties such as quote perturbation logic, date-grid construction, curve invariants, numerical identities, validation rules, and lightweight helper functions.
 
 Some tests execute a full calibration experiment. For example, global quote-sensitivity analysis may require one base calibration, one `+1 bp` calibration for each quote, one `-1 bp` calibration for each quote, and dense forward diagnostics after each shocked calibration.
+
+The historical quote-sensitivity tests also construct module-scoped repeated
+recalibration fixtures. Some of those tests are not currently marked `slow`,
+so `pytest -m "not slow"` should not be interpreted as a guarantee that every
+selected test is cheap.
 
 Those tests are valuable, but they should not have to run every time a small implementation detail changes. Pytest's `slow` marker separates these expensive integration tests from the normal fast suite.
 

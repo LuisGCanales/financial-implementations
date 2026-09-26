@@ -24,8 +24,9 @@ Synthetic OIS Quote Dataset
 The objective is to create a calibration problem for which the underlying
 curve is known exactly.
 
-The bootstrap engine will later receive only the synthetic OIS quotes and
-will attempt to reconstruct the underlying curve.
+The historical bootstrap and current simultaneous-calibration workflows
+receive only the synthetic OIS quotes and attempt to reconstruct the
+underlying curve.
 
 ---
 
@@ -174,6 +175,15 @@ NPV
 ≈
 0
 ```
+
+The known-truth function is used by research workflows for recovery analysis.
+The current operational baseline does not depend on that function; it consumes
+quotes and a calendar through the public baseline API.
+
+Future research may use multiple synthetic known-truth scenarios with
+different shape, smoothness, or regime characteristics. Such scenarios would
+remain research inputs and would not automatically change the operational
+baseline.
 
 under the known-truth curve.
 

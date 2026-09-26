@@ -2,11 +2,11 @@
 
 This directory separates future operational workflows from historical development research.
 
-- **Use `operational/`** when consuming the project baseline. The stable baseline workflow will be implemented in a later phase.
-- **Use `assurance/`** when validating the current operational baseline. These checks will be implemented in a later phase.
+- **Use `operational/`** when consuming the project baseline.
+- **Use `assurance/`** when validating the current operational baseline.
 - **Use `experiments/`** when reproducing development research or historical diagnostics.
 
-The current scripts are historical workflows and are intentionally placed under `experiments/`.
+The current historical scripts are intentionally placed under `experiments/`.
 
 ## Experiments
 
@@ -53,6 +53,18 @@ This directory preserves historical comparisons of two and three interpolation m
 
 The global sensitivity producer is expensive. The heatmap and locality scripts consume persisted CSVs and do not recalibrate curves.
 
-## Future directories
+## Operational and assurance entrypoints
 
-`operational/` and `assurance/` will be populated in the next phase. No external consumer should depend on experiment scripts. The future operational baseline is simultaneous nodal calibration with `CUBIC_CONTINUOUS_ZERO`; this phase does not implement it.
+The operational Python contract is:
+
+```python
+from yield_curves.baseline import build_baseline_ftiie_curve
+```
+
+The operational script is `operational/build_baseline_curve.py` and writes
+`outputs/baseline/`. The assurance script is
+`assurance/validate_baseline_curve.py`; it validates the current simultaneous
+`CUBIC_CONTINUOUS_ZERO` baseline.
+
+No external consumer should depend on experiment scripts or historical
+reports.

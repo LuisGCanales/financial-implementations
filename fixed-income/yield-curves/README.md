@@ -1,714 +1,170 @@
 # Yield-Curve Bootstrapping & Validation
 
-A transparent implementation of interest-rate curve construction, calibration, and validation for financial valuation workflows.
+This project implements transparent MXN F-TIIE OIS curve construction, pricing, validation, diagnostics, and sensitivity analysis.
 
-The project focuses on the complete reasoning chain between market instruments and a curve that can be safely consumed downstream:
+It separates reusable financial code from the current operational baseline, baseline assurance, and historical research workflows.
+
+## What this project demonstrates
+
+- Explicit F-TIIE OIS financial conventions and MXMC calendar handling.
+- OIS schedules, overnight observations, instruments, and pricing.
+- Sequential bootstrap and simultaneous nodal calibration.
+- Independent repricing and structural acceptance checks.
+- Curve-shape diagnostics and quote-sensitivity research.
+- A reusable Python API for the current project-selected baseline.
+
+## Current baseline
+
+The current operational baseline is:
 
 ```text
-Market Quotes
+simultaneous nodal calibration
+        +
+CUBIC_CONTINUOUS_ZERO
+```
+
+Nodal discount factors are solved together and continuous zero rates are represented with a natural cubic spline. This is the selected baseline for the current implementation, not a claim of universal superiority.
+
+The rationale and trade-offs are documented in [docs/methodology.md](docs/methodology.md) and [docs/assumptions_limitations.md](docs/assumptions_limitations.md).
+
+## Architecture
+
+```text
+reusable financial library
         ↓
-Instrument Definitions
+yield_curves.baseline
         ↓
-Financial Conventions
+operational workflow
         ↓
-Schedules & Cash Flows
+outputs/baseline/
         ↓
-Calibration
-        ↓
-Discount Factors
-        ↓
-Zero & Forward Rates
-        ↓
-Independent Repricing
-        ↓
-Curve Diagnostics
-        ↓
-Validated Curve
+external consumer / flagship
 ```
 
-The objective is not simply to produce a curve that fits market quotes.
-
-The objective is to build a curve whose:
-
-* financial inputs;
-* conventions;
-* assumptions;
-* calibration;
-* numerical behavior;
-* implied forwards;
-* limitations;
-* and validation status
-
-can be inspected and defended.
-
----
-
-## Current Status
-
-**Phase:** Canonical implementation foundation
-**Status:** In development
-**Version:** 0.1.0
-
-Current development is focused on the financial foundation required before calibration:
+In parallel:
 
 ```text
-conventions
-↓
-business calendar
-↓
-schedule construction
-↓
-overnight observations
-↓
-OIS representation
-↓
-calibration
+baseline result → assurance workflow → acceptance evidence
+
+historical development workflows → scripts/experiments/ → reports/
 ```
 
-The project should not yet be interpreted as a completed pricing or production curve engine.
+The flagship must depend on the Python baseline API, not on research scripts or historical reports.
 
----
-
-## Canonical Market
-
-The primary implementation targets the Mexican interest-rate market using:
-
-> **MXN F-TIIE Overnight Index Swaps**
-
-The canonical benchmark is:
-
-> **TIIE de Fondeo / F-TIIE**
-
-The floating leg references the overnight F-TIIE process and market-standard OIS conventions are represented explicitly rather than inherited silently from third-party library defaults.
-
-Detailed conventions are documented in:
-
-```text
-docs/conventions.md
-```
-
-Machine-readable configuration is stored in:
-
-```text
-config/mxn_ftiie_ois.yaml
-```
-
----
-
-## Core-v1 Financial Architecture
-
-The primary curve constructed by the project is an:
-
-> **F-TIIE projection curve**
-
-For Core v1, the implementation deliberately uses the same curve for both projection and discounting:
-
-```text
-projection_curve = discount_curve
-```
-
-This is an explicit **project simplification**.
-
-It is not intended to reproduce the complete institutional MXN implied-discounting architecture used for cleared derivatives.
-
-The simplification allows the project to isolate and validate:
-
-```text
-instrument mechanics
-+
-curve construction
-+
-interpolation
-+
-repricing
-+
-diagnostics
-```
-
-before introducing cross-currency dependencies.
-
----
-
-## Institutional Boundary
-
-The project explicitly distinguishes its Core-v1 same-curve assumption from the broader MXN discounting architecture documented for cleared derivatives.
-
-A future advanced implementation may separate:
-
-```text
-F-TIIE Projection Curve
-```
-
-from:
-
-```text
-MXN Implied Discount Curve
-```
-
-with the latter potentially depending on:
-
-```text
-USD SOFR
-+
-USD/MXN FX instruments
-+
-SOFR/F-TIIE cross-currency swaps
-```
-
-That multi-curve architecture is outside the initial implementation scope.
-
----
-
-## Canonical Calibration Universe
-
-The project calibration universe is:
-
-```text
-1M
-2M
-3M
-6M
-9M
-1Y
-2Y
-3Y
-4Y
-5Y
-7Y
-10Y
-15Y
-20Y
-30Y
-```
-
-using MXN F-TIIE OIS instruments.
-
-The numerical contemporary market snapshot will be frozen separately.
-
-Implementation development begins from a deterministic synthetic known-truth dataset so that calibration correctness can be tested independently of external market-data availability.
-
----
-
-## Financial Conventions
-
-The canonical OIS profile includes:
-
-| Attribute              | Value                            |
-| ---------------------- | -------------------------------- |
-| Currency               | MXN                              |
-| Benchmark              | F-TIIE                           |
-| Floating index         | MXN-TIIE ON-OIS Compound         |
-| Floating tenor         | 1D                               |
-| Effective date         | T+2 business days                |
-| Calendar               | Mexico City / MXMC               |
-| Day count              | ACT/360                          |
-| Payment frequency      | 28D                              |
-| Calculation frequency  | 28D                              |
-| Reset frequency        | 28D                              |
-| Roll convention        | NONE                             |
-| Start-date adjustment  | FOLLOWING                        |
-| Maturity adjustment    | FOLLOWING                        |
-| Calculation adjustment | FOLLOWING                        |
-| Payment adjustment     | FOLLOWING                        |
-| Payment lag            | 2 business days                  |
-| Fixing offset          | 0D                               |
-| Fixing adjustment      | PRECEDING                        |
-| Compounding            | ISDA Standard / Spread Exclusive |
-
-Each convention is documented together with its provenance in:
-
-```text
-docs/conventions.md
-```
-
----
-
-## Curve Representation
-
-The canonical curve state is represented using:
-
-> **discount factors**
-
-Derived outputs include:
-
-```text
-discount factors
-zero rates
-period forward rates
-par OIS rates
-```
-
-Continuous compounding is used for zero-rate reporting.
-
-This is a project reporting convention and should not be confused with the quotation convention of the calibration instruments.
-
----
-
-## Interpolation
-
-The Core-v1 interpolation baseline is:
-
-> **piecewise linear interpolation in log discount factors**
-
-or equivalently:
-
-> **log-linear discount-factor interpolation**
-
-This is a project methodology choice rather than a claim about CME or Bloomberg production methodology.
-
-The baseline is intentionally transparent and will be compared against alternative approaches.
-
-Planned challenger methods include:
-
-```text
-linear interpolation in continuously compounded zero rates
-
-cubic-spline interpolation in par swap / OIS rates
-```
-
-The comparison is intended to study how interpolation choices affect:
-
-```text
-discount factors
-zero rates
-forward rates
-local sensitivity
-calibration behavior
-```
-
----
-
-## Validation Philosophy
-
-Calibration and validation are treated as separate problems.
-
-A curve reproducing its calibration instruments is not automatically considered reliable.
-
-The project therefore evaluates:
-
-```text
-market-input integrity
-
-schedule correctness
-
-calibration convergence
-
-instrument repricing
-
-discount-factor validity
-
-zero-rate behavior
-
-implied forward behavior
-
-interpolation effects
-
-input sensitivity
-
-failure scenarios
-```
-
-A central project principle is:
-
-> **Correct repricing of calibration instruments is necessary but not sufficient evidence that a curve is financially or numerically well behaved.**
-
----
-
-## Curve Validation States
-
-The curve engine will expose three technical states:
-
-```text
-VALID
-REVIEW
-INVALID
-```
-
-### VALID
-
-Calibration and required structural validations pass.
-
-### REVIEW
-
-Calibration succeeds, but diagnostics identify behavior requiring analyst judgment.
-
-Examples may include:
-
-```text
-unusual forward behavior
-unexpected local sensitivity
-large cross-day movement
-non-critical methodology warnings
-```
-
-### INVALID
-
-A critical condition prevents safe downstream use.
-
-Examples include:
-
-```text
-missing required input
-undefined convention
-calibration failure
-invalid discount factor
-repricing failure
-unsupported extrapolation
-```
-
-An invalid curve should not proceed automatically into downstream valuation.
-
----
-
-## Independent Validation
-
-The calibration routine should not be the sole proof that the curve is correct.
-
-The project will use:
-
-```text
-native calibration engine
-        ↓
-curve object
-        ↓
-independent OIS repricer
-```
-
-and later an external benchmark such as:
-
-> **QuantLib**
-
-QuantLib is intended as a challenger implementation rather than the hidden canonical engine.
-
----
-
-## Synthetic Known-Truth Case
-
-A deterministic synthetic reference case will be used to validate the full calibration process.
-
-Conceptually:
-
-```text
-Known Underlying Curve
-        ↓
-Generate Theoretical OIS Quotes
-        ↓
-Hide Original Curve
-        ↓
-Calibrate From Quotes
-        ↓
-Recover Curve
-        ↓
-Compare Against Known Truth
-```
-
-This allows the project to test calibration accuracy against an actual ground truth.
-
-Synthetic inputs will always be labeled explicitly as synthetic data.
-
----
-
-## Legacy TIIE28 Case
-
-The repository will also preserve a historical TIIE28 case originating from earlier financial-engineering coursework and independent reconstruction.
-
-Its purpose is not to represent the current Mexican benchmark environment.
-
-It is retained to investigate:
-
-```text
-legacy interpolation methods
-forward-rate indexing
-curve-shape behavior
-methodological differences
-```
-
-A particular focus will be reproducing and explaining suspicious forward behavior observed in the earlier implementation.
-
----
-
-## Repository Structure
-
-```text
-yield-curves/
-│
-├── config/
-│   ├── mxn_ftiie_ois.yaml
-│   └── sample_curve.yaml
-│
-├── data/
-│   ├── README.md
-│   └── sample/
-│
-├── docs/
-│   ├── assumptions_limitations.md
-│   ├── conventions.md
-│   ├── integration_contract.md
-│   ├── interpolation.md
-│   ├── methodology.md
-│   └── validation.md
-│
-├── notebooks/
-│   ├── 01_curve_demo.ipynb
-│   ├── 02_interpolation_comparison.ipynb
-│   └── 03_curve_diagnostics.ipynb
-│
-├── reports/
-│   └── sample_outputs/
-│
-├── src/
-│   └── yield_curves/
-│       ├── conventions.py
-│       ├── calendars.py
-│       ├── schedules.py
-│       ├── instruments/
-│       ├── quotes/
-│       ├── bootstrap/
-│       ├── interpolation/
-│       ├── curves/
-│       ├── validation/
-│       ├── diagnostics/
-│       └── utilities/
-│
-├── tests/
-│   ├── unit/
-│   ├── calibration/
-│   ├── regression/
-│   └── fixtures/
-│
-├── CHANGELOG.md
-├── NOTES.md
-├── pyproject.toml
-└── README.md
-```
-
----
-
-## Installation
+## Quick start
 
 Python 3.11 or later is required.
 
-Create an isolated environment:
-
 ```bash
-python3.11 -m venv .venv
+python -m venv .venv
 source .venv/bin/activate
-```
-
-Upgrade packaging tools:
-
-```bash
-python -m pip install --upgrade pip
-```
-
-Install the project in editable development mode:
-
-```bash
 python -m pip install -e ".[dev]"
 ```
 
----
-
-## Running Tests
-
-From the project root:
+Runtime dependencies are NumPy, SciPy, and PyYAML. Plotting dependencies are optional:
 
 ```bash
-pytest
+python -m pip install -e ".[dev,plots]"
 ```
 
-For compact output:
+Build the current demonstration baseline from the frozen synthetic quote set:
 
 ```bash
-pytest -q
+python scripts/operational/build_baseline_curve.py
 ```
 
-The test suite is intended to include several different levels of validation:
+Validate the current baseline:
+
+```bash
+python scripts/assurance/validate_baseline_curve.py
+```
+
+The operational snapshot is written to `outputs/baseline/`.
+
+## Python API
+
+```python
+from yield_curves.baseline import build_baseline_ftiie_curve
+
+result = build_baseline_ftiie_curve(
+    quotes=quotes,
+    calendar=calendar,
+)
+
+if result.accepted_for_use:
+    curve = result.curve
+```
+
+The API does not read CSV, YAML, reports, or research outputs. See [docs/integration_contract.md](docs/integration_contract.md).
+
+## Repository structure
 
 ```text
-unit tests
-calibration tests
-financial-property tests
-regression tests
-failure scenarios
+yield-curves/
+├── config/                 # descriptive project specifications
+├── data/                   # calendars and frozen synthetic inputs
+├── docs/                   # conventions, methodology, contracts, limits
+├── outputs/baseline/       # current operational snapshot
+├── reports/                # historical analytical and research evidence
+├── scripts/
+│   ├── operational/        # current baseline workflow
+│   ├── assurance/          # current baseline acceptance workflow
+│   └── experiments/        # historical and research workflows
+├── src/yield_curves/       # reusable financial library and baseline API
+├── tests/
+├── CHANGELOG.md
+└── pyproject.toml
 ```
 
----
+## Operational outputs
 
-## Current Development Milestone
+`outputs/baseline/` contains the current snapshot, not the primary curve API:
 
-The first financial implementation milestone is:
+- `curve_nodes.csv`: tenor, pillar date, discount factor, and continuous zero rate.
+- `quote_repricing.csv`: input quote, independently repriced quote, error, and status.
+- `metadata.json`: baseline identity, provenance, method, solver state, acceptance, and tolerances.
 
-> **construct a spot-starting F-TIIE OIS schedule correctly before attempting curve calibration.**
+For arbitrary-date discount factors, zero rates, and forwards, consumers must use the Python curve object rather than reconstructing a dense curve from CSV.
 
-The initial implementation therefore focuses on:
+## Analytical evidence
 
-```text
-T+2 effective date
+`reports/` contains historical analytical, diagnostic, and experimental evidence generated during development. It is not the operational delivery mechanism.
 
-MXMC business-day logic
+- `01_synthetic_reference`: synthetic known-truth reference evidence.
+- `02_bootstrap_recovery`: historical bootstrap and recovery evidence.
+- `03_curve_validation`: historical sequential-bootstrap validation.
+- `04_curve_diagnostics`: historical log-linear diagnostics.
+- `05_quote_sensitivity`: no persisted section currently available.
+- `06_interpolation_comparison`: historical interpolation comparison evidence.
+- `07_global_sensitivity`: simultaneous-calibration propagation and locality evidence.
 
-28D calculation periods
+Reports use synthetic data where documented and must not be interpreted as observed market data.
 
-FOLLOWING adjustment
+## Testing
 
-ACT/360 accrual factors
+Fast unit and calibration tests:
 
-2-business-day payment lag
-
-overnight fixing / observation logic
+```bash
+pytest -m "not slow"
 ```
 
-Only after these mechanics are independently validated will curve calibration begin.
+The global sensitivity integration tests are marked `slow`. Some historical quote-sensitivity fixtures still perform repeated recalibration without the `slow` marker; run those tests selectively when needed. See [docs/testing.md](docs/testing.md).
 
----
+## Scope and limitations
 
-## Data Policy
+- The canonical instrument is MXN F-TIIE OIS.
+- Core v1 uses one curve for projection and discounting as a project assumption.
+- The operational input demonstration is synthetic, not observed market data.
+- The current API does not claim CME or bank production-curve replication.
+- Extrapolation beyond calibrated coverage is not supported.
+- The projected calendar has explicit coverage limitations.
+- Cubic interpolation is globally coupled and has documented sensitivity/locality trade-offs.
+- Synthetic known-truth recovery does not establish real-market robustness.
+- A multi-curve discounting architecture is outside the current scope.
+- PCHIP is implemented as an experimental extension and is not the selected baseline.
 
-Project data should clearly distinguish between:
+Perfect instrument calibration is not the same as true-curve recovery. A calibration can reprice its inputs while still depending materially on the interpolation and assumptions between nodes.
 
-```text
-OBSERVED MARKET DATA
+## Status
 
-SYNTHETIC DATA
-
-LEGACY / HISTORICAL DATA
-
-DERIVED CURVE OUTPUT
-```
-
-Synthetic inputs should never be presented as observed market quotes.
-
-The reproducible Core-v1 demonstration should not depend on proprietary live-market infrastructure.
-
----
-
-## Scope
-
-Core v1 is intended to demonstrate:
-
-```text
-financial-instrument understanding
-explicit conventions
-curve construction
-numerical calibration
-interpolation analysis
-repricing
-curve diagnostics
-sensitivity analysis
-independent validation
-```
-
-It is not intended to represent:
-
-```text
-production banking infrastructure
-a proprietary pricing engine
-a Bloomberg curve replica
-a CME production-engine replica
-live trading infrastructure
-institutional deployment
-```
-
----
-
-## Documentation
-
-Detailed project documentation is separated by responsibility:
-
-```text
-docs/conventions.md
-→ contractual and market conventions
-
-docs/methodology.md
-→ financial derivations and calibration equations
-
-docs/interpolation.md
-→ interpolation methodology and comparison
-
-docs/validation.md
-→ validation framework and status logic
-
-docs/assumptions_limitations.md
-→ simplifications and scope boundaries
-
-docs/integration_contract.md
-→ interface with downstream valuation projects
-```
-
----
-
-## Primary References
-
-### Banco de México — TIIE de Fondeo
-
-[https://www.banxico.org.mx/SieInternet/consultarDirectorioInternetAction.do?accion=consultarCuadro&idCuadro=CF111](https://www.banxico.org.mx/SieInternet/consultarDirectorioInternetAction.do?accion=consultarCuadro&idCuadro=CF111)
-
-### CME — MXN F-TIIE OIS Market Standard Attributes
-
-[https://www.cmegroup.com/articles/files/2024/f-tiie-ois-market-standard-attributes.pdf](https://www.cmegroup.com/articles/files/2024/f-tiie-ois-market-standard-attributes.pdf)
-
-### CME Clearing Advisory 26-167 — F-TIIE Curve Input Changes
-
-[https://www.cmegroup.com/notices/clearing/2026/05/26-167.html](https://www.cmegroup.com/notices/clearing/2026/05/26-167.html)
-
-### CME — F-TIIE OIS Conversion Curve Construction
-
-[https://www.cmegroup.com/articles/files/2024/FTIIE-conversion-curve-methodology.pdf](https://www.cmegroup.com/articles/files/2024/FTIIE-conversion-curve-methodology.pdf)
-
-### CME — Conversion Pricing for Cleared MXN 28D TIIE Swaps
-
-[https://www.cmegroup.com/articles/files/2024/mxn-pricing.pdf](https://www.cmegroup.com/articles/files/2024/mxn-pricing.pdf)
-
-### CME Clearing Advisory 25-005 — MXN Discounting Curve Input Changes
-
-[https://www.cmegroup.com/content/dam/cmegroup/notices/clearing/2025/01/chadv25-005.pdf](https://www.cmegroup.com/content/dam/cmegroup/notices/clearing/2025/01/chadv25-005.pdf)
-
----
-
-## Relationship to Broader Work
-
-This implementation is intended to become a reusable financial component.
-
-For example:
-
-```text
-Yield-Curve Bootstrapping & Validation
-        ↓
-Validated Curve Object
-        ↓
-MXN Valuation & Price Validation Engine
-```
-
-The yield-curve implementation owns:
-
-```text
-curve methodology
-construction
-validation
-diagnostics
-```
-
-while downstream applications own:
-
-```text
-instrument valuation
-workflow controls
-exceptions
-reporting
-analyst decisions
-```
-
-This separation allows the curve methodology to evolve independently from the applications that consume it.
-
----
-
-## Project Principle
-
-The objective is not merely:
-
-> **build a yield curve.**
-
-It is:
-
-> **build a yield curve and know when not to trust it.**
+The yield-curve implementation is functionally closed for feeding the future `valuation-price-validation` flagship through the baseline API and operational snapshot. Historical methodology research remains available for maintenance and future, separately scoped investigation.

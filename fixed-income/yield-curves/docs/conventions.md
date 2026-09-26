@@ -11,6 +11,11 @@ instrument-convention profile that can be implemented and tested.
 The objective is to prevent material financial assumptions from remaining
 hidden inside code, third-party libraries, or default date-handling behavior.
 
+This document describes financial conventions. It does not select the current
+interpolation baseline. Project assumptions, synthetic-data setup, and
+operational methodology are documented separately in
+`docs/methodology.md` and `docs/assumptions_limitations.md`.
+
 ---
 
 ## 1. Provenance Labels
