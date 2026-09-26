@@ -1,0 +1,55 @@
+F-TIIE Three-Method Interpolation Comparison
+============================================================================================================================================
+
+Method                         Success    Reprice Max       DF RMSE     Zero RMSE    Zero Max      Fwd RMSE     Fwd Max
+                                                 (bp)         (abs)          (bp)        (bp)          (bp)        (bp)
+--------------------------------------------------------------------------------------------------------------------------------------------
+LOG_LINEAR_DF                     True     0.00000000    0.00016312        0.5136      4.5197        3.8110     15.2374
+LINEAR_CONTINUOUS_ZERO            True     0.00000000    0.00020528        0.5506      4.5197        5.2346     15.0579
+CUBIC_CONTINUOUS_ZERO             True     0.00000000    0.00000902        0.1395      4.3579        0.2493      2.1661
+
+
+Zero-Rate Recovery RMSE (bp)
+
+Method                                    0-1Y              1-5Y             5-10Y     10Y-curve-end
+----------------------------------------------------------------------------------------------------
+LOG_LINEAR_DF                           1.0805            0.8691            0.6709            0.2727
+LINEAR_CONTINUOUS_ZERO                  0.8245            0.9487            0.2555            0.4744
+CUBIC_CONTINUOUS_ZERO                   0.7567            0.0228            0.0177            0.0221
+
+
+28-Day Forward Recovery RMSE (bp)
+
+Method                                    0-1Y              1-5Y             5-10Y     10Y-curve-end
+----------------------------------------------------------------------------------------------------
+LOG_LINEAR_DF                           3.9812            4.4825            6.7901            2.3293
+LINEAR_CONTINUOUS_ZERO                  1.5505            6.3355            2.8753            5.5611
+CUBIC_CONTINUOUS_ZERO                   0.7129            0.1127            0.2003            0.2342
+
+
+28-Day Forward Maximum Absolute Error (bp)
+
+Method                                    0-1Y              1-5Y             5-10Y     10Y-curve-end
+----------------------------------------------------------------------------------------------------
+LOG_LINEAR_DF                          11.8360           15.2374           12.6910            4.8659
+LINEAR_CONTINUOUS_ZERO                  7.6758           15.0579            7.8354           13.8411
+CUBIC_CONTINUOUS_ZERO                   2.1661            0.2880            0.2990            0.4189
+
+
+Dense Discount-Factor RMSE
+
+Method                                    0-1Y              1-5Y             5-10Y     10Y-curve-end
+----------------------------------------------------------------------------------------------------
+LOG_LINEAR_DF                       0.00003090        0.00012860        0.00029257        0.00012321
+LINEAR_CONTINUOUS_ZERO              0.00000777        0.00016025        0.00010521        0.00023518
+CUBIC_CONTINUOUS_ZERO               0.00000453        0.00000317        0.00000787        0.00001017
+
+
+Simultaneous Calibration Diagnostics
+
+Method                            nfev      njev            Cost      Optimality    RMSE Reprice
+                                                                                            (bp)
+------------------------------------------------------------------------------------------------
+LOG_LINEAR_DF                        2         2    4.444497e-21    1.414625e-05      0.00000000
+LINEAR_CONTINUOUS_ZERO               4         4    4.201801e-22    5.663293e-07      0.00000000
+CUBIC_CONTINUOUS_ZERO                4         3    4.478606e-21    3.843532e-05      0.00000000
