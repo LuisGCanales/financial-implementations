@@ -3,19 +3,13 @@
 from datetime import date
 from pathlib import Path
 
-from yield_curves.project_paths import find_project_root
+from yield_curves.tooling.project_paths import (find_project_root)
 
-from yield_curves.calendars import (
-    build_projected_mxmc_calendar,
-)
+from yield_curves.research.calendars import (build_projected_mxmc_calendar)
 from yield_curves.schedules import (
     calculate_effective_date,
 )
-from yield_curves.synthetic import (
-    build_synthetic_known_truth_curve,
-    generate_synthetic_ois_quotes,
-    write_synthetic_ois_quotes_csv,
-)
+from yield_curves.research.synthetic import (build_synthetic_known_truth_curve, generate_synthetic_ois_quotes, write_synthetic_ois_quotes_csv)
 
 
 PROJECT_ROOT = (

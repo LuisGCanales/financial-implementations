@@ -6,9 +6,7 @@ from yield_curves.bootstrap import (
     bootstrap_ftiie_ois_curve,
     bootstrap_ftiie_ois_curve_with_method,
 )
-from yield_curves.calendars import (
-    build_projected_mxmc_calendar,
-)
+from yield_curves.research.calendars import (build_projected_mxmc_calendar)
 from yield_curves.curves import (
     CurveInterpolationMethod,
     LinearContinuousZeroCurve,
@@ -20,9 +18,7 @@ from yield_curves.instruments import (
 from yield_curves.pricing import (
     calculate_par_rate,
 )
-from yield_curves.synthetic import (
-    read_synthetic_ois_quotes_csv,
-)
+from yield_curves.research.synthetic import (read_synthetic_ois_quotes_csv)
 
 
 PROJECT_ROOT = (

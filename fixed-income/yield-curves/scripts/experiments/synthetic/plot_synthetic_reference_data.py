@@ -33,14 +33,9 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 
-from yield_curves.project_paths import find_project_root
-from yield_curves.reporting import (
-    save_csv,
-    save_figure,
-)
-from yield_curves.synthetic import (
-    build_synthetic_known_truth_curve,
-)
+from yield_curves.tooling.project_paths import (find_project_root)
+from yield_curves.tooling.reporting import (save_csv, save_figure)
+from yield_curves.research.synthetic import (build_synthetic_known_truth_curve)
 
 
 PROJECT_ROOT = find_project_root(Path(__file__))

@@ -71,12 +71,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.colors import TwoSlopeNorm
 
-from yield_curves.project_paths import find_project_root
-from yield_curves.reporting import (
-    save_csv,
-    save_figure,
-    save_json,
-)
+from yield_curves.tooling.project_paths import (find_project_root)
+from yield_curves.tooling.reporting import (save_csv, save_figure, save_json)
 
 
 PROJECT_ROOT = (

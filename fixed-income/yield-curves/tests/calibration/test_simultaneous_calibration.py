@@ -8,15 +8,11 @@ from yield_curves.bootstrap import (
 from yield_curves.calibration import (
     calibrate_ftiie_ois_curve_simultaneously,
 )
-from yield_curves.calendars import (
-    build_projected_mxmc_calendar,
-)
+from yield_curves.research.calendars import (build_projected_mxmc_calendar)
 from yield_curves.curves import (
     CurveInterpolationMethod,
 )
-from yield_curves.synthetic import (
-    read_synthetic_ois_quotes_csv,
-)
+from yield_curves.research.synthetic import (read_synthetic_ois_quotes_csv)
 
 
 PROJECT_ROOT = (

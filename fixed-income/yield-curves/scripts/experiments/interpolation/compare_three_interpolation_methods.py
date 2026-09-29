@@ -34,29 +34,17 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from yield_curves.project_paths import find_project_root
+from yield_curves.tooling.project_paths import (find_project_root)
 from yield_curves.calibration import (
     calibrate_ftiie_ois_curve_simultaneously,
 )
-from yield_curves.calendars import (
-    build_projected_mxmc_calendar,
-)
+from yield_curves.research.calendars import (build_projected_mxmc_calendar)
 from yield_curves.curves import (
     CurveInterpolationMethod,
 )
-from yield_curves.recovery import (
-    calculate_horizon_recovery_metrics,
-    calculate_recovery_metrics,
-)
-from yield_curves.reporting import (
-    TextReport,
-    save_csv,
-    save_json,
-)
-from yield_curves.synthetic import (
-    build_synthetic_known_truth_curve,
-    read_synthetic_ois_quotes_csv,
-)
+from yield_curves.research.recovery import (calculate_horizon_recovery_metrics, calculate_recovery_metrics)
+from yield_curves.tooling.reporting import (TextReport, save_csv, save_json)
+from yield_curves.research.synthetic import (build_synthetic_known_truth_curve, read_synthetic_ois_quotes_csv)
 
 
 PROJECT_ROOT = (

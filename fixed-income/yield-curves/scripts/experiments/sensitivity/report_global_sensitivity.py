@@ -73,26 +73,14 @@ from time import perf_counter
 
 import matplotlib.pyplot as plt
 
-from yield_curves.project_paths import find_project_root
-from yield_curves.calendars import (
-    build_projected_mxmc_calendar,
-)
+from yield_curves.tooling.project_paths import (find_project_root)
+from yield_curves.research.calendars import (build_projected_mxmc_calendar)
 from yield_curves.curves import (
     CurveInterpolationMethod,
 )
-from yield_curves.global_sensitivity import (
-    analyze_global_quote_sensitivity,
-)
-from yield_curves.reporting import (
-    TextReport,
-    save_csv,
-    save_figure,
-    save_json,
-    save_matrix_csv,
-)
-from yield_curves.synthetic import (
-    read_synthetic_ois_quotes_csv,
-)
+from yield_curves.research.global_sensitivity import (analyze_global_quote_sensitivity)
+from yield_curves.tooling.reporting import (TextReport, save_csv, save_figure, save_json, save_matrix_csv)
+from yield_curves.research.synthetic import (read_synthetic_ois_quotes_csv)
 
 
 PROJECT_ROOT = (

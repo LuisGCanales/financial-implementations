@@ -13,8 +13,11 @@ This keeps separate:
 from __future__ import annotations
 
 import csv
+import hashlib
+import io
 from dataclasses import dataclass, field
 from datetime import date, timedelta
+from enum import StrEnum
 from pathlib import Path
 from typing import Iterable
 
@@ -29,6 +32,29 @@ WEEKEND_DAYS = frozenset({5, 6})
 # Sunday = 6
 
 
+class CalendarCoverageError(ValueError):
+    """Requested dates exceed declared coverage, or coverage is unspecified."""
+
+
+class CalendarSource(StrEnum):
+    PROVIDED = "PROVIDED"
+    PROJECTED = "PROJECTED"
+
+
+@dataclass(frozen=True, slots=True)
+class CalendarProvenance:
+    """Source declaration; PROVIDED does not imply independently verified data."""
+
+    source: str
+    kind: CalendarSource
+    sha256: str | None = None
+
+    def __post_init__(self) -> None:
+        if not self.source.strip():
+            raise ValueError("Calendar source must not be empty.")
+        object.__setattr__(self, "kind", CalendarSource(self.kind))
+
+
 @dataclass(frozen=True, slots=True)
 class BusinessCalendar:
     """Simple deterministic business calendar.
@@ -41,33 +67,78 @@ class BusinessCalendar:
         Explicit non-weekend holidays.
     weekend_days
         Weekday numbers considered weekends.
+    coverage_start, coverage_end
+        Inclusive bounds. Both may be omitted for legacy calendars; operational
+        input checks require declared coverage. Date operations enforce bounds
+        whenever they are supplied, including business-day shifts.
+    provenance
+        Optional source declaration and file fingerprint. This does not certify
+        completeness or authenticity of the holiday source.
     """
 
     name: str
     holidays: frozenset[date] = field(default_factory=frozenset)
     weekend_days: frozenset[int] = WEEKEND_DAYS
 
+    coverage_start: date | None = None
+    coverage_end: date | None = None
+    provenance: CalendarProvenance | None = None
+
+    def __post_init__(self) -> None:
+        if (self.coverage_start is None) != (self.coverage_end is None):
+            raise ValueError("Calendar coverage requires both start and end dates.")
+        if self.coverage_start is not None and self.coverage_end < self.coverage_start:
+            raise ValueError("Calendar coverage end cannot precede start.")
+
+    def _check_coverage(self, value: date) -> None:
+        if self.coverage_start is not None and not (
+            self.coverage_start <= value <= self.coverage_end
+        ):
+            raise CalendarCoverageError(
+                f"{self.name}: {value} is outside calendar coverage "
+                f"[{self.coverage_start}, {self.coverage_end}]."
+            )
+
+    def require_coverage(self, start: date, end: date | None = None) -> None:
+        """Require explicit inclusive coverage for operational input checks."""
+        end = start if end is None else end
+        if end < start:
+            raise ValueError("Requested coverage end cannot precede start.")
+        if self.coverage_start is None:
+            raise CalendarCoverageError(f"{self.name}: calendar coverage is unspecified.")
+        self._check_coverage(start)
+        self._check_coverage(end)
+
     @classmethod
     def from_holidays(
         cls,
         name: str,
         holidays: Iterable[date],
+        *,
+        coverage_start: date | None = None,
+        coverage_end: date | None = None,
+        provenance: CalendarProvenance | None = None,
     ) -> "BusinessCalendar":
         """Construct a calendar from an iterable of holiday dates."""
 
         return cls(
             name=name,
             holidays=frozenset(holidays),
+            coverage_start=coverage_start,
+            coverage_end=coverage_end,
+            provenance=provenance,
         )
 
     def is_weekend(self, value: date) -> bool:
         """Return True when date falls on configured weekend."""
 
+        self._check_coverage(value)
         return value.weekday() in self.weekend_days
 
     def is_holiday(self, value: date) -> bool:
         """Return True when date appears in explicit holiday set."""
 
+        self._check_coverage(value)
         return value in self.holidays
 
     def is_business_day(self, value: date) -> bool:
@@ -105,6 +176,7 @@ class BusinessCalendar:
     ) -> date:
         """Adjust a date under the requested convention."""
 
+        self._check_coverage(value)
         if convention == BusinessDayConvention.NONE:
             return value
 
@@ -137,6 +209,7 @@ class BusinessCalendar:
         separately and explicitly.
         """
 
+        self._check_coverage(value)
         if offset == 0:
             return value
 
@@ -171,272 +244,62 @@ def load_holidays_csv(
     the holiday file. Provenance belongs in the data documentation.
     """
 
-    path = Path(path)
+    return _parse_holidays_csv(
+        Path(path).read_text(encoding="utf-8-sig"), date_column=date_column
+    )
 
+
+def _parse_holidays_csv(text: str, *, date_column: str) -> frozenset[date]:
+    reader = csv.DictReader(io.StringIO(text))
+    if date_column not in (reader.fieldnames or []):
+        raise ValueError(f"CSV must contain column '{date_column}'.")
     holidays: set[date] = set()
-
-    with path.open(
-        "r",
-        encoding="utf-8",
-        newline="",
-    ) as file:
-        reader = csv.DictReader(file)
-
-        if date_column not in (reader.fieldnames or []):
-            raise ValueError(
-                f"CSV must contain column '{date_column}'."
-            )
-
-        for row in reader:
-            raw_value = row[date_column].strip()
-
-            if not raw_value:
-                continue
-
-            holidays.add(
-                date.fromisoformat(raw_value)
-            )
-
+    for row in reader:
+        raw_value = row[date_column].strip()
+        if raw_value:
+            holidays.add(date.fromisoformat(raw_value))
     return frozenset(holidays)
 
 
 def build_mxmc_calendar(
     holidays: Iterable[date],
+    *,
+    coverage_start: date | None = None,
+    coverage_end: date | None = None,
+    provenance: CalendarProvenance | None = None,
 ) -> BusinessCalendar:
-    """Construct the project MXMC calendar from verified holiday data."""
+    """Construct the project MXMC calendar from supplied holiday data."""
 
     return BusinessCalendar.from_holidays(
         name="MXMC",
         holidays=holidays,
+        coverage_start=coverage_start,
+        coverage_end=coverage_end,
+        provenance=provenance,
     )
     
     
 def build_mxmc_calendar_from_csv(
     path: str | Path,
-) -> BusinessCalendar:
-    """Build the project MXMC calendar from a frozen holiday dataset."""
-
-    holidays = load_holidays_csv(path)
-
-    return build_mxmc_calendar(holidays)
-
-
-def _nth_weekday_of_month(
     *,
-    year: int,
-    month: int,
-    weekday: int,
-    occurrence: int,
-) -> date:
-    """Return nth occurrence of weekday in a calendar month.
-
-    Monday = 0
-    ...
-    Sunday = 6
-    """
-
-    if occurrence <= 0:
-        raise ValueError(
-            "Occurrence must be positive."
-        )
-
-    first = date(
-        year,
-        month,
-        1,
-    )
-
-    days_until_weekday = (
-        weekday - first.weekday()
-    ) % 7
-
-    result = (
-        first
-        + timedelta(days=days_until_weekday)
-        + timedelta(
-            weeks=occurrence - 1
-        )
-    )
-
-    if result.month != month:
-        raise ValueError(
-            "Requested weekday occurrence does not "
-            "exist in month."
-        )
-
-    return result
-
-
-def _gregorian_easter_sunday(
-    year: int,
-) -> date:
-    """Return Gregorian Easter Sunday using Meeus/Jones/Butcher.
-
-    The function exists only to derive Holy Thursday and Good Friday
-    for the project's projected MXMC calendar model.
-    """
-
-    a = year % 19
-    b = year // 100
-    c = year % 100
-
-    d = b // 4
-    e = b % 4
-
-    f = (b + 8) // 25
-    g = (b - f + 1) // 3
-
-    h = (
-        19 * a
-        + b
-        - d
-        - g
-        + 15
-    ) % 30
-
-    i = c // 4
-    k = c % 4
-
-    l = (
-        32
-        + 2 * e
-        + 2 * i
-        - h
-        - k
-    ) % 7
-
-    m = (
-        a
-        + 11 * h
-        + 22 * l
-    ) // 451
-
-    month = (
-        h
-        + l
-        - 7 * m
-        + 114
-    ) // 31
-
-    day = (
-        (
-            h
-            + l
-            - 7 * m
-            + 114
-        )
-        % 31
-    ) + 1
-
-    return date(
-        year,
-        month,
-        day,
-    )
-
-
-def projected_mxmc_holidays(
-    year: int,
-) -> frozenset[date]:
-    """Generate recurring holidays for the synthetic MXMC model.
-
-    IMPORTANT
-    ---------
-    This is a PROJECT CALENDAR MODEL.
-
-    It is based on the recurring structure observed in the official
-    Mexican financial-sector calendar, including the verified 2026
-    calendar.
-
-    It must not be represented as an official CNBV or CME calendar
-    for future years.
-
-    Real-market valuation must use a verified calendar source.
-    """
-
-    monday = 0
-
-    easter_sunday = (
-        _gregorian_easter_sunday(year)
-    )
-
-    holy_thursday = (
-        easter_sunday
-        - timedelta(days=3)
-    )
-
-    good_friday = (
-        easter_sunday
-        - timedelta(days=2)
-    )
-
-    holidays = {
-        date(year, 1, 1),
-
-        _nth_weekday_of_month(
-            year=year,
-            month=2,
-            weekday=monday,
-            occurrence=1,
-        ),
-
-        _nth_weekday_of_month(
-            year=year,
-            month=3,
-            weekday=monday,
-            occurrence=3,
-        ),
-
-        holy_thursday,
-        good_friday,
-
-        date(year, 5, 1),
-        date(year, 9, 16),
-        date(year, 11, 2),
-
-        _nth_weekday_of_month(
-            year=year,
-            month=11,
-            weekday=monday,
-            occurrence=3,
-        ),
-
-        date(year, 12, 12),
-        date(year, 12, 25),
-    }
-
-    return frozenset(holidays)
-
-
-def build_projected_mxmc_calendar(
-    *,
-    start_year: int,
-    end_year: int,
+    coverage_start: date | None = None,
+    coverage_end: date | None = None,
+    source: str | None = None,
 ) -> BusinessCalendar:
-    """Build long-horizon PROJECT MXMC calendar for synthetic testing.
-
-    The returned calendar is suitable for deterministic synthetic
-    experiments.
-
-    It is not an authoritative future holiday calendar.
-    """
-
-    if end_year < start_year:
-        raise ValueError(
-            "End year cannot precede start year."
-        )
-
-    holidays: set[date] = set()
-
-    for year in range(
-        start_year,
-        end_year + 1,
-    ):
-        holidays.update(
-            projected_mxmc_holidays(year)
-        )
-
-    return BusinessCalendar.from_holidays(
-        name="MXMC_PROJECTED",
-        holidays=holidays,
+    """Load provided holidays; coverage is declared, never inferred from holidays."""
+    path = Path(path).resolve()
+    raw = path.read_bytes()
+    # Parse the same bytes that are fingerprinted.
+    holidays = _parse_holidays_csv(raw.decode("utf-8-sig"), date_column="date")
+    return build_mxmc_calendar(
+        holidays,
+        coverage_start=coverage_start,
+        coverage_end=coverage_end,
+        provenance=CalendarProvenance(
+            source=str(path) if source is None else source,
+            kind=CalendarSource.PROVIDED,
+            sha256=hashlib.sha256(raw).hexdigest(),
+        ),
     )
+
+
