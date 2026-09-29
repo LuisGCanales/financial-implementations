@@ -37,7 +37,6 @@ classifiers = [
 ]
 
 dependencies = [
-    "PyYAML>=6.0",
     "numpy>=1.24",
     "scipy>=1.11"
 ]
