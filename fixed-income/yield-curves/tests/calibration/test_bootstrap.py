@@ -6,18 +6,14 @@ import pytest
 from yield_curves.bootstrap import (
     bootstrap_ftiie_ois_curve,
 )
-from yield_curves.calendars import (
-    build_projected_mxmc_calendar,
-)
+from yield_curves.research.calendars import (build_projected_mxmc_calendar)
 from yield_curves.instruments import (
     build_ftiie_ois,
 )
 from yield_curves.pricing import (
     calculate_par_rate,
 )
-from yield_curves.synthetic import (
-    read_synthetic_ois_quotes_csv,
-)
+from yield_curves.research.synthetic import (read_synthetic_ois_quotes_csv)
 
 
 PROJECT_ROOT = (

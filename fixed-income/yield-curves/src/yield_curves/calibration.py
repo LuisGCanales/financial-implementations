@@ -25,9 +25,9 @@ import numpy as np
 from scipy.optimize import least_squares
 
 from .bootstrap import (
-    OISCalibrationQuote,
     bootstrap_ftiie_ois_curve,
 )
+from .quotes import OISCalibrationQuote
 from .calendars import BusinessCalendar
 from .curves import (
     CurveInterpolationMethod,

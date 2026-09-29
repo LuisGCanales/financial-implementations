@@ -21,7 +21,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date
 from math import isfinite
-from typing import Protocol, Sequence
+from typing import Sequence
 
 from scipy.optimize import brentq
 
@@ -40,14 +40,8 @@ from .pricing import (
 )
 
 
-class OISCalibrationQuote(Protocol):
-    """Minimal interface required by the bootstrap."""
-
-    tenor: str
-    trade_date: date
-    contractual_maturity_date: date
-    par_rate: float
-
+# Compatibility export; new consumers import from yield_curves.quotes.
+from .quotes import OISCalibrationQuote as OISCalibrationQuote
 
 @dataclass(frozen=True, slots=True)
 class CalibrationStep:
