@@ -1,0 +1,342 @@
+{
+  "schema_version": 1,
+  "purpose": "Pre-migration numerical characterization; not synthetic known truth",
+  "baseline_identifier": "FTIIE_CUBIC_SIMULTANEOUS_V1",
+  "environment": {
+    "python": "3.11.15",
+    "numpy": "2.4.6",
+    "scipy": "1.17.1"
+  },
+  "inputs": {
+    "quotes_path": "data/synthetic/ftiie_ois_quotes_v1.csv",
+    "quotes_sha256": "38469f91b95ad5afad4a593a39c791a49e34ca435fc461f88d3b2039b717a5e6",
+    "quote_count": 15,
+    "calendar": {
+      "name": "MXMC_PROJECTED",
+      "start_year": 2026,
+      "end_year": 2057,
+      "weekend_days": [
+        5,
+        6
+      ],
+      "holidays_sha256": "87ae6a40a4db48abd37d686eee660c087bd1f89e973606fe98558d2a18019940"
+    },
+    "initial_discount_factors": null
+  },
+  "reference_date": "2026-09-18",
+  "interpolation_method": "CUBIC_CONTINUOUS_ZERO",
+  "acceptance": {
+    "calibration_success": true,
+    "accepted_for_use": true,
+    "structural_valid": true,
+    "checks": [
+      {
+        "tenor": "1M",
+        "market_quote": 0.07762604563,
+        "model_quote": 0.07762604563000206,
+        "error_bp": 2.0539125955565396e-11,
+        "absolute_error_bp": 2.0539125955565396e-11,
+        "status": "PASS"
+      },
+      {
+        "tenor": "2M",
+        "market_quote": 0.077088792099,
+        "model_quote": 0.07708879209899562,
+        "error_bp": -4.3853809472693683e-11,
+        "absolute_error_bp": 4.3853809472693683e-11,
+        "status": "PASS"
+      },
+      {
+        "tenor": "3M",
+        "market_quote": 0.076576653084,
+        "model_quote": 0.07657665308399673,
+        "error_bp": -3.2612801348363973e-11,
+        "absolute_error_bp": 3.2612801348363973e-11,
+        "status": "PASS"
+      },
+      {
+        "tenor": "6M",
+        "market_quote": 0.075189263035,
+        "model_quote": 0.07518926303499825,
+        "error_bp": -1.7486012637846216e-11,
+        "absolute_error_bp": 1.7486012637846216e-11,
+        "status": "PASS"
+      },
+      {
+        "tenor": "9M",
+        "market_quote": 0.073979952583,
+        "model_quote": 0.07397995258300025,
+        "error_bp": 2.4980018054066022e-12,
+        "absolute_error_bp": 2.4980018054066022e-12,
+        "status": "PASS"
+      },
+      {
+        "tenor": "1Y",
+        "market_quote": 0.072930700295,
+        "model_quote": 0.07293070029499597,
+        "error_bp": -4.0245584642661925e-11,
+        "absolute_error_bp": 4.0245584642661925e-11,
+        "status": "PASS"
+      },
+      {
+        "tenor": "2Y",
+        "market_quote": 0.07020829676,
+        "model_quote": 0.07020829675999572,
+        "error_bp": -4.274358644806853e-11,
+        "absolute_error_bp": 4.274358644806853e-11,
+        "status": "PASS"
+      },
+      {
+        "tenor": "3Y",
+        "market_quote": 0.068890121722,
+        "model_quote": 0.06889012172200043,
+        "error_bp": 4.3021142204224816e-12,
+        "absolute_error_bp": 4.3021142204224816e-12,
+        "status": "PASS"
+      },
+      {
+        "tenor": "4Y",
+        "market_quote": 0.068362579699,
+        "model_quote": 0.06836257969900192,
+        "error_bp": 1.915134717478395e-11,
+        "absolute_error_bp": 1.915134717478395e-11,
+        "status": "PASS"
+      },
+      {
+        "tenor": "5Y",
+        "market_quote": 0.068270726084,
+        "model_quote": 0.06827072608400218,
+        "error_bp": 2.1788126858268697e-11,
+        "absolute_error_bp": 2.1788126858268697e-11,
+        "status": "PASS"
+      },
+      {
+        "tenor": "7Y",
+        "market_quote": 0.068661509651,
+        "model_quote": 0.06866150965100179,
+        "error_bp": 1.790234627208065e-11,
+        "absolute_error_bp": 1.790234627208065e-11,
+        "status": "PASS"
+      },
+      {
+        "tenor": "10Y",
+        "market_quote": 0.069534094022,
+        "model_quote": 0.06953409402200056,
+        "error_bp": 5.551115123125783e-12,
+        "absolute_error_bp": 5.551115123125783e-12,
+        "status": "PASS"
+      },
+      {
+        "tenor": "15Y",
+        "market_quote": 0.070516134352,
+        "model_quote": 0.07051613435200181,
+        "error_bp": 1.8041124150158794e-11,
+        "absolute_error_bp": 1.8041124150158794e-11,
+        "status": "PASS"
+      },
+      {
+        "tenor": "20Y",
+        "market_quote": 0.070945972382,
+        "model_quote": 0.07094597238200125,
+        "error_bp": 1.2490009027033011e-11,
+        "absolute_error_bp": 1.2490009027033011e-11,
+        "status": "PASS"
+      },
+      {
+        "tenor": "30Y",
+        "market_quote": 0.071206559631,
+        "model_quote": 0.07120655963100099,
+        "error_bp": 9.853229343548264e-12,
+        "absolute_error_bp": 9.853229343548264e-12,
+        "status": "PASS"
+      }
+    ],
+    "issues": [],
+    "pass_tolerance_bp": 0.01,
+    "max_abs_repricing_error_bp": 4.3853809472693683e-11
+  },
+  "nodes": [
+    {
+      "date": "2026-10-21",
+      "discount_factor": 0.9929307409019738,
+      "zero_rate": 0.07739306944095392
+    },
+    {
+      "date": "2026-11-20",
+      "discount_factor": 0.9866445819510343,
+      "zero_rate": 0.07683087851647302
+    },
+    {
+      "date": "2026-12-22",
+      "discount_factor": 0.980067394981167,
+      "zero_rate": 0.07629703311087778
+    },
+    {
+      "date": "2027-03-22",
+      "discount_factor": 0.9622402342012317,
+      "zero_rate": 0.07490166964598922
+    },
+    {
+      "date": "2027-06-22",
+      "discount_factor": 0.9448782450574843,
+      "zero_rate": 0.07368849227196023
+    },
+    {
+      "date": "2027-09-22",
+      "discount_factor": 0.9282392989953941,
+      "zero_rate": 0.07264947721045537
+    },
+    {
+      "date": "2028-09-20",
+      "discount_factor": 0.8673884405760882,
+      "zero_rate": 0.06987259851087818
+    },
+    {
+      "date": "2029-09-20",
+      "discount_factor": 0.8114140131429096,
+      "zero_rate": 0.06851700263358557
+    },
+    {
+      "date": "2030-09-20",
+      "discount_factor": 0.7585959206095648,
+      "zero_rate": 0.06798562530145791
+    },
+    {
+      "date": "2031-09-22",
+      "discount_factor": 0.7080239965051094,
+      "zero_rate": 0.0679234018020956
+    },
+    {
+      "date": "2033-09-21",
+      "discount_factor": 0.6146302295101933,
+      "zero_rate": 0.06844703130415407
+    },
+    {
+      "date": "2036-09-22",
+      "discount_factor": 0.4930968823121931,
+      "zero_rate": 0.06960291469072254
+    },
+    {
+      "date": "2041-09-20",
+      "discount_factor": 0.3393376627812583,
+      "zero_rate": 0.07098585300057592
+    },
+    {
+      "date": "2046-09-20",
+      "discount_factor": 0.23370910960018468,
+      "zero_rate": 0.0716195567251532
+    },
+    {
+      "date": "2056-09-20",
+      "discount_factor": 0.11184981985247423,
+      "zero_rate": 0.0719539555291234
+    }
+  ],
+  "interior_observations": [
+    {
+      "date": "2026-10-04",
+      "discount_factor": 0.9965633127415834,
+      "zero_rate": 0.07745864024415228,
+      "forward_end_date": "2026-11-01",
+      "forward_rate": 0.0773246699577406
+    },
+    {
+      "date": "2026-11-05",
+      "discount_factor": 0.989766396042282,
+      "zero_rate": 0.07714745468208725,
+      "forward_end_date": "2026-12-03",
+      "forward_rate": 0.07586628521957588
+    },
+    {
+      "date": "2026-12-06",
+      "discount_factor": 0.9833431299801805,
+      "zero_rate": 0.07654400054111199,
+      "forward_end_date": "2027-01-03",
+      "forward_rate": 0.0751145423589951
+    },
+    {
+      "date": "2027-02-05",
+      "discount_factor": 0.9710302232834179,
+      "zero_rate": 0.07559404775913894,
+      "forward_end_date": "2027-03-05",
+      "forward_rate": 0.07318076440418946
+    },
+    {
+      "date": "2027-05-07",
+      "discount_factor": 0.9534645107494555,
+      "zero_rate": 0.07426453186587986,
+      "forward_end_date": "2027-06-04",
+      "forward_rate": 0.07116654359131479
+    },
+    {
+      "date": "2027-08-07",
+      "discount_factor": 0.9364748828009403,
+      "zero_rate": 0.07315086064454597,
+      "forward_end_date": "2027-09-04",
+      "forward_rate": 0.06945552161778405
+    },
+    {
+      "date": "2028-03-22",
+      "discount_factor": 0.8969928640139263,
+      "zero_rate": 0.07102478048038809,
+      "forward_end_date": "2028-04-19",
+      "forward_rate": 0.06697038577856704
+    },
+    {
+      "date": "2029-03-21",
+      "discount_factor": 0.839005995372166,
+      "zero_rate": 0.06906390558124946,
+      "forward_end_date": "2029-04-18",
+      "forward_rate": 0.0658881330548855
+    },
+    {
+      "date": "2030-03-21",
+      "discount_factor": 0.7847431497441721,
+      "zero_rate": 0.06817466602089159,
+      "forward_end_date": "2030-04-18",
+      "forward_rate": 0.0665747988291408
+    },
+    {
+      "date": "2031-03-22",
+      "discount_factor": 0.7330755430324349,
+      "zero_rate": 0.06791151156764219,
+      "forward_end_date": "2031-04-19",
+      "forward_rate": 0.06790358918031242
+    },
+    {
+      "date": "2032-09-21",
+      "discount_factor": 0.6601268701905013,
+      "zero_rate": 0.06811679478565566,
+      "forward_end_date": "2032-10-19",
+      "forward_rate": 0.07003345554287785
+    },
+    {
+      "date": "2035-03-23",
+      "discount_factor": 0.5510610558011175,
+      "zero_rate": 0.0690242857403463,
+      "forward_end_date": "2035-04-20",
+      "forward_rate": 0.07261349673010953
+    },
+    {
+      "date": "2039-03-23",
+      "discount_factor": 0.40920673584286177,
+      "zero_rate": 0.07040326597789248,
+      "forward_end_date": "2039-04-20",
+      "forward_rate": 0.07407117183664935
+    },
+    {
+      "date": "2044-03-21",
+      "discount_factor": 0.28148324410037856,
+      "zero_rate": 0.07137404573765935,
+      "forward_end_date": "2044-04-18",
+      "forward_rate": 0.07372791739417389
+    },
+    {
+      "date": "2051-09-20",
+      "discount_factor": 0.16149311394261606,
+      "zero_rate": 0.07186963748250107,
+      "forward_end_date": "2051-10-18",
+      "forward_rate": 0.07276864954353789
+    }
+  ]
+}
