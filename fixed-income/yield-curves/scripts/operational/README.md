@@ -1,16 +1,8 @@
-# Operational Scripts
+# Operational scripts
 
-This directory contains stable workflows that build and export the selected project baseline.
+`build_baseline_curve.py` requires explicit quotes, classification/source,
+calendar CSV, coverage/source and output destination. It publishes only accepted
+runs. No synthetic data or projected calendar is selected implicitly.
 
-The current baseline is simultaneous nodal calibration with `CUBIC_CONTINUOUS_ZERO`.
-
-No external consumer should depend on scripts under `experiments/`.
-
-The primary Python contract is:
-
-```python
-from yield_curves.baseline import build_baseline_ftiie_curve
-```
-
-The operational demonstration script is `build_baseline_curve.py`. It writes
-the current snapshot to `outputs/baseline/` without modifying `reports/`.
+See [CLI workflows](../../docs/cli.md) for commands and migration from the former
+no-argument demo. The demo now lives in `../demo/build_synthetic_baseline.py`.
