@@ -36,7 +36,7 @@ from .curves import (
 )
 from .instruments import (
     FTiieOIS,
-    build_ftiie_ois,
+    build_calibration_ftiie_ois,
 )
 from .pricing import (
     calculate_par_rate,
@@ -117,15 +117,7 @@ def _prepare_global_calibration_instruments(
     previous_pillar: date | None = None
 
     for quote in quotes:
-        ois = build_ftiie_ois(
-            trade_date=quote.trade_date,
-            maturity_date=(
-                quote.contractual_maturity_date
-            ),
-            fixed_rate=quote.par_rate,
-            notional=1.0,
-            calendar=calendar,
-        )
+        ois = build_calibration_ftiie_ois(quote=quote, calendar=calendar)
 
         if reference_date is None:
             reference_date = (

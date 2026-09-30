@@ -6,7 +6,7 @@ from math import isfinite
 from typing import Sequence
 
 from .calendars import BusinessCalendar, CalendarCoverageError
-from .instruments import FTiieOIS, build_ftiie_ois
+from .instruments import FTiieOIS, build_calibration_ftiie_ois
 from .quotes import OISCalibrationQuote
 
 
@@ -31,12 +31,7 @@ def _build_covered_instrument(
 ) -> FTiieOIS:
     try:
         calendar.require_coverage(quote.trade_date, quote.contractual_maturity_date)
-        instrument = build_ftiie_ois(
-            trade_date=quote.trade_date,
-            maturity_date=quote.contractual_maturity_date,
-            fixed_rate=quote.par_rate,
-            calendar=calendar,
-        )
+        instrument = build_calibration_ftiie_ois(quote=quote, calendar=calendar)
         calendar.require_coverage(quote.trade_date, instrument.last_relevant_date)
         return instrument
     except CalendarCoverageError as exc:

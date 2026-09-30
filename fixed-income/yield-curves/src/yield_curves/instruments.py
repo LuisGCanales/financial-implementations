@@ -30,6 +30,7 @@ from .observations import (
     OvernightObservation,
     generate_overnight_observations,
 )
+from .quotes import OISCalibrationQuote
 from .schedules import (
     calculate_effective_date,
     generate_ois_schedule,
@@ -347,4 +348,27 @@ def build_ftiie_ois(
         fixed_leg=tuple(fixed_leg),
         floating_leg=tuple(floating_leg),
         conventions=conventions,
+    )
+
+
+def build_calibration_ftiie_ois(
+    *,
+    quote: OISCalibrationQuote,
+    calendar: BusinessCalendar,
+) -> FTiieOIS:
+    """Construct a fresh Core-v1 calibration OIS from a neutral quote.
+
+    The closed financial profile owns calibration notional and spread.
+    Contractual maturity comes directly from the quote, without tenor
+    resolution. Each call rebuilds schedules and observations using the
+    supplied calendar, including calls made for independent repricing.
+    """
+    return build_ftiie_ois(
+        trade_date=quote.trade_date,
+        maturity_date=quote.contractual_maturity_date,
+        fixed_rate=quote.par_rate,
+        calendar=calendar,
+        notional=FTIIE_OIS_CONVENTIONS.calibration_notional,
+        floating_spread=FTIIE_OIS_CONVENTIONS.floating_spread,
+        conventions=FTIIE_OIS_CONVENTIONS,
     )

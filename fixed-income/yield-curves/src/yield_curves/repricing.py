@@ -13,7 +13,7 @@ from typing import Sequence
 
 from .calendars import BusinessCalendar
 from .curves import DiscountFactorCurve
-from .instruments import build_ftiie_ois
+from .instruments import build_calibration_ftiie_ois
 from .pricing import calculate_par_rate
 from .quotes import OISCalibrationQuote
 
@@ -103,13 +103,7 @@ def reprice_calibration_instruments(
     """
     checks: list[InstrumentRepricingCheck] = []
     for quote in quotes:
-        ois = build_ftiie_ois(
-            trade_date=quote.trade_date,
-            maturity_date=quote.contractual_maturity_date,
-            fixed_rate=quote.par_rate,
-            notional=1.0,
-            calendar=calendar,
-        )
+        ois = build_calibration_ftiie_ois(quote=quote, calendar=calendar)
         model_quote = calculate_par_rate(
             ois=ois,
             projection_curve=curve,

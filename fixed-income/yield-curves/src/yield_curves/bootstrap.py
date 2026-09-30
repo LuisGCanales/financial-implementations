@@ -32,7 +32,7 @@ from .curves import (
     build_nodal_curve,
 )
 from .instruments import (
-    build_ftiie_ois,
+    build_calibration_ftiie_ois,
 )
 from .pricing import (
     calculate_par_rate,
@@ -234,15 +234,7 @@ def bootstrap_ftiie_ois_curve_with_method(
         # Reconstruct calibration instrument from the quote.
         # ----------------------------------------------------------
 
-        ois = build_ftiie_ois(
-            trade_date=quote.trade_date,
-            maturity_date=(
-                quote.contractual_maturity_date
-            ),
-            fixed_rate=quote.par_rate,
-            notional=1.0,
-            calendar=calendar,
-        )
+        ois = build_calibration_ftiie_ois(quote=quote, calendar=calendar)
 
         # ----------------------------------------------------------
         # Establish and enforce one common curve reference date.
