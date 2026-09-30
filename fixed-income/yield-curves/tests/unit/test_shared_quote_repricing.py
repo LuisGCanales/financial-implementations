@@ -190,7 +190,8 @@ def test_four_paths_rebuild_identical_contracts(monkeypatch, holidays):
     def capture(path):
         captured[path] = []
         def build(**kwargs):
-            assert kwargs["calendar"] is calendar
+            # P04 copies calendar values before operational preparation.
+            assert kwargs["calendar"] == calendar
             ois = instruments.build_calibration_ftiie_ois(**kwargs)
             captured[path].append(ois)
             return ois

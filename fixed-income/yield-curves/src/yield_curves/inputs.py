@@ -7,7 +7,7 @@ from typing import Sequence
 
 from .calendars import BusinessCalendar, CalendarCoverageError
 from .instruments import FTiieOIS, build_calibration_ftiie_ois
-from .quotes import OISCalibrationQuote
+from .quotes import OISCalibrationQuote, OISQuote
 
 
 def validate_calendar_coverage(
@@ -47,12 +47,39 @@ class BaselineInputError(ValueError):
 
 
 @dataclass(frozen=True, slots=True)
+class CalendarFinancialIdentity:
+    """Complete calendar values, independent of file/source declarations."""
+
+    name: str
+    coverage_start: date | None
+    coverage_end: date | None
+    weekend_days: tuple[int, ...]
+    holidays: tuple[date, ...]
+
+    @classmethod
+    def capture(cls, calendar: BusinessCalendar) -> "CalendarFinancialIdentity":
+        return cls(
+            str(calendar.name), calendar.coverage_start, calendar.coverage_end,
+            tuple(sorted(calendar.weekend_days)), tuple(sorted(calendar.holidays)),
+        )
+
+    def to_calendar(self) -> BusinessCalendar:
+        """Use only the captured financial values for date operations."""
+        return BusinessCalendar(
+            name=self.name, coverage_start=self.coverage_start,
+            coverage_end=self.coverage_end, weekend_days=frozenset(self.weekend_days),
+            holidays=frozenset(self.holidays),
+        )
+
+
+@dataclass(frozen=True, slots=True)
 class PreparedBaselineInputs:
     """Validated quote ordering and expected curve geometry."""
 
-    quotes: tuple[OISCalibrationQuote, ...]
+    quotes: tuple[OISQuote, ...]
     reference_date: date
     pillar_dates: tuple[date, ...]
+    calendar: CalendarFinancialIdentity
 
 
 def prepare_baseline_inputs(
@@ -64,6 +91,9 @@ def prepare_baseline_inputs(
     calendar coverage. Source authenticity is outside this input contract.
     """
     quotes = tuple(quotes)
+    calendar_identity = CalendarFinancialIdentity.capture(calendar)
+    calendar = calendar_identity.to_calendar()
+    captured_quotes: list[OISQuote] = []
     issues: list[str] = []
     if not quotes:
         raise BaselineInputError(("EMPTY_QUOTE_SET",))
@@ -104,11 +134,14 @@ def prepare_baseline_inputs(
             finite = False
         if not finite:
             issues.append(f"NON_FINITE_OR_INVALID_QUOTE:{label}")
+        if not issues:
+            captured_quotes.append(OISQuote(str(tenor), trade, maturity, float(rate)))
     if len(trade_dates) > 1:
         issues.append("MULTIPLE_TRADE_DATES")
     if issues:
         raise BaselineInputError(issues)
 
+    quotes = tuple(captured_quotes)
     reference_date = None
     pillar_dates: list[date] = []
     for quote in quotes:
@@ -128,4 +161,6 @@ def prepare_baseline_inputs(
         pillar_dates.append(pillar)
 
     assert reference_date is not None
-    return PreparedBaselineInputs(quotes, reference_date, tuple(pillar_dates))
+    return PreparedBaselineInputs(
+        quotes, reference_date, tuple(pillar_dates), calendar_identity
+    )

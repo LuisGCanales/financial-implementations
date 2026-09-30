@@ -52,7 +52,9 @@ def test_rejected_run_is_archived_without_replacing_current(run_inputs, tmp_path
     acceptance = assess_baseline_calibration(calibration_result=calibration,
                                             quotes=run_inputs["dataset"].quotes,
                                             calendar=run_inputs["calendar"])
-    rejected = replace(run_inputs["result"], calibration_result=calibration, acceptance=acceptance)
+    # Standalone reassessment carries evaluation inputs, not construction history.
+    rejected = replace(run_inputs["result"], calibration_result=calibration,
+                       acceptance=acceptance, financial_context=None)
     archive = snapshots.export_baseline_snapshot(**{**run_inputs, "result": rejected}, output_root=tmp_path)
     assert not archive.published
     assert (tmp_path / "current.json").read_bytes() == pointer
@@ -156,7 +158,7 @@ def test_metadata_retains_custom_acceptance_tolerances(run_inputs, tmp_path):
         quotes=run_inputs["dataset"].quotes, calendar=run_inputs["calendar"],
         pass_tolerance_bp=0.02, fail_tolerance_bp=0.20,
     )
-    result = replace(run_inputs["result"], acceptance=acceptance)
+    result = replace(run_inputs["result"], acceptance=acceptance, financial_context=None)
     exported = snapshots.export_baseline_snapshot(
         **{**run_inputs, "result": result}, output_root=tmp_path
     )

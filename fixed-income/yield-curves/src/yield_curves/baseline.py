@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
+from datetime import date
 from math import isfinite
 from typing import Sequence
 
@@ -12,6 +13,7 @@ from .calibration import (
     GlobalCalibrationResult,
     calibrate_ftiie_ois_curve_simultaneously,
 )
+from .conventions import FTiieOISConventions, FTIIE_OIS_CONVENTIONS
 from .curves import CurveInterpolationMethod, CubicContinuousZeroCurve
 from .inputs import BaselineInputError, PreparedBaselineInputs, prepare_baseline_inputs
 from .repricing import (
@@ -33,8 +35,87 @@ BASELINE_FAIL_TOLERANCE_BP = 0.10
 
 
 @dataclass(frozen=True, slots=True)
+class BaselineConstructionPolicy:
+    """Financial policy selected at build time; no acceptance/publication identity."""
+
+    baseline_identifier: str
+    calibration_approach: str
+    interpolation_method: CurveInterpolationMethod
+    conventions: FTiieOISConventions
+    instrument: str = "FTIIE_OIS"
+    profile: str = "Core-v1"
+    projection_discounting: str = "same_curve"
+    reference_date_rule: str = "common_effective_date"
+    pillar_date_rule: str = "final_payment_date"
+    spline_boundary: str = "natural"
+    zero_at_origin: str = "first_nodal_zero"
+    extrapolation: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class BaselineFinancialContext:
+    """Captured construction inputs and selected policy, without source provenance."""
+
+    inputs: PreparedBaselineInputs
+    policy: BaselineConstructionPolicy
+
+
+@dataclass(frozen=True, slots=True)
+class BaselinePayloadBinding:
+    """Exact value identity of the assessed payload, including mutable spline state.
+
+    Hexadecimal floats preserve binary values without repricing tolerances or
+    rounding. Nonfinite diagnostic values remain explicit (nan/inf). This is
+    value binding, not authentication against deliberate object forgery.
+    """
+
+    evaluation_inputs: PreparedBaselineInputs | None
+    financial_context: BaselineFinancialContext | None
+    interpolation_method: str
+    curve_type: tuple[str, str]
+    reference_date: date | None
+    node_dates: tuple[date, ...]
+    discount_factors: tuple[str, ...]
+    spline_state: tuple
+    calibration_state: tuple
+
+    @classmethod
+    def capture(
+        cls, result: GlobalCalibrationResult,
+        inputs: PreparedBaselineInputs | None,
+        context: BaselineFinancialContext | None,
+    ) -> "BaselinePayloadBinding":
+        curve = result.curve
+        spline_state = ()
+        if isinstance(curve, CubicContinuousZeroCurve):
+            spline = curve._spline_object
+            spline_state = (
+                tuple(spline.x.shape), tuple(float(x).hex() for x in spline.x.flat),
+                tuple(spline.c.shape), tuple(float(x).hex() for x in spline.c.flat),
+                spline.extrapolate, spline.axis,
+            )
+        checks = tuple(
+            (c.tenor, float(c.market_quote).hex(), float(c.model_quote).hex(),
+             float(c.error_bp).hex()) for c in result.checks
+        )
+        return cls(
+            inputs, context, str(result.interpolation_method),
+            (type(curve).__module__, type(curve).__qualname__),
+            getattr(curve, "reference_date", None),
+            tuple(getattr(curve, "node_dates", ())),
+            tuple(float(df).hex() for df in getattr(curve, "discount_factors", ())),
+            spline_state,
+            (result.success, checks, result.message, result.function_evaluations,
+             result.jacobian_evaluations, float(result.cost).hex(),
+             float(result.optimality).hex(),
+             float(result.max_abs_repricing_error_bp).hex(),
+             float(result.rmse_repricing_error_bp).hex()),
+        )
+
+
+@dataclass(frozen=True, slots=True)
 class BaselineAcceptance:
-    """Operational acceptance result for one baseline calibration."""
+    """Historical assessment of the payload recorded in ``binding``."""
 
     calibration_success: bool
     accepted_for_use: bool
@@ -49,19 +130,34 @@ class BaselineAcceptance:
     pass_tolerance_bp: float
     max_abs_repricing_error_bp: float
     fail_tolerance_bp: float = BASELINE_FAIL_TOLERANCE_BP
+    binding: BaselinePayloadBinding | None = None
+
+    def is_bound_to(
+        self, calibration_result: GlobalCalibrationResult,
+        financial_context: BaselineFinancialContext | None = None,
+    ) -> bool:
+        """Check current payload values; a standalone assessment has no build history."""
+        if self.binding is None:
+            return False
+        try:
+            return self.binding == BaselinePayloadBinding.capture(
+                calibration_result, self.binding.evaluation_inputs, financial_context
+            )
+        except (AttributeError, TypeError, ValueError, ArithmeticError):
+            return False
 
 
 @dataclass(frozen=True, slots=True)
 class BaselineResult:
-    """Calibration result plus the explicit operational acceptance result.
-
-    The calibration result remains the single source of truth for the curve,
-    solver diagnostics, and calibration checks. This wrapper only separates
-    those facts from the policy decision about downstream use.
-    """
+    """Calibration and historical acceptance with a checked financial value binding."""
 
     calibration_result: GlobalCalibrationResult
     acceptance: BaselineAcceptance
+    financial_context: BaselineFinancialContext | None = None
+
+    def __post_init__(self) -> None:
+        if not self.acceptance.is_bound_to(self.calibration_result, self.financial_context):
+            raise ValueError("Acceptance payload binding mismatch.")
 
     @property
     def curve(self):
@@ -71,9 +167,11 @@ class BaselineResult:
 
     @property
     def accepted_for_use(self) -> bool:
-        """Return whether the result passed operational acceptance."""
+        """Require both historical acceptance and an unchanged current payload."""
 
-        return self.acceptance.accepted_for_use
+        return self.acceptance.accepted_for_use and self.acceptance.is_bound_to(
+            self.calibration_result, self.financial_context
+        )
 
 
 def _independently_reprice(
@@ -113,6 +211,8 @@ def assess_baseline_calibration(
     quotes = tuple(quotes)
     try:
         prepared = prepare_baseline_inputs(quotes=quotes, calendar=calendar)
+        quotes = prepared.quotes
+        calendar = prepared.calendar.to_calendar()
         input_issues = ()
     except BaselineInputError as exc:
         prepared = None
@@ -149,8 +249,10 @@ def _assess_prepared_calibration(
     input_issues: tuple[str, ...],
     pass_tolerance_bp: float,
     fail_tolerance_bp: float,
+    financial_context: BaselineFinancialContext | None = None,
 ) -> BaselineAcceptance:
     """Reuse preflight geometry; repricing still reconstructs instruments independently."""
+    binding = BaselinePayloadBinding.capture(calibration_result, prepared, financial_context)
     issues = list(input_issues)
     curve = calibration_result.curve
     if calibration_result.interpolation_method != BASELINE_INTERPOLATION_METHOD:
@@ -235,6 +337,7 @@ def _assess_prepared_calibration(
         pass_tolerance_bp=pass_tolerance_bp,
         max_abs_repricing_error_bp=max_abs_error,
         fail_tolerance_bp=fail_tolerance_bp,
+        binding=binding,
     )
 
 
@@ -249,14 +352,24 @@ def build_baseline_ftiie_curve(
     Invalid quote sets raise BaselineInputError; absent/insufficient calendar
     coverage raises CalendarCoverageError before the solver is invoked.
     """
+    if initial_discount_factors is not None:
+        initial_discount_factors = tuple(initial_discount_factors)
+    policy = BaselineConstructionPolicy(
+        baseline_identifier=BASELINE_IDENTIFIER,
+        calibration_approach=BASELINE_CALIBRATION_APPROACH,
+        interpolation_method=BASELINE_INTERPOLATION_METHOD,
+        conventions=replace(FTIIE_OIS_CONVENTIONS),
+    )
     prepared = prepare_baseline_inputs(quotes=quotes, calendar=calendar)
     quotes = prepared.quotes
+    calendar = prepared.calendar.to_calendar()
+    context = BaselineFinancialContext(prepared, policy)
 
     calibration_result = (
         calibrate_ftiie_ois_curve_simultaneously(
             quotes=quotes,
             calendar=calendar,
-            interpolation_method=BASELINE_INTERPOLATION_METHOD,
+            interpolation_method=policy.interpolation_method,
             initial_discount_factors=initial_discount_factors,
         )
     )
@@ -269,9 +382,11 @@ def build_baseline_ftiie_curve(
         input_issues=(),
         pass_tolerance_bp=BASELINE_PASS_TOLERANCE_BP,
         fail_tolerance_bp=BASELINE_FAIL_TOLERANCE_BP,
+        financial_context=context,
     )
 
     return BaselineResult(
         calibration_result=calibration_result,
         acceptance=acceptance,
+        financial_context=context,
     )

@@ -223,3 +223,33 @@ def test_cli_loads_explicit_calendar_and_general_quotes(tmp_path):
     )
     assert dataset.quotes == read_ois_quotes_csv(quotes_path)
     assert build_baseline_ftiie_curve(quotes=dataset.quotes, calendar=calendar).accepted_for_use
+
+
+@pytest.mark.parametrize('changes', [
+    {'holidays': frozenset({date(2026, 9, 16)})},
+    {'weekend_days': frozenset({4, 5})},
+    {'coverage_start': date(2026, 1, 2)},
+    {'coverage_end': date(2026, 12, 30)},
+])
+def test_same_calendar_name_does_not_imply_same_financial_identity(changes):
+    from yield_curves.inputs import CalendarFinancialIdentity
+
+    calendar = BusinessCalendar('SAME', coverage_start=date(2026, 1, 1),
+                                coverage_end=date(2026, 12, 31))
+    assert CalendarFinancialIdentity.capture(calendar) != CalendarFinancialIdentity.capture(
+        replace(calendar, **changes)
+    )
+
+
+def test_calendar_financial_identity_excludes_source_and_canonicalizes_sets():
+    from yield_curves.calendars import CalendarProvenance
+    from yield_curves.inputs import CalendarFinancialIdentity
+
+    calendar = BusinessCalendar('SAME', holidays={date(2026, 1, 2), date(2026, 9, 16)},
+                                coverage_start=date(2026, 1, 1), coverage_end=date(2026, 12, 31))
+    identity = CalendarFinancialIdentity.capture(calendar)
+    other = replace(calendar, holidays=frozenset(reversed(sorted(calendar.holidays))),
+                    provenance=CalendarProvenance('/different/source.csv', CalendarSource.PROVIDED))
+    assert identity == CalendarFinancialIdentity.capture(other)
+    assert identity.holidays == (date(2026, 1, 2), date(2026, 9, 16))
+    assert identity.to_calendar().provenance is None

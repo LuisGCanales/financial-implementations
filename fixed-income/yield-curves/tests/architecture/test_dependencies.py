@@ -123,3 +123,13 @@ assert projected.provenance.sha256 is None
 assert not projected.is_business_day(date(2026, 9, 16))
 assert "yield_curves.calendar_io" not in sys.modules
 """], check=True, cwd=ROOT)
+
+
+def test_financial_context_policy_has_no_filesystem_or_adapter_dependencies():
+    for module in ('inputs', 'baseline'):
+        imports = set(_imports(PACKAGE / (module + '.py')))
+        forbidden = ('pathlib', 'os', 'json', 'hashlib', 'yield_curves.calendar_io',
+                     'yield_curves.quote_io', 'yield_curves.snapshots',
+                     'yield_curves.snapshot_assurance', 'yield_curves.tooling')
+        assert not any(name == target or name.startswith(target + '.')
+                       for name in imports for target in forbidden)

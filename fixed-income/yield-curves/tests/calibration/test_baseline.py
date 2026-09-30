@@ -191,3 +191,11 @@ def test_curve_unavailable_is_rejected_without_exception(
     assert not acceptance.structural_valid
     assert not acceptance.accepted_for_use
     assert "CURVE_UNAVAILABLE" in acceptance.issues
+
+def test_baseline_public_signature_remains_fixed():
+    from inspect import Parameter, signature
+
+    parameters = signature(build_baseline_ftiie_curve).parameters
+    assert tuple(parameters) == ('quotes', 'calendar', 'initial_discount_factors')
+    assert all(p.kind is Parameter.KEYWORD_ONLY for p in parameters.values())
+    assert parameters['initial_discount_factors'].default is None
