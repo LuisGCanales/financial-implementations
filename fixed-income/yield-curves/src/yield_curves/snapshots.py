@@ -17,12 +17,10 @@ from itertools import zip_longest
 from pathlib import Path
 from uuid import uuid4
 
-from .baseline import BASELINE_IDENTIFIER, BASELINE_CALIBRATION_APPROACH, BaselineAcceptance, BaselineResult
-from .calendars import BusinessCalendar
-from .quote_io import OISQuoteDataset
+from .execution import ExecutionEnvelope, fingerprint
 
 
-SCHEMA_VERSION = "2.0"
+SCHEMA_VERSION = "3.0"
 
 
 @dataclass(frozen=True, slots=True)
@@ -43,19 +41,6 @@ def _safe(value):
     if isinstance(value, (list, tuple)):
         return [_safe(item) for item in value]
     return value
-
-
-def _acceptance_metadata(acceptance: BaselineAcceptance) -> dict:
-    """Preserve schema 2.0 until publication supports acceptance identity."""
-    metadata = asdict(acceptance)
-    metadata.pop("acceptance_policy")
-    binding = metadata["binding"]
-    if binding is not None:
-        binding.pop("acceptance_policy")
-        context = binding["financial_context"]
-        if context is not None:
-            context["policy"].pop("acceptance_policy")
-    return metadata
 
 
 def _write_json(path: Path, value) -> None:
@@ -84,15 +69,22 @@ def _sync_directory(path: Path) -> None:
 
 
 def export_baseline_snapshot(
-    *, result: BaselineResult, dataset: OISQuoteDataset,
-    calendar: BusinessCalendar, output_root: str | Path,
+    *, execution: ExecutionEnvelope, output_root: str | Path,
 ) -> SnapshotExport:
-    """Archive a run and publish it only when operational acceptance passed.
+    """Archive a complete bound standard execution; promote only accepted runs.
 
-    Supply the dataset/calendar used for this result. No input files are reread.
-    Run files are immutable by convention. Concurrent accepted publishers use
-    last-completed-pointer-replacement wins, not valuation-date ordering.
+    Local POSIX staging/fsync/rename precedes atomic pointer replacement. An
+    exception after rename may leave a complete run; after os.replace it may
+    leave a new current pointer. No rollback is promised after either commit.
+    Concurrent publishers use last-completed-pointer-replacement wins.
     """
+    if not isinstance(execution, ExecutionEnvelope):
+        raise TypeError("Standard publication requires an ExecutionEnvelope.")
+    execution.validate()
+    result = execution.result
+    quotes = execution.inputs.quotes
+    calendar = execution.inputs.calendar.to_calendar()
+    policy = result.financial_context.policy
     calibration = result.calibration_result
     acceptance = result.acceptance
     curve = result.curve
@@ -107,11 +99,6 @@ def export_baseline_snapshot(
                         and check.absolute_error_bp <= acceptance.pass_tolerance_bp
                         for check in acceptance.checks)):
             raise ValueError("Inconsistent accepted result cannot be published.")
-        if [(q.tenor, q.par_rate) for q in dataset.quotes] != [
-            (check.tenor, check.market_quote) for check in acceptance.checks
-        ]:
-            raise ValueError("Dataset does not match the accepted repricing checks.")
-
     root = Path(output_root).resolve()
     runs = root / "runs"
     runs.mkdir(parents=True, exist_ok=True)
@@ -124,21 +111,21 @@ def export_baseline_snapshot(
         _write_csv(staging / "input_quotes.csv",
                    ("tenor", "trade_date", "contractual_maturity_date", "par_rate"),
                    ((q.tenor, q.trade_date, q.contractual_maturity_date, q.par_rate)
-                    for q in dataset.quotes))
+                    for q in quotes))
         calendar_data = {
             "name": calendar.name,
             "coverage_start": calendar.coverage_start,
             "coverage_end": calendar.coverage_end,
             "weekend_days": sorted(calendar.weekend_days),
             "holidays": sorted(calendar.holidays),
-            "provenance": asdict(calendar.provenance) if calendar.provenance else None,
+            "provenance": asdict(execution.calendar_provenance) if execution.calendar_provenance else None,
         }
         _write_json(staging / "calendar.json", calendar_data)
         node_rows = []
         for index, (day, df) in enumerate(zip_longest(
             getattr(curve, "node_dates", ()), getattr(curve, "discount_factors", ())
         )):
-            tenor = dataset.quotes[index].tenor if index < len(dataset.quotes) else None
+            tenor = quotes[index].tenor if index < len(quotes) else None
             zero = curve.zero_rate(day) if acceptance.structural_valid and day is not None else None
             node_rows.append((tenor, day, df, zero))
         _write_csv(staging / "curve_nodes.csv",
@@ -150,14 +137,20 @@ def export_baseline_snapshot(
         metadata = {
             "artifact_schema_version": SCHEMA_VERSION,
             "run_id": run_id, "created_at_utc": created_at,
-            "baseline_identifier": BASELINE_IDENTIFIER,
-            "calibration_approach": BASELINE_CALIBRATION_APPROACH,
+            "baseline_identifier": policy.baseline_identifier,
+            "calibration_approach": policy.calibration_approach,
             "interpolation_method": calibration.interpolation_method.value,
-            "projection_discount_assumption": "same_curve",
+            "projection_discount_assumption": policy.projection_discounting,
             "curve_reference_date": getattr(curve, "reference_date", None),
-            "quote_count": len(dataset.quotes), "node_count": len(node_rows),
-            "quote_provenance": asdict(dataset.provenance),
-            "acceptance": _acceptance_metadata(acceptance),
+            "quote_count": len(quotes), "node_count": len(node_rows),
+            "quote_provenance": asdict(execution.quote_provenance),
+            "acceptance": asdict(acceptance),
+            "execution": execution.record(),
+            "execution_binding_sha256": execution.binding_sha256,
+            "financial_context_sha256": fingerprint(result.financial_context),
+            "payload_sha256": fingerprint(acceptance.binding),
+            "acceptance_sha256": fingerprint(acceptance),
+            "status": "accepted" if result.accepted_for_use else "rejected",
             "solver": {key: getattr(calibration, key) for key in (
                 "success", "message", "function_evaluations", "jacobian_evaluations",
                 "cost", "optimality",
@@ -165,7 +158,12 @@ def export_baseline_snapshot(
             "environment": {"python": platform.python_version(),
                             "numpy": version("numpy"), "scipy": version("scipy"),
                             "yield_curves": version("yield-curves")},
-            "non_finite_encoding": "JSON null; CSV blank",
+            "non_finite_encoding": "JSON null; CSV blank; binding diagnostics use float.hex",
+            "checksum_semantics": {
+                "files_sha256": "SHA-256 of exact serialized artifact bytes",
+                "source_sha256": "SHA-256 of captured source bytes, when available",
+                "binding_sha256": "SHA-256 of sorted compact UTF-8 JSON values; no authentication",
+            },
         }
         _write_json(staging / "metadata.json", metadata)
         hashes = {path.name: hashlib.sha256(path.read_bytes()).hexdigest()
@@ -174,6 +172,7 @@ def export_baseline_snapshot(
             "artifact_schema_version": SCHEMA_VERSION, "run_id": run_id,
             "created_at_utc": created_at, "accepted_for_use": result.accepted_for_use,
             "files_sha256": hashes,
+            "execution_binding_sha256": execution.binding_sha256,
         }
         _write_json(staging / "manifest.json", manifest)
         _sync_directory(staging)
@@ -185,6 +184,7 @@ def export_baseline_snapshot(
             _write_json(pointer_temp, {
                 "artifact_schema_version": SCHEMA_VERSION, "run_id": run_id,
                 "run_path": f"runs/{run_id}",
+                "execution_binding_sha256": execution.binding_sha256,
                 "manifest_sha256": hashlib.sha256(
                     (destination / "manifest.json").read_bytes()
                 ).hexdigest(),
@@ -202,6 +202,8 @@ def resolve_current_snapshot(output_root: str | Path) -> Path:
     """Read the pointer once and verify the complete run before returning its path."""
     root = Path(output_root).resolve()
     pointer = json.loads((root / "current.json").read_text(encoding="utf-8"))
+    if pointer.get("artifact_schema_version") != SCHEMA_VERSION:
+        raise ValueError("Unsupported snapshot schema; bound assurance requires schema 3.0.")
     run_id = pointer["run_id"]
     if (pointer["artifact_schema_version"] != SCHEMA_VERSION
             or not isinstance(run_id, str) or len(run_id) != 32
@@ -213,6 +215,8 @@ def resolve_current_snapshot(output_root: str | Path) -> Path:
     if hashlib.sha256(raw_manifest).hexdigest() != pointer["manifest_sha256"]:
         raise ValueError("Snapshot manifest checksum mismatch.")
     manifest = json.loads(raw_manifest)
+    if manifest.get("artifact_schema_version") != SCHEMA_VERSION:
+        raise ValueError("Unsupported snapshot manifest schema; expected 3.0.")
     expected_files = {"metadata.json", "calendar.json", "input_quotes.csv",
                       "curve_nodes.csv", "quote_repricing.csv"}
     if (manifest["run_id"] != run_id or manifest["accepted_for_use"] is not True
@@ -223,6 +227,15 @@ def resolve_current_snapshot(output_root: str | Path) -> Path:
         if hashlib.sha256((run / name).read_bytes()).hexdigest() != checksum:
             raise ValueError(f"Snapshot checksum mismatch: {name}")
     metadata = json.loads((run / "metadata.json").read_text(encoding="utf-8"))
-    if metadata["run_id"] != run_id or metadata["acceptance"]["accepted_for_use"] is not True:
+    if metadata.get("artifact_schema_version") != SCHEMA_VERSION:
+        raise ValueError("Unsupported snapshot metadata schema; expected 3.0.")
+    if (metadata.get("artifact_schema_version") != SCHEMA_VERSION
+            or metadata["run_id"] != run_id
+            or metadata["acceptance"]["accepted_for_use"] is not True
+            or metadata.get("status") != "accepted"
+            or metadata["created_at_utc"] != manifest["created_at_utc"]
+            or pointer.get("execution_binding_sha256") != manifest.get("execution_binding_sha256")
+            or manifest.get("execution_binding_sha256") != metadata.get("execution_binding_sha256")
+            or metadata.get("execution_binding_sha256") != fingerprint(metadata.get("execution"))):
         raise ValueError("Snapshot metadata does not describe an accepted run.")
     return run

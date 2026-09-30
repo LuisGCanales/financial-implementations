@@ -3,7 +3,7 @@
 import argparse
 from pathlib import Path
 
-from yield_curves.baseline import build_baseline_ftiie_curve
+from yield_curves.execution import build_baseline_execution
 from yield_curves.research.calendars import (build_projected_mxmc_calendar)
 from yield_curves.tooling.cli_inputs import (print_acceptance)
 from yield_curves.tooling.project_paths import (find_project_root)
@@ -23,9 +23,12 @@ def main(arguments=None):
         classification=QuoteSource.SYNTHETIC, source="Frozen F-TIIE synthetic reference scenario",
     )
     calendar = build_projected_mxmc_calendar(start_year=2026, end_year=2057)
-    result = build_baseline_ftiie_curve(quotes=dataset.quotes, calendar=calendar)
-    exported = export_baseline_snapshot(result=result, dataset=dataset, calendar=calendar,
+    execution = build_baseline_execution(dataset=dataset, calendar=calendar)
+    result = execution.result
+    exported = export_baseline_snapshot(execution=execution,
                                         output_root=args.output_root)
+    print(f"quote_classification: {execution.quote_provenance.classification}")
+    print(f"calendar_origin: {execution.calendar_provenance.kind}")
     print_acceptance(result.acceptance)
     print(f"run_path: {exported.run_path}")
     return 0 if result.accepted_for_use else 1

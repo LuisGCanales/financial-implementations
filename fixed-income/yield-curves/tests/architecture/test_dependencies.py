@@ -10,7 +10,7 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[2]
 PACKAGE = ROOT / "src/yield_curves"
-OPERATIONAL = {"baseline", "inputs", "snapshots", "snapshot_assurance", "quote_io", "calendar_io"}
+OPERATIONAL = {"baseline", "inputs", "snapshots", "snapshot_assurance", "quote_io", "calendar_io", "execution"}
 CORE = {"bootstrap", "calibration", "calendars", "conventions", "curves",
         "diagnostics", "log_linear_diagnostics", "instruments", "observations",
         "pricing", "quotes", "repricing", "schedules", "tenors"}
@@ -54,7 +54,9 @@ def test_package_layers_are_explicit_and_imports_point_inward():
             if start.split(".")[-1] in CORE:
                 assert name.split(".")[-1] not in OPERATIONAL, (start, name)
             if start in {f"yield_curves.{layer}" for layer in CORE | {"baseline", "inputs"}}:
-                assert name != "yield_curves.calendar_io", (start, name)
+                assert name not in {"yield_curves.calendar_io", "yield_curves.quote_io",
+                                    "yield_curves.execution", "yield_curves.snapshots",
+                                    "yield_curves.snapshot_assurance"}, (start, name)
             pending.extend(graph[name] - visited)
 
 
@@ -76,7 +78,7 @@ def test_all_script_package_imports_resolve_without_executing_scripts():
 def test_operational_entrypoints_have_no_research_or_repository_defaults():
     for path in [ROOT / "scripts/operational/build_baseline_curve.py",
                  ROOT / "scripts/assurance/validate_baseline_curve.py",
-                 PACKAGE / "tooling/cli_inputs.py"]:
+                 PACKAGE / "tooling/cli_inputs.py", PACKAGE / "execution.py"]:
         source = path.read_text()
         assert "research" not in source
         assert "find_project_root" not in source
@@ -126,10 +128,25 @@ assert "yield_curves.calendar_io" not in sys.modules
 
 
 def test_financial_context_policy_has_no_filesystem_or_adapter_dependencies():
-    for module in ('inputs', 'baseline'):
+    for module in CORE | {'inputs', 'baseline'}:
         imports = set(_imports(PACKAGE / (module + '.py')))
-        forbidden = ('pathlib', 'os', 'json', 'hashlib', 'yield_curves.calendar_io',
-                     'yield_curves.quote_io', 'yield_curves.snapshots',
+        forbidden = ('pathlib', 'os', 'io', 'shutil', 'tempfile', 'json', 'hashlib',
+                     'yield_curves.calendar_io',
+                     'yield_curves.quote_io', 'yield_curves.execution', 'yield_curves.snapshots',
                      'yield_curves.snapshot_assurance', 'yield_curves.tooling')
         assert not any(name == target or name.startswith(target + '.')
                        for name in imports for target in forbidden)
+        tree = ast.parse((PACKAGE / (module + '.py')).read_text())
+        assert not any(isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+                       and node.func.id == 'open' for node in ast.walk(tree))
+
+
+def test_snapshot_assurance_has_no_solver_or_publication_calls():
+    tree = ast.parse((PACKAGE / "snapshot_assurance.py").read_text())
+    forbidden = {"build_baseline_ftiie_curve", "build_baseline_execution",
+                 "calibrate_ftiie_ois_curve_simultaneously", "least_squares",
+                 "bootstrap_ftiie_ois_curve", "export_baseline_snapshot"}
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call):
+            name = node.func.id if isinstance(node.func, ast.Name) else getattr(node.func, "attr", "")
+            assert name not in forbidden

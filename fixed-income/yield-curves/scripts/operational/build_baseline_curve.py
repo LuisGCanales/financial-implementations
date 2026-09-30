@@ -3,15 +3,16 @@
 import argparse
 from pathlib import Path
 
-from yield_curves.baseline import build_baseline_ftiie_curve
+from yield_curves.execution import build_baseline_execution
 from yield_curves.tooling.cli_inputs import (add_input_arguments, load_cli_inputs, print_acceptance)
 from yield_curves.snapshots import export_baseline_snapshot
 
 
 def build_snapshot(*, dataset, calendar, output_root):
     """Build and archive using the exact dataset and calendar supplied by the caller."""
-    result = build_baseline_ftiie_curve(quotes=dataset.quotes, calendar=calendar)
-    export_baseline_snapshot(result=result, dataset=dataset, calendar=calendar,
+    execution = build_baseline_execution(dataset=dataset, calendar=calendar)
+    result = execution.result
+    export_baseline_snapshot(execution=execution,
                              output_root=output_root)
     return result
 
