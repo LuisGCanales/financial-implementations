@@ -15,6 +15,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from math import isfinite
 
+from .conventions import validate_zero_floating_spread
 from .curves import DiscountFactorCurve
 from .instruments import (
     FTiieOIS,
@@ -174,11 +175,7 @@ def project_floating_coupon(
     until their contractual treatment is separately specified.
     """
 
-    if coupon.spread != 0.0:
-        raise NotImplementedError(
-            "Core-v1 projected pricing currently supports "
-            "zero floating spread only."
-        )
+    validate_zero_floating_spread(coupon.spread)
 
     projected_observations: list[
         ProjectedOvernightRate

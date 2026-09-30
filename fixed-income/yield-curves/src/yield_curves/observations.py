@@ -28,6 +28,7 @@ from .calendars import BusinessCalendar
 from .conventions import (
     FTIIE_OIS_CONVENTIONS,
     FTiieOISConventions,
+    validate_core_v1_conventions,
 )
 
 
@@ -100,6 +101,8 @@ def generate_overnight_observations(
         Ordered fixing/accrual observations.
     """
 
+    validate_core_v1_conventions(conventions)
+
     if period_end_date <= period_start_date:
         raise ValueError(
             "Period end date must be after period start date."
@@ -113,11 +116,6 @@ def generate_overnight_observations(
     if not calendar.is_business_day(period_end_date):
         raise ValueError(
             "Period end date must be a business day."
-        )
-
-    if conventions.fixing_day_type.value != "BUSINESS":
-        raise NotImplementedError(
-            "Core v1 currently supports business-day fixings only."
         )
 
     observations: list[OvernightObservation] = []

@@ -1,5 +1,7 @@
+from dataclasses import replace
 from datetime import date
 from pathlib import Path
+from math import isfinite
 
 import pytest
 
@@ -271,28 +273,28 @@ def test_higher_projection_curve_increases_par_rate(
     assert high_rate > low_rate
 
 
-def test_nonzero_floating_spread_fails_explicitly(
-    mxmc_calendar,
-) -> None:
-    ois = build_ftiie_ois(
-        trade_date=date(2026, 9, 15),
-        maturity_date=date(2026, 12, 11),
-        fixed_rate=0.07,
-        floating_spread=0.001,
-        calendar=mxmc_calendar,
-    )
+@pytest.mark.parametrize("spread", [0.001, -0.001, float("inf"), float("nan")])
+def test_nonzero_floating_spread_fails_explicitly(sample_ois, spread) -> None:
+    coupon = replace(sample_ois.floating_leg[0], spread=spread)
+    # No curve access is allowed before rejecting the unsupported spread.
+    error = ValueError if not isfinite(spread) else NotImplementedError
+    with pytest.raises(error, match="[Ff]loating spread"):
+        project_floating_coupon(coupon=coupon, projection_curve=None)
 
-    curve = FlatContinuousZeroCurve(
-        reference_date=ois.effective_date,
-        rate=0.07,
-    )
 
-    with pytest.raises(
-        NotImplementedError,
-        match="zero floating spread",
-    ):
-        value_ftiie_ois(
-            ois=ois,
-            projection_curve=curve,
-            discount_curve=curve,
-        )
+def test_downstream_notional_scales_pv_without_changing_profile(mxmc_calendar):
+    from yield_curves.conventions import FTIIE_OIS_CONVENTIONS
+
+    instruments = [build_ftiie_ois(
+        trade_date=date(2026, 9, 15), maturity_date=date(2026, 12, 11),
+        fixed_rate=0.07, notional=notional, calendar=mxmc_calendar,
+    ) for notional in (1.0, 1_000_000.0)]
+    curve = FlatContinuousZeroCurve(reference_date=instruments[0].effective_date, rate=0.08)
+    small, large = [value_ftiie_ois(
+        ois=ois, projection_curve=curve, discount_curve=curve,
+    ) for ois in instruments]
+    assert large.fixed_leg_pv == pytest.approx(small.fixed_leg_pv * 1_000_000)
+    assert large.floating_leg_pv == pytest.approx(small.floating_leg_pv * 1_000_000)
+    assert large.par_rate == pytest.approx(small.par_rate)
+    assert all(ois.conventions is FTIIE_OIS_CONVENTIONS for ois in instruments)
+    assert FTIIE_OIS_CONVENTIONS.calibration_notional == 1.0

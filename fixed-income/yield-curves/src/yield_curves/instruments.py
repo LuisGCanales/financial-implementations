@@ -23,6 +23,8 @@ from .calendars import BusinessCalendar
 from .conventions import (
     FTIIE_OIS_CONVENTIONS,
     FTiieOISConventions,
+    validate_core_v1_conventions,
+    validate_zero_floating_spread,
 )
 from .observations import (
     OvernightObservation,
@@ -118,14 +120,14 @@ class FTiieOIS:
     conventions: FTiieOISConventions
 
     def __post_init__(self) -> None:
+        validate_core_v1_conventions(self.conventions)
+        validate_zero_floating_spread(self.floating_spread)
+        for coupon in self.floating_leg:
+            validate_zero_floating_spread(coupon.spread)
+
         if not isfinite(self.fixed_rate):
             raise ValueError(
                 "Fixed rate must be finite."
-            )
-
-        if not isfinite(self.floating_spread):
-            raise ValueError(
-                "Floating spread must be finite."
             )
 
         if not isfinite(self.notional):
@@ -257,11 +259,14 @@ def build_ftiie_ois(
     floating_spread
         Floating-leg spread expressed as a decimal.
 
-        Canonical calibration instruments use zero spread.
+        Core-v1 supports zero spread only, including downstream instruments.
 
     conventions
         Explicit F-TIIE OIS financial convention profile.
     """
+
+    validate_core_v1_conventions(conventions)
+    validate_zero_floating_spread(floating_spread)
 
     if not isfinite(fixed_rate):
         raise ValueError(
@@ -276,11 +281,6 @@ def build_ftiie_ois(
     if notional <= 0:
         raise ValueError(
             "Notional must be positive."
-        )
-
-    if not isfinite(floating_spread):
-        raise ValueError(
-            "Floating spread must be finite."
         )
 
     effective_date = calculate_effective_date(

@@ -1,9 +1,11 @@
+from dataclasses import replace
 from datetime import date
 from pathlib import Path
 
 import pytest
 
 from yield_curves.calendars import (
+    BusinessCalendar,
     build_mxmc_calendar_from_csv,
 )
 from yield_curves.instruments import (
@@ -291,3 +293,34 @@ def test_non_positive_notional_is_rejected(
             notional=0.0,
             calendar=mxmc_calendar,
         )
+
+@pytest.mark.parametrize("spread", [0.001, -0.001])
+def test_builder_rejects_spread_before_calendar_access(spread):
+    with pytest.raises(NotImplementedError, match="zero floating spread"):
+        build_ftiie_ois(
+            trade_date=date(2026, 9, 15), maturity_date=date(2026, 12, 11),
+            fixed_rate=0.07, floating_spread=spread, calendar=None,
+        )
+
+
+@pytest.mark.parametrize("location", ["instrument", "coupon"])
+def test_direct_instrument_rejects_nonzero_spread(mxmc_calendar, location):
+    ois = build_ftiie_ois(
+        trade_date=date(2026, 9, 15), maturity_date=date(2026, 12, 11),
+        fixed_rate=0.07, calendar=mxmc_calendar,
+    )
+    with pytest.raises(NotImplementedError, match="zero floating spread"):
+        if location == "instrument":
+            replace(ois, floating_spread=0.001)
+        else:
+            coupons = (replace(ois.floating_leg[0], spread=0.001),) + ois.floating_leg[1:]
+            replace(ois, floating_leg=coupons)
+
+
+def test_calendar_family_does_not_restrict_instance_name():
+    ois = build_ftiie_ois(
+        trade_date=date(2026, 9, 15), maturity_date=date(2026, 12, 11),
+        fixed_rate=0.07, calendar=BusinessCalendar(name="MXMC_PROJECTED"),
+    )
+    assert ois.conventions.calendar_id == "MXMC"
+    assert ois.calendar_id == "MXMC_PROJECTED"

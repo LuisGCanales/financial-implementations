@@ -14,9 +14,10 @@ independently testable.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from datetime import date
 from enum import StrEnum
+from math import isfinite
 
 
 class BusinessDayConvention(StrEnum):
@@ -126,40 +127,44 @@ class FTiieOISConventions:
     calibration_notional: float = 1.0
 
     def __post_init__(self) -> None:
-        if self.effective_date_lag_business_days < 0:
+        validate_core_v1_conventions(self)
+
+
+def validate_core_v1_conventions(conventions: FTiieOISConventions) -> None:
+    """Require the closed Core-v1 profile before using financial primitives.
+
+    Dataclass defaults are the single authority for supported values. Fields
+    without a runtime selector are validated fixed descriptors, not extension
+    points. Calendar identity denotes a family, not the supplied instance name.
+    Calibration notional does not constrain a downstream instrument's notional.
+    """
+
+    if not isinstance(conventions, FTiieOISConventions):
+        raise ValueError("Core-v1 requires FTiieOISConventions.")
+
+    for field in fields(FTiieOISConventions):
+        expected = field.default
+        actual = getattr(conventions, field.name)
+        # Preserve enums and integral day counts; allow numeric 0/1 for
+        # spread/notional without requiring a float literal.
+        valid_type = (
+            type(actual) in (int, float)
+            if type(expected) is float
+            else type(actual) is type(expected)
+        )
+        if not valid_type or actual != expected:
             raise ValueError(
-                "Effective-date lag cannot be negative."
+                f"Core-v1 requires {field.name}={expected!r}; got {actual!r}."
             )
 
-        if self.payment_frequency_days <= 0:
-            raise ValueError(
-                "Payment frequency must be positive."
-            )
 
-        if self.calculation_frequency_days <= 0:
-            raise ValueError(
-                "Calculation frequency must be positive."
-            )
+def validate_zero_floating_spread(spread: float) -> None:
+    """Reject unsupported contractual spreads before construction or pricing."""
 
-        if self.reset_frequency_days <= 0:
-            raise ValueError(
-                "Reset frequency must be positive."
-            )
-
-        if self.payment_lag_business_days < 0:
-            raise ValueError(
-                "Payment lag cannot be negative."
-            )
-
-        if self.floating_index_tenor_days <= 0:
-            raise ValueError(
-                "Floating-index tenor must be positive."
-            )
-
-        if self.calibration_notional <= 0:
-            raise ValueError(
-                "Calibration notional must be positive."
-            )
+    if not isfinite(spread):
+        raise ValueError("Floating spread must be finite.")
+    if spread != 0.0:
+        raise NotImplementedError("Core-v1 supports zero floating spread only.")
 
 
 FTIIE_OIS_CONVENTIONS = FTiieOISConventions()

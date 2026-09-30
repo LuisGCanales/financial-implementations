@@ -18,6 +18,7 @@ from .calendars import BusinessCalendar
 from .conventions import (
     FTIIE_OIS_CONVENTIONS,
     FTiieOISConventions,
+    validate_core_v1_conventions,
     act_360,
 )
 
@@ -65,6 +66,8 @@ def calculate_effective_date(
     We fail explicitly rather than silently adjusting an invalid
     trade date.
     """
+
+    validate_core_v1_conventions(conventions)
 
     if not calendar.is_business_day(trade_date):
         raise ValueError(
@@ -152,6 +155,8 @@ def generate_ois_schedule(
     conventions
         Frozen instrument convention profile.
     """
+
+    validate_core_v1_conventions(conventions)
 
     boundaries = _build_unadjusted_boundaries(
         effective_date=effective_date,
