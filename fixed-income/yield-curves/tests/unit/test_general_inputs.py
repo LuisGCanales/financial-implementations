@@ -6,7 +6,8 @@ from pathlib import Path
 import pytest
 
 from yield_curves.baseline import build_baseline_ftiie_curve
-from yield_curves.calendars import (BusinessCalendar, CalendarCoverageError, CalendarSource, build_mxmc_calendar_from_csv)
+from yield_curves.calendars import (BusinessCalendar, CalendarCoverageError, CalendarSource)
+from yield_curves.calendar_io import build_mxmc_calendar_from_csv
 from yield_curves.research.calendars import (build_projected_mxmc_calendar)
 from yield_curves.conventions import BusinessDayConvention
 from yield_curves.inputs import validate_calendar_coverage
@@ -197,3 +198,28 @@ def test_baseline_construction_rejects_dates_outside_declared_coverage(tmp_path)
     calendar = build_projected_mxmc_calendar(start_year=2025, end_year=2025)
     with pytest.raises(CalendarCoverageError, match="outside calendar coverage"):
         build_baseline_ftiie_curve(quotes=quotes, calendar=calendar)
+
+
+
+def test_cli_loads_explicit_calendar_and_general_quotes(tmp_path):
+    from argparse import ArgumentParser
+    from yield_curves.tooling.cli_inputs import add_input_arguments, load_cli_inputs
+
+    quotes_path = write_csv(tmp_path, HEADER + ROW + "3M,2026-09-15,2026-12-18,0.081\n")
+    calendar_path = tmp_path / "holidays.csv"
+    calendar_path.write_bytes(b"date\n2026-09-16\n")
+    parser = ArgumentParser()
+    add_input_arguments(parser)
+    args = parser.parse_args([
+        "--quotes", str(quotes_path), "--classification", QuoteSource.SYNTHETIC.value,
+        "--source", "test quotes", "--calendar", str(calendar_path),
+        "--calendar-start", "2026-01-01", "--calendar-end", "2026-12-31",
+        "--calendar-source", "explicit holidays",
+    ])
+    dataset, calendar = load_cli_inputs(args)
+    assert calendar == build_mxmc_calendar_from_csv(
+        calendar_path, coverage_start=date(2026, 1, 1),
+        coverage_end=date(2026, 12, 31), source="explicit holidays",
+    )
+    assert dataset.quotes == read_ois_quotes_csv(quotes_path)
+    assert build_baseline_ftiie_curve(quotes=dataset.quotes, calendar=calendar).accepted_for_use

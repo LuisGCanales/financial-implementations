@@ -1,7 +1,7 @@
 from datetime import date
 from pathlib import Path
 
-from yield_curves.calendars import (build_mxmc_calendar_from_csv)
+from yield_curves.calendar_io import build_mxmc_calendar_from_csv
 from yield_curves.research.calendars import (build_projected_mxmc_calendar, projected_mxmc_holidays)
 
 

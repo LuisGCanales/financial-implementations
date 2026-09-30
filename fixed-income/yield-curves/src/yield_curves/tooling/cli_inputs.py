@@ -3,7 +3,7 @@
 from datetime import date
 from pathlib import Path
 
-from ..calendars import build_mxmc_calendar_from_csv
+from ..calendar_io import build_mxmc_calendar_from_csv
 from ..quote_io import QuoteSource, load_ois_quote_dataset_csv
 
 

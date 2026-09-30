@@ -76,7 +76,7 @@ quotes are equal. The loader does not infer source information from directories.
 
 ```python
 from datetime import date
-from yield_curves.calendars import build_mxmc_calendar_from_csv
+from yield_curves.calendars_io import build_mxmc_calendar_from_csv
 
 calendar = build_mxmc_calendar_from_csv(
     "holidays.csv",

@@ -5,9 +5,7 @@ from math import isfinite
 
 import pytest
 
-from yield_curves.calendars import (
-    build_mxmc_calendar_from_csv,
-)
+from yield_curves.calendar_io import build_mxmc_calendar_from_csv
 from yield_curves.curves import (
     FlatContinuousZeroCurve,
 )
