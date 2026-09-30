@@ -36,6 +36,10 @@ def test_publish_accepted_and_preserve_previous_runs(run_inputs, tmp_path):
     assert {p.name: p.read_bytes() for p in first.run_path.iterdir()} == first_bytes
     meta = json.loads((second.run_path / "metadata.json").read_text())
     assert meta["artifact_schema_version"] == "2.0"
+    assert run_inputs["result"].acceptance.is_standard_acceptance
+    assert "acceptance_policy" not in meta["acceptance"]
+    assert "acceptance_policy" not in meta["acceptance"]["binding"]
+    assert "acceptance_policy" not in meta["acceptance"]["binding"]["financial_context"]["policy"]
     assert meta["quote_provenance"]["sha256"] == run_inputs["dataset"].provenance.sha256
     assert meta["quote_provenance"]["classification"] == "SYNTHETIC_REFERENCE_DATA"
     cal = json.loads((second.run_path / "calendar.json").read_text())
@@ -158,6 +162,8 @@ def test_metadata_retains_custom_acceptance_tolerances(run_inputs, tmp_path):
         quotes=run_inputs["dataset"].quotes, calendar=run_inputs["calendar"],
         pass_tolerance_bp=0.02, fail_tolerance_bp=0.20,
     )
+    # Identity is available in memory; standard publication enforcement is P06.
+    assert not acceptance.is_standard_acceptance
     result = replace(run_inputs["result"], acceptance=acceptance, financial_context=None)
     exported = snapshots.export_baseline_snapshot(
         **{**run_inputs, "result": result}, output_root=tmp_path

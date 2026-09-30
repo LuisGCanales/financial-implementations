@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, replace
 from datetime import date
+from enum import Enum, StrEnum
 from math import isfinite
 from typing import Sequence
 
@@ -34,9 +35,38 @@ BASELINE_PASS_TOLERANCE_BP = 0.01
 BASELINE_FAIL_TOLERANCE_BP = 0.10
 
 
+class AcceptanceKind(StrEnum):
+    STANDARD_BASELINE_ACCEPTANCE = "STANDARD_BASELINE_ACCEPTANCE"
+    CUSTOM_ANALYTICAL_ASSESSMENT = "CUSTOM_ANALYTICAL_ASSESSMENT"
+
+
+@dataclass(frozen=True, slots=True)
+class AcceptancePolicy:
+    """Captured rule identity and effective tolerances; not publication authority."""
+
+    kind: AcceptanceKind
+    identifier: str | None
+    pass_tolerance_bp: float
+    fail_tolerance_bp: float
+
+
+# Names the existing V1 rules: successful solver, valid structure/geometry,
+# nonempty finite independent repricing, and every check PASS. REVIEW rejects.
+STANDARD_ACCEPTANCE_POLICY = AcceptancePolicy(
+    AcceptanceKind.STANDARD_BASELINE_ACCEPTANCE,
+    "FTIIE_STANDARD_BASELINE_ACCEPTANCE_V1",
+    BASELINE_PASS_TOLERANCE_BP,
+    BASELINE_FAIL_TOLERANCE_BP,
+)
+
+
+class _OmittedTolerance(Enum):
+    OMITTED = "omitted"
+
+
 @dataclass(frozen=True, slots=True)
 class BaselineConstructionPolicy:
-    """Financial policy selected at build time; no acceptance/publication identity."""
+    """Financial policy selected at build time, including standard acceptance."""
 
     baseline_identifier: str
     calibration_approach: str
@@ -50,6 +80,7 @@ class BaselineConstructionPolicy:
     spline_boundary: str = "natural"
     zero_at_origin: str = "first_nodal_zero"
     extrapolation: bool = False
+    acceptance_policy: AcceptancePolicy = STANDARD_ACCEPTANCE_POLICY
 
 
 @dataclass(frozen=True, slots=True)
@@ -78,12 +109,14 @@ class BaselinePayloadBinding:
     discount_factors: tuple[str, ...]
     spline_state: tuple
     calibration_state: tuple
+    acceptance_policy: AcceptancePolicy | None = None
 
     @classmethod
     def capture(
         cls, result: GlobalCalibrationResult,
         inputs: PreparedBaselineInputs | None,
         context: BaselineFinancialContext | None,
+        acceptance_policy: AcceptancePolicy | None = None,
     ) -> "BaselinePayloadBinding":
         curve = result.curve
         spline_state = ()
@@ -110,6 +143,7 @@ class BaselinePayloadBinding:
              float(result.optimality).hex(),
              float(result.max_abs_repricing_error_bp).hex(),
              float(result.rmse_repricing_error_bp).hex()),
+            acceptance_policy,
         )
 
 
@@ -131,6 +165,12 @@ class BaselineAcceptance:
     max_abs_repricing_error_bp: float
     fail_tolerance_bp: float = BASELINE_FAIL_TOLERANCE_BP
     binding: BaselinePayloadBinding | None = None
+    acceptance_policy: AcceptancePolicy | None = None
+
+    @property
+    def is_standard_acceptance(self) -> bool:
+        """Identify standard rules, without certifying build history/publication."""
+        return self.acceptance_policy == STANDARD_ACCEPTANCE_POLICY
 
     def is_bound_to(
         self, calibration_result: GlobalCalibrationResult,
@@ -139,9 +179,15 @@ class BaselineAcceptance:
         """Check current payload values; a standalone assessment has no build history."""
         if self.binding is None:
             return False
+        if self.acceptance_policy is not None and (
+            self.pass_tolerance_bp != self.acceptance_policy.pass_tolerance_bp
+            or self.fail_tolerance_bp != self.acceptance_policy.fail_tolerance_bp
+        ):
+            return False
         try:
             return self.binding == BaselinePayloadBinding.capture(
-                calibration_result, self.binding.evaluation_inputs, financial_context
+                calibration_result, self.binding.evaluation_inputs, financial_context,
+                self.acceptance_policy,
             )
         except (AttributeError, TypeError, ValueError, ArithmeticError):
             return False
@@ -203,11 +249,30 @@ def assess_baseline_calibration(
     calibration_result: GlobalCalibrationResult,
     quotes: Sequence[OISCalibrationQuote],
     calendar: BusinessCalendar,
-    pass_tolerance_bp: float = BASELINE_PASS_TOLERANCE_BP,
-    fail_tolerance_bp: float = BASELINE_FAIL_TOLERANCE_BP,
+    pass_tolerance_bp: float | _OmittedTolerance = _OmittedTolerance.OMITTED,
+    fail_tolerance_bp: float | _OmittedTolerance = _OmittedTolerance.OMITTED,
 ) -> BaselineAcceptance:
-    """Assess existing calibration; invalid inputs yield rejection issue codes."""
+    """Assess existing calibration; invalid inputs yield rejection issue codes.
+
+    Omit both tolerances to use standard V1 rules. Supplying either tolerance
+    explicitly selects custom analysis, even if equal to or stricter than V1;
+    the omitted counterpart retains its standard numerical default. Existing
+    numeric calls and accepted_for_use/checks keep their analytical meaning.
+    Neither path certifies construction history or authorizes publication.
+    """
+    standard = (
+        pass_tolerance_bp is _OmittedTolerance.OMITTED
+        and fail_tolerance_bp is _OmittedTolerance.OMITTED
+    )
+    if pass_tolerance_bp is _OmittedTolerance.OMITTED:
+        pass_tolerance_bp = STANDARD_ACCEPTANCE_POLICY.pass_tolerance_bp
+    if fail_tolerance_bp is _OmittedTolerance.OMITTED:
+        fail_tolerance_bp = STANDARD_ACCEPTANCE_POLICY.fail_tolerance_bp
     _validate_acceptance_tolerances(pass_tolerance_bp, fail_tolerance_bp)
+    acceptance_policy = STANDARD_ACCEPTANCE_POLICY if standard else AcceptancePolicy(
+        AcceptanceKind.CUSTOM_ANALYTICAL_ASSESSMENT, None,
+        pass_tolerance_bp, fail_tolerance_bp,
+    )
     quotes = tuple(quotes)
     try:
         prepared = prepare_baseline_inputs(quotes=quotes, calendar=calendar)
@@ -230,8 +295,7 @@ def assess_baseline_calibration(
         calendar=calendar,
         prepared=prepared,
         input_issues=input_issues,
-        pass_tolerance_bp=pass_tolerance_bp,
-        fail_tolerance_bp=fail_tolerance_bp,
+        acceptance_policy=acceptance_policy,
     )
 
 
@@ -247,12 +311,15 @@ def _assess_prepared_calibration(
     calendar: BusinessCalendar,
     prepared: PreparedBaselineInputs | None,
     input_issues: tuple[str, ...],
-    pass_tolerance_bp: float,
-    fail_tolerance_bp: float,
+    acceptance_policy: AcceptancePolicy,
     financial_context: BaselineFinancialContext | None = None,
 ) -> BaselineAcceptance:
     """Reuse preflight geometry; repricing still reconstructs instruments independently."""
-    binding = BaselinePayloadBinding.capture(calibration_result, prepared, financial_context)
+    pass_tolerance_bp = acceptance_policy.pass_tolerance_bp
+    fail_tolerance_bp = acceptance_policy.fail_tolerance_bp
+    binding = BaselinePayloadBinding.capture(
+        calibration_result, prepared, financial_context, acceptance_policy
+    )
     issues = list(input_issues)
     curve = calibration_result.curve
     if calibration_result.interpolation_method != BASELINE_INTERPOLATION_METHOD:
@@ -338,6 +405,7 @@ def _assess_prepared_calibration(
         max_abs_repricing_error_bp=max_abs_error,
         fail_tolerance_bp=fail_tolerance_bp,
         binding=binding,
+        acceptance_policy=acceptance_policy,
     )
 
 
@@ -359,6 +427,7 @@ def build_baseline_ftiie_curve(
         calibration_approach=BASELINE_CALIBRATION_APPROACH,
         interpolation_method=BASELINE_INTERPOLATION_METHOD,
         conventions=replace(FTIIE_OIS_CONVENTIONS),
+        acceptance_policy=STANDARD_ACCEPTANCE_POLICY,
     )
     prepared = prepare_baseline_inputs(quotes=quotes, calendar=calendar)
     quotes = prepared.quotes
@@ -380,8 +449,7 @@ def build_baseline_ftiie_curve(
         calendar=calendar,
         prepared=prepared,
         input_issues=(),
-        pass_tolerance_bp=BASELINE_PASS_TOLERANCE_BP,
-        fail_tolerance_bp=BASELINE_FAIL_TOLERANCE_BP,
+        acceptance_policy=policy.acceptance_policy,
         financial_context=context,
     )
 

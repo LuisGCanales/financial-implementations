@@ -17,7 +17,7 @@ from itertools import zip_longest
 from pathlib import Path
 from uuid import uuid4
 
-from .baseline import BASELINE_IDENTIFIER, BASELINE_CALIBRATION_APPROACH, BaselineResult
+from .baseline import BASELINE_IDENTIFIER, BASELINE_CALIBRATION_APPROACH, BaselineAcceptance, BaselineResult
 from .calendars import BusinessCalendar
 from .quote_io import OISQuoteDataset
 
@@ -43,6 +43,19 @@ def _safe(value):
     if isinstance(value, (list, tuple)):
         return [_safe(item) for item in value]
     return value
+
+
+def _acceptance_metadata(acceptance: BaselineAcceptance) -> dict:
+    """Preserve schema 2.0 until publication supports acceptance identity."""
+    metadata = asdict(acceptance)
+    metadata.pop("acceptance_policy")
+    binding = metadata["binding"]
+    if binding is not None:
+        binding.pop("acceptance_policy")
+        context = binding["financial_context"]
+        if context is not None:
+            context["policy"].pop("acceptance_policy")
+    return metadata
 
 
 def _write_json(path: Path, value) -> None:
@@ -144,7 +157,7 @@ def export_baseline_snapshot(
             "curve_reference_date": getattr(curve, "reference_date", None),
             "quote_count": len(dataset.quotes), "node_count": len(node_rows),
             "quote_provenance": asdict(dataset.provenance),
-            "acceptance": asdict(acceptance),
+            "acceptance": _acceptance_metadata(acceptance),
             "solver": {key: getattr(calibration, key) for key in (
                 "success", "message", "function_evaluations", "jacobian_evaluations",
                 "cost", "optimality",

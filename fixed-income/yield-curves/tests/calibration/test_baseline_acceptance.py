@@ -372,3 +372,108 @@ def test_initial_vector_is_copied_before_preparation(result, monkeypatch):
     assert baseline.build_baseline_ftiie_curve(
         quotes=QUOTES, calendar=CALENDAR, initial_discount_factors=initial,
     ).accepted_for_use
+
+
+@pytest.mark.parametrize("success", [True, False])
+def test_builder_always_captures_standard_acceptance(result, monkeypatch, success):
+    monkeypatch.setattr(
+        baseline, "calibrate_ftiie_ois_curve_simultaneously",
+        lambda **kwargs: replace(result.calibration_result, success=success),
+    )
+    built = baseline.build_baseline_ftiie_curve(quotes=QUOTES, calendar=CALENDAR)
+    policy = built.acceptance.acceptance_policy
+    assert built.acceptance.is_standard_acceptance
+    assert policy.kind is baseline.AcceptanceKind.STANDARD_BASELINE_ACCEPTANCE
+    assert policy.identifier == "FTIIE_STANDARD_BASELINE_ACCEPTANCE_V1"
+    assert policy.pass_tolerance_bp == built.acceptance.pass_tolerance_bp == 0.01
+    assert policy.fail_tolerance_bp == built.acceptance.fail_tolerance_bp == 0.10
+    assert built.financial_context.policy.acceptance_policy == policy
+    assert built.financial_context.policy.baseline_identifier == "FTIIE_CUBIC_SIMULTANEOUS_V1"
+    assert built.acceptance.binding.acceptance_policy == policy
+    assert built.acceptance.is_bound_to(built.calibration_result, built.financial_context)
+    assert built.accepted_for_use is success
+
+
+@pytest.mark.parametrize("tolerances,expected", [
+    ({}, (0.01, 0.10)),
+    ({"pass_tolerance_bp": 0.01, "fail_tolerance_bp": 0.10}, (0.01, 0.10)),
+    ({"pass_tolerance_bp": 0.001, "fail_tolerance_bp": 0.01}, (0.001, 0.01)),
+    ({"pass_tolerance_bp": 1.0, "fail_tolerance_bp": 2.0}, (1.0, 2.0)),
+    ({"pass_tolerance_bp": 0.01}, (0.01, 0.10)),
+    ({"fail_tolerance_bp": 0.10}, (0.01, 0.10)),
+])
+def test_standalone_identity_depends_on_explicit_path(result, tolerances, expected):
+    assessed = baseline.assess_baseline_calibration(
+        calibration_result=result.calibration_result, quotes=QUOTES, calendar=CALENDAR,
+        **tolerances,
+    )
+    assert assessed.accepted_for_use
+    assert all(c.status is repricing.InstrumentValidationStatus.PASS for c in assessed.checks)
+    policy = assessed.acceptance_policy
+    assert (assessed.pass_tolerance_bp, assessed.fail_tolerance_bp) == expected
+    assert (policy.pass_tolerance_bp, policy.fail_tolerance_bp) == expected
+    assert assessed.is_standard_acceptance is (not tolerances)
+    if tolerances:
+        assert policy.kind is baseline.AcceptanceKind.CUSTOM_ANALYTICAL_ASSESSMENT
+        assert policy.identifier is None
+    else:
+        assert policy == baseline.STANDARD_ACCEPTANCE_POLICY
+    assert assessed.binding.acceptance_policy == policy
+    assert assessed.is_bound_to(result.calibration_result)
+    assert assessed.binding.financial_context is None
+    # A PASS (standard or custom) cannot be attached to a captured build context.
+    with pytest.raises(ValueError, match="binding mismatch"):
+        replace(result, acceptance=assessed)
+
+
+def test_custom_cannot_be_relabelled_standard_without_invalidating_binding(result):
+    custom = baseline.assess_baseline_calibration(
+        calibration_result=result.calibration_result, quotes=QUOTES, calendar=CALENDAR,
+        pass_tolerance_bp=0.01, fail_tolerance_bp=0.10,
+    )
+    relabelled = replace(custom, acceptance_policy=baseline.STANDARD_ACCEPTANCE_POLICY)
+    assert not relabelled.is_bound_to(result.calibration_result)
+    with pytest.raises(ValueError, match="binding mismatch"):
+        baseline.BaselineResult(result.calibration_result, relabelled)
+
+
+@pytest.mark.parametrize("changes", [
+    {"acceptance_policy": None},
+    {"pass_tolerance_bp": 0.001},
+    {"fail_tolerance_bp": 0.01},
+])
+def test_acceptance_identity_and_effective_tolerances_are_bound(result, changes):
+    with pytest.raises(ValueError, match="binding mismatch"):
+        replace(result, acceptance=replace(result.acceptance, **changes))
+
+
+@pytest.mark.parametrize("error_bp,status", [
+    (0.0, "PASS"), (0.01, "PASS"), (0.010000001, "REVIEW"),
+    (0.10, "REVIEW"), (0.100000001, "FAIL"), (float("inf"), "FAIL"),
+])
+def test_standard_threshold_boundaries_preserve_baseline_acceptance(
+    result, monkeypatch, error_bp, status,
+):
+    # Inject controlled errors at the pricing boundary; retain real classification
+    # and baseline acceptance logic without floating point subtraction at endpoints.
+    def reprice(**kwargs):
+        assert kwargs["pass_tolerance_bp"] == 0.01
+        assert kwargs["fail_tolerance_bp"] == 0.10
+        checks = []
+        for check in result.acceptance.checks:
+            classified = repricing.classify_repricing_error(
+                absolute_error_bp=error_bp,
+                pass_tolerance_bp=kwargs["pass_tolerance_bp"],
+                fail_tolerance_bp=kwargs["fail_tolerance_bp"],
+            )
+            assert classified.value == status
+            checks.append(replace(check, error_bp=error_bp,
+                                  absolute_error_bp=error_bp, status=classified))
+        return tuple(checks)
+
+    monkeypatch.setattr(baseline, "reprice_calibration_instruments", reprice)
+    monkeypatch.setattr(baseline, "calibrate_ftiie_ois_curve_simultaneously",
+                        lambda **kwargs: result.calibration_result)
+    built = baseline.build_baseline_ftiie_curve(quotes=QUOTES, calendar=CALENDAR)
+    assert built.acceptance.is_standard_acceptance
+    assert built.accepted_for_use is (status == "PASS")
