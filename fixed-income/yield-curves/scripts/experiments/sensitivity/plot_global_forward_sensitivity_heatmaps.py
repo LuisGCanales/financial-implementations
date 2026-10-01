@@ -8,7 +8,7 @@ It consumes the persistent outputs produced by:
 
 Specifically:
 
-    reports/tables/07_global_sensitivity/
+    outputs/research/tables/07_global_sensitivity/
         global_forward_sensitivity_dense.csv
         global_node_sensitivity_long.csv
 
@@ -46,18 +46,18 @@ Persistent outputs
 ------------------
 Figures:
 
-    reports/figures/07_global_sensitivity/
+    outputs/research/figures/07_global_sensitivity/
         forward_sensitivity_heatmap_<method>_robust_common_scale.png/.svg
         forward_sensitivity_heatmap_<method>_full_common_scale.png/.svg
 
 Tables:
 
-    reports/tables/07_global_sensitivity/
+    outputs/research/tables/07_global_sensitivity/
         forward_sensitivity_heatmap_scale_diagnostics.csv
 
 Metadata:
 
-    reports/metadata/07_global_sensitivity/
+    outputs/research/metadata/07_global_sensitivity/
         forward_sensitivity_heatmap_metadata.json
 """
 
@@ -86,7 +86,8 @@ REPORT_SECTION = (
 
 FORWARD_DATA_PATH = (
     PROJECT_ROOT
-    / "reports"
+    / "outputs"
+    / "research"
     / "tables"
     / REPORT_SECTION
     / "global_forward_sensitivity_dense.csv"
@@ -94,7 +95,8 @@ FORWARD_DATA_PATH = (
 
 NODE_DATA_PATH = (
     PROJECT_ROOT
-    / "reports"
+    / "outputs"
+    / "research"
     / "tables"
     / REPORT_SECTION
     / "global_node_sensitivity_long.csv"

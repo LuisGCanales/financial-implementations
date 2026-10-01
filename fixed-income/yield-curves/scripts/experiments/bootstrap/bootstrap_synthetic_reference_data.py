@@ -8,11 +8,11 @@ exclusively for recovery validation.
 Persistent outputs
 ------------------
 Tables:
-    reports/tables/02_bootstrap_recovery/
+    outputs/research/tables/02_bootstrap_recovery/
         bootstrap_node_recovery.csv
 
 Text:
-    reports/text/02_bootstrap_recovery/
+    outputs/research/text/02_bootstrap_recovery/
         bootstrap_node_recovery.txt
 
 Rates are persisted in raw decimal form.

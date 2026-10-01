@@ -6,7 +6,7 @@ synthetic F-TIIE experiment.
 Persistent outputs
 ------------------
 Figures:
-    reports/figures/01_synthetic_reference/
+    outputs/research/figures/01_synthetic_reference/
         known_truth_zero_curve.png
         known_truth_zero_curve.svg
         known_truth_forward_28d.png
@@ -15,7 +15,7 @@ Figures:
         synthetic_ois_par_curve.svg
 
 Tables:
-    reports/tables/01_synthetic_reference/
+    outputs/research/tables/01_synthetic_reference/
         known_truth_zero_curve_dense.csv
         known_truth_forward_28d_dense.csv
         synthetic_ois_par_quotes.csv

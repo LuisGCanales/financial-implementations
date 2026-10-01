@@ -1,8 +1,10 @@
 # Project Data
 
 This directory contains explicit project inputs and frozen datasets. It is
-separate from `reports/`, which contains generated analytical evidence, and
-from `outputs/baseline/`, which contains the current operational snapshot.
+separate from `outputs/research/`, which contains generated analytical evidence, and
+from `outputs/baseline/`, whose `current.json` resolves an operational run.
+The three historical schema-1.0 flat files are preserved byte-for-byte under
+`outputs/baseline/legacy/schema-1.0/`; they are not a current snapshot source.
 
 ## `calendars/`
 

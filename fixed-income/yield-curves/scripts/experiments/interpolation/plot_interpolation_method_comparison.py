@@ -15,7 +15,7 @@ analysis.
 Persistent outputs
 ------------------
 Figures:
-    reports/figures/06_interpolation_comparison/
+    outputs/research/figures/06_interpolation_comparison/
         discount_factor_recovery_two_methods.png
         discount_factor_recovery_two_methods.svg
         zero_rate_recovery_two_methods.png
@@ -24,7 +24,7 @@ Figures:
         forward_28d_recovery_two_methods.svg
 
 Tables:
-    reports/tables/06_interpolation_comparison/
+    outputs/research/tables/06_interpolation_comparison/
         discount_factor_recovery_two_methods_dense.csv
         zero_rate_recovery_two_methods_dense.csv
         forward_28d_recovery_two_methods_dense.csv

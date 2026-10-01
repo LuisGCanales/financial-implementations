@@ -4,7 +4,7 @@ This script performs NO curve calibration.
 
 It consumes the persisted global-sensitivity experiment:
 
-    reports/tables/07_global_sensitivity/
+    outputs/research/tables/07_global_sensitivity/
         global_forward_sensitivity_dense.csv
         global_node_sensitivity_long.csv
 
@@ -32,22 +32,22 @@ Smaller values indicate a more maturity-localized forward response.
 Persistent outputs
 ------------------
 Tables:
-    reports/tables/07_global_sensitivity/
+    outputs/research/tables/07_global_sensitivity/
         forward_sensitivity_locality.csv
 
 Figures:
-    reports/figures/07_global_sensitivity/
+    outputs/research/figures/07_global_sensitivity/
         forward_sensitivity_rms_locality_by_shock.png/.svg
         forward_sensitivity_spread_by_shock.png/.svg
         forward_sensitivity_center_offset_by_shock.png/.svg
         forward_sensitivity_mass_within_2y_by_shock.png/.svg
 
 Text:
-    reports/text/07_global_sensitivity/
+    outputs/research/text/07_global_sensitivity/
         forward_sensitivity_locality_report.txt
 
 Metadata:
-    reports/metadata/07_global_sensitivity/
+    outputs/research/metadata/07_global_sensitivity/
         forward_sensitivity_locality_metadata.json
 """
 
@@ -76,7 +76,8 @@ REPORT_SECTION = (
 
 FORWARD_DATA_PATH = (
     PROJECT_ROOT
-    / "reports"
+    / "outputs"
+    / "research"
     / "tables"
     / REPORT_SECTION
     / "global_forward_sensitivity_dense.csv"
@@ -84,7 +85,8 @@ FORWARD_DATA_PATH = (
 
 NODE_DATA_PATH = (
     PROJECT_ROOT
-    / "reports"
+    / "outputs"
+    / "research"
     / "tables"
     / REPORT_SECTION
     / "global_node_sensitivity_long.csv"

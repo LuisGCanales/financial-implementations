@@ -21,7 +21,7 @@ The experiment is intentionally separated into:
     src/yield_curves/reporting.py
         reusable serialization primitives
 
-    reports/
+    outputs/research/
         persistent analytical artifacts
 
 The expensive global-sensitivity calculation is executed exactly once
@@ -32,7 +32,7 @@ calibrations.
 Persistent outputs
 ------------------
 Tables:
-    reports/tables/07_global_sensitivity/
+    outputs/research/tables/07_global_sensitivity/
         global_sensitivity_summary.csv
         global_node_sensitivity_long.csv
         global_forward_sensitivity_dense.csv
@@ -48,7 +48,7 @@ Tables:
         node_zero_curvature_matrix_cubic_continuous_zero.csv
 
 Figures:
-    reports/figures/07_global_sensitivity/
+    outputs/research/figures/07_global_sensitivity/
         node_zero_sensitivity_heatmap_log_linear_df.png/.svg
         node_zero_sensitivity_heatmap_linear_continuous_zero.png/.svg
         node_zero_sensitivity_heatmap_cubic_continuous_zero.png/.svg
@@ -58,11 +58,11 @@ Figures:
         forward_max_abs_sensitivity_by_shock.png/.svg
 
 Text:
-    reports/text/07_global_sensitivity/
+    outputs/research/text/07_global_sensitivity/
         global_quote_sensitivity_report.txt
 
 Metadata:
-    reports/metadata/07_global_sensitivity/
+    outputs/research/metadata/07_global_sensitivity/
         experiment_metadata.json
 """
 

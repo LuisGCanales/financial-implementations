@@ -22,6 +22,10 @@ identity internally. The exporter does not reread potentially changed source fil
 
 ```text
 outputs/baseline/
+  legacy/schema-1.0/  # historical flat artifacts; never current
+    curve_nodes.csv
+    quote_repricing.csv
+    metadata.json
   current.json
   runs/<unique-run-id>/
     input_quotes.csv
@@ -38,10 +42,12 @@ each of the five payload files. A rejected run has its own manifest and remains
 available for inspection, but does not update the current pointer. With no prior
 accepted run, rejection leaves no `current.json`.
 
-The old three flat files are schema `1.0` historical snapshots. They are left
-untouched and are no longer updated by the script. Consumers must migrate to
-resolving `current.json`; there is no automatic fallback to potentially stale
-flat files. These artifacts remain an audit interface. Arbitrary-date pricing
+The old three flat files are schema `1.0` historical snapshots, archived together
+under `outputs/baseline/legacy/schema-1.0/` with their exact bytes and original
+metadata preserved. No UUID, manifest, binding or current pointer was added.
+They are never promoted or used as fallback by the resolver or snapshot assurance.
+Consumers resolve `current.json` to a bound run; an absent pointer is an error,
+even when the legacy archive exists. These artifacts remain an audit interface. Arbitrary-date pricing
 continues to use the Python curve object.
 
 ## Contents and provenance

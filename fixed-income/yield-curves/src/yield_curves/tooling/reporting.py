@@ -7,7 +7,7 @@ Reporting artifacts are separated into:
     text/
     metadata/
 
-under the project-level reports directory.
+under the project-level outputs/research directory.
 
 These helpers deliberately contain no financial logic.
 """
@@ -42,7 +42,7 @@ def build_report_path(
     """Build and create one report-output path."""
 
     root = (
-        find_project_root(Path(__file__)) / "reports"
+        find_project_root(Path(__file__)) / "outputs" / "research"
         if reports_root is None
         else reports_root
     )
@@ -291,7 +291,7 @@ def save_matrix_csv(
     Parameters
     ----------
     section:
-        Report section under ``reports/tables/``.
+        Report section under ``outputs/research/tables/``.
 
     stem:
         Output filename without extension.

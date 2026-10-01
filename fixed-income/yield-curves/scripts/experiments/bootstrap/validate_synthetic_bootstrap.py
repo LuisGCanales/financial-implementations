@@ -6,13 +6,13 @@ quote set and then passed through the independent validation framework.
 Persistent outputs
 ------------------
 Tables:
-    reports/tables/03_curve_validation/
+    outputs/research/tables/03_curve_validation/
         curve_validation_summary.csv
         independent_repricing.csv
         validation_issues.csv
 
 Text:
-    reports/text/03_curve_validation/
+    outputs/research/text/03_curve_validation/
         curve_validation_report.txt
 
 The validation-issues CSV is generated even when no issues are present,

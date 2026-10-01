@@ -6,12 +6,12 @@ analyzed for forward-curve shape characteristics.
 Persistent outputs
 ------------------
 Tables:
-    reports/tables/04_curve_diagnostics/
+    outputs/research/tables/04_curve_diagnostics/
         curve_diagnostics_summary.csv
         log_linear_forward_jumps.csv
 
 Text:
-    reports/text/04_curve_diagnostics/
+    outputs/research/text/04_curve_diagnostics/
         curve_diagnostics.txt
 
 The jump table is generated even when the selected interpolation method

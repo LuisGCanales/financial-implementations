@@ -14,12 +14,12 @@ The experiment measures:
 Persistent outputs
 ------------------
 Tables:
-    reports/tables/05_quote_sensitivity/
+    outputs/research/tables/05_quote_sensitivity/
         one_sided_quote_sensitivity_summary.csv
         one_sided_zero_sensitivity_matrix.csv
 
 Text:
-    reports/text/05_quote_sensitivity/
+    outputs/research/text/05_quote_sensitivity/
         one_sided_quote_sensitivity.txt
 """
 

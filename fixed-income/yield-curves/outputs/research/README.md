@@ -1,11 +1,13 @@
-# Analytical Reports
+# Research Outputs
 
 This directory contains reproducible analytical, diagnostic, and historical
 research outputs generated during development of the yield-curve
 implementation.
 
 It is not the operational curve-delivery mechanism. The current operational
-snapshot belongs under `outputs/baseline/`.
+snapshot is resolved through `outputs/baseline/current.json` into `runs/`.
+Legacy schema-1.0 flat snapshots are archived under
+`outputs/baseline/legacy/schema-1.0/`.
 
 ## Structure
 
@@ -22,8 +24,10 @@ market data.
 
 ## Reproducibility
 
-All artifacts in this directory should be reproducible from the scripts
-under `scripts/`.
+Current producers under `scripts/experiments/` write to `outputs/research/`
+through the reporting helpers. Explicit `reports_root` overrides remain supported.
+Historical artifacts record the code and inputs of their original execution;
+this relocation does not claim that current scripts reproduce every historical byte.
 
 For computationally expensive experiments, the underlying plotted
 series are also persisted as CSV so figures can later be reconstructed
@@ -43,3 +47,12 @@ The sections currently present are:
 
 The reports are based on synthetic inputs where documented and must not be
 interpreted as observed-market data or as the operational baseline contract.
+
+## Historical relocation
+
+The existing figures, tables, text and metadata were moved mechanically from
+`reports/` with their bytes preserved. No experiment was rerun. Paths embedded
+in historical metadata (including `reports/...`) describe the original execution
+location and were intentionally retained; they are not current lookup paths.
+The relative category/section/filename beneath `outputs/research/` is unchanged.
+Reference inputs remain under `data/calendars/` and `data/synthetic/`.

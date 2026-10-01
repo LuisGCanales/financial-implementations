@@ -46,7 +46,7 @@ In parallel:
 ```text
 baseline result → assurance workflow → acceptance evidence
 
-historical development workflows → scripts/experiments/ → reports/
+historical development workflows → scripts/experiments/ → outputs/research/
 ```
 
 The flagship must depend on the Python baseline API, not on research scripts or historical reports.
@@ -107,7 +107,7 @@ yield-curves/
 ├── data/                   # calendars and frozen synthetic inputs
 ├── docs/                   # conventions, methodology, contracts, limits
 ├── outputs/baseline/       # current operational snapshot
-├── reports/                # historical analytical and research evidence
+├── outputs/research/       # historical analytical and research evidence
 ├── scripts/
 │   ├── operational/        # current baseline workflow
 │   ├── assurance/          # current baseline acceptance workflow
@@ -120,7 +120,8 @@ yield-curves/
 
 ## Operational outputs
 
-`outputs/baseline/` contains the current snapshot, not the primary curve API:
+`outputs/baseline/current.json` resolves the current run under `runs/<run-id>/`.
+The run contains these payloads among others (see [snapshots](docs/snapshots.md)):
 
 - `curve_nodes.csv`: tenor, pillar date, discount factor, and continuous zero rate.
 - `quote_repricing.csv`: input quote, independently repriced quote, error, and status.
@@ -128,9 +129,13 @@ yield-curves/
 
 For arbitrary-date discount factors, zero rates, and forwards, consumers must use the Python curve object rather than reconstructing a dense curve from CSV.
 
+Historical schema-1.0 flat files are archived under
+`outputs/baseline/legacy/schema-1.0/`, preserving their original bytes and metadata.
+They are never used as a current fallback.
+
 ## Analytical evidence
 
-`reports/` contains historical analytical, diagnostic, and experimental evidence generated during development. It is not the operational delivery mechanism.
+`outputs/research/` contains historical analytical, diagnostic, and experimental evidence generated during development. It is not the operational delivery mechanism.
 
 - `01_synthetic_reference`: synthetic known-truth reference evidence.
 - `02_bootstrap_recovery`: historical bootstrap and recovery evidence.

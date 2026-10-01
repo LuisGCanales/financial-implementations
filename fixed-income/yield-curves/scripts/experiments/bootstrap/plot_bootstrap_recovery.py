@@ -8,7 +8,7 @@ exclusively for recovery validation.
 Persistent outputs
 ------------------
 Figures:
-    reports/figures/02_bootstrap_recovery/
+    outputs/research/figures/02_bootstrap_recovery/
         discount_factor_recovery.png
         discount_factor_recovery.svg
         discount_factor_error_by_pillar.png
@@ -19,7 +19,7 @@ Figures:
         forward_28d_recovery.svg
 
 Tables:
-    reports/tables/02_bootstrap_recovery/
+    outputs/research/tables/02_bootstrap_recovery/
         discount_factor_recovery_dense.csv
         discount_factor_error_by_pillar.csv
         zero_rate_recovery_dense.csv

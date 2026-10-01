@@ -16,17 +16,17 @@ and is used exclusively for recovery analysis.
 Persistent outputs
 ------------------
 Tables:
-    reports/tables/06_interpolation_comparison/
+    outputs/research/tables/06_interpolation_comparison/
         three_method_global_recovery.csv
         three_method_recovery_by_horizon.csv
         simultaneous_calibration_diagnostics.csv
 
 Text:
-    reports/text/06_interpolation_comparison/
+    outputs/research/text/06_interpolation_comparison/
         three_method_interpolation_comparison.txt
 
 Metadata:
-    reports/metadata/06_interpolation_comparison/
+    outputs/research/metadata/06_interpolation_comparison/
         experiment_metadata.json
 """
 
@@ -615,17 +615,17 @@ def main() -> None:
                 "for recovery analysis."
             ),
             "global_recovery_output": (
-                "reports/tables/"
+                "outputs/research/tables/"
                 "06_interpolation_comparison/"
                 "three_method_global_recovery.csv"
             ),
             "horizon_recovery_output": (
-                "reports/tables/"
+                "outputs/research/tables/"
                 "06_interpolation_comparison/"
                 "three_method_recovery_by_horizon.csv"
             ),
             "calibration_diagnostics_output": (
-                "reports/tables/"
+                "outputs/research/tables/"
                 "06_interpolation_comparison/"
                 "simultaneous_calibration_diagnostics.csv"
             ),

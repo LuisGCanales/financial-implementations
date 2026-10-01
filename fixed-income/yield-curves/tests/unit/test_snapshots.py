@@ -525,3 +525,24 @@ def test_flat_legacy_is_never_current(tmp_path):
     (tmp_path / "metadata.json").write_text('{"artifact_schema_version": "1.0"}')
     with pytest.raises(FileNotFoundError):
         snapshots.resolve_current_snapshot(tmp_path)
+
+
+@pytest.mark.parametrize("reader_name", ["resolver", "assurance"])
+@pytest.mark.parametrize("legacy_directory", [".", "legacy/schema-1.0"])
+def test_legacy_artifacts_are_not_a_current_source(tmp_path, reader_name, legacy_directory):
+    from yield_curves.snapshot_assurance import assess_current_snapshot
+
+    archive = tmp_path / legacy_directory
+    archive.mkdir(parents=True, exist_ok=True)
+    historical = {
+        "metadata.json": b'{"artifact_schema_version": "1.0", "accepted_for_use": true}\n',
+        "curve_nodes.csv": b"historical curve\n",
+        "quote_repricing.csv": b"historical repricing\n",
+    }
+    for name, content in historical.items():
+        (archive / name).write_bytes(content)
+    reader = snapshots.resolve_current_snapshot if reader_name == "resolver" else assess_current_snapshot
+    with pytest.raises(FileNotFoundError, match="current.json"):
+        reader(tmp_path)
+    assert {p.name: p.read_bytes() for p in archive.iterdir()} == historical
+    assert not (tmp_path / "runs").exists()

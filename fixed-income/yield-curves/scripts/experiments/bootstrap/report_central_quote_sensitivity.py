@@ -14,13 +14,13 @@ The experiment measures:
 Persistent outputs
 ------------------
 Tables:
-    reports/tables/05_quote_sensitivity/
+    outputs/research/tables/05_quote_sensitivity/
         central_quote_sensitivity_summary.csv
         central_zero_sensitivity_matrix.csv
         own_node_local_curvature.csv
 
 Text:
-    reports/text/05_quote_sensitivity/
+    outputs/research/text/05_quote_sensitivity/
         central_quote_sensitivity.txt
 """
 

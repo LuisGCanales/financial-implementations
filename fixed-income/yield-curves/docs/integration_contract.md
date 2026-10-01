@@ -63,7 +63,7 @@ Consumers must:
 The flagship must not depend on:
 
 - `scripts/experiments/`;
-- historical `reports/`;
+- historical `outputs/research/`;
 - synthetic known-truth functions;
 - research metadata;
 - the execution order of experiment scripts.
@@ -73,11 +73,14 @@ The flagship must not depend on:
 `scripts/operational/build_baseline_curve.py` writes:
 
 ```text
-outputs/baseline/curve_nodes.csv
-outputs/baseline/quote_repricing.csv
-outputs/baseline/metadata.json
+outputs/baseline/current.json
+outputs/baseline/runs/<run-id>/
 ```
 
-These files provide an auditable operational snapshot and provenance. They are
+Resolve `current.json` to the run before reading its payloads; see
+[snapshot layout](snapshots.md). The former flat schema-1.0 files are historical
+artifacts under `outputs/baseline/legacy/schema-1.0/`, with no current fallback.
+
+Run files provide an auditable operational snapshot and provenance. They are
 not the primary curve interface and do not replace the Python curve object for
 arbitrary-date interpolation or forward calculations.

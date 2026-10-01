@@ -638,4 +638,4 @@ def test_default_report_destination_is_under_discovered_project(tmp_path, monkey
     from yield_curves.tooling import reporting
     monkeypatch.setattr(reporting, "find_project_root", lambda _: tmp_path)
     assert reporting.build_report_path(category="text", section="test", stem="report", suffix="txt") == (
-        tmp_path / "reports/text/test/report.txt")
+        tmp_path / "outputs/research/text/test/report.txt")

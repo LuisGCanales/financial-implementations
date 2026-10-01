@@ -7,12 +7,12 @@ calibration.
 Persistent outputs
 ------------------
 Tables:
-    reports/tables/02_bootstrap_recovery/
+    outputs/research/tables/02_bootstrap_recovery/
         recovery_metrics_global.csv
         recovery_metrics_by_horizon.csv
 
 Text:
-    reports/text/02_bootstrap_recovery/
+    outputs/research/text/02_bootstrap_recovery/
         bootstrap_recovery_metrics.txt
 """
 

@@ -8,7 +8,7 @@ the current operational baseline.
 The historical validation workflow operates on `BootstrapResult`. It checks
 quote integrity, sequential solver steps, curve structure, discount-factor
 validity, and independently reprices the calibration instruments. Its outputs
-are preserved under `reports/03_curve_validation/` as historical evidence.
+are preserved under `outputs/research/{tables,text}/03_curve_validation/` as historical evidence.
 
 Those reports document the sequential/log-linear path. They are not the
 acceptance contract for the current cubic baseline.

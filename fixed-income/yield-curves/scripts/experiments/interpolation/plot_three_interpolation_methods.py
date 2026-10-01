@@ -15,7 +15,7 @@ for recovery analysis.
 Persistent outputs
 ------------------
 Figures:
-    reports/figures/06_interpolation_comparison/
+    outputs/research/figures/06_interpolation_comparison/
         discount_factor_recovery_three_methods.png
         discount_factor_recovery_three_methods.svg
         zero_rate_recovery_three_methods.png
@@ -26,7 +26,7 @@ Figures:
         cubic_zero_instantaneous_forward.svg
 
 Tables:
-    reports/tables/06_interpolation_comparison/
+    outputs/research/tables/06_interpolation_comparison/
         calibrated_nodes_three_methods.csv
         discount_factor_recovery_three_methods_dense.csv
         zero_rate_recovery_three_methods_dense.csv
