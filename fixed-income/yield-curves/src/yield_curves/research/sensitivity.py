@@ -39,6 +39,7 @@ from ..bootstrap import (
 )
 from ..quotes import OISCalibrationQuote, OISQuote, bump_ois_quotes
 from ..calendars import BusinessCalendar
+from ..date_grids import iter_forward_start_dates
 
 
 @dataclass(frozen=True, slots=True)
@@ -175,21 +176,12 @@ def _build_forward_start_dates(
             "the requested forward period."
         )
 
-    dates: list[date] = []
-
-    current = reference_date
-
-    while current <= last_start_date:
-        dates.append(
-            current
-        )
-
-        current += timedelta(
-            days=grid_step_days
-        )
-
     return tuple(
-        dates
+        iter_forward_start_dates(
+            reference_date=reference_date,
+            last_start_date=last_start_date,
+            grid_step_days=grid_step_days,
+        )
     )
 
 

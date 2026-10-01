@@ -13,7 +13,7 @@ PACKAGE = ROOT / "src/yield_curves"
 OPERATIONAL = {"baseline", "inputs", "snapshots", "snapshot_assurance", "quote_io", "calendar_io", "execution"}
 ENGINES = {"bootstrap", "calibration", "engine_capabilities"}
 CORE = {"engine_capabilities", "bootstrap", "calibration", "calendars", "conventions", "curves",
-        "diagnostics", "log_linear_diagnostics", "instruments", "observations",
+        "date_grids", "diagnostics", "log_linear_diagnostics", "instruments", "observations",
         "pricing", "quotes", "repricing", "schedules", "tenors"}
 
 

@@ -18,11 +18,13 @@ from typing import Callable, Sequence
 
 from ..quotes import OISCalibrationQuote, OISQuote, bump_ois_quotes
 from ..calendars import BusinessCalendar
+from ..date_grids import iter_forward_start_dates
 from ..calibration import (
     GlobalCalibrationResult,
     calibrate_ftiie_ois_curve_simultaneously,
 )
 from ..curves import CurveInterpolationMethod
+from ..conventions import act_360
 
 
 ProgressCallback = Callable[[str], None]
@@ -251,23 +253,12 @@ def _forward_start_dates(
             "Curve horizon is shorter than the forward period."
         )
 
-    dates: list[date] = []
-
-    current = (
-        reference_date
-    )
-
-    while current <= last_start:
-        dates.append(
-            current
-        )
-
-        current += timedelta(
-            days=grid_step_days
-        )
-
     return tuple(
-        dates
+        iter_forward_start_dates(
+            reference_date=reference_date,
+            last_start_date=last_start,
+            grid_step_days=grid_step_days,
+        )
     )
 
 
@@ -561,10 +552,7 @@ def calculate_forward_sensitivity_locality(
                 "Forward sensitivities must be finite."
             )
 
-        time_years = (
-            start_date
-            - reference_date
-        ).days / 360.0
+        time_years = act_360(reference_date, start_date)
 
         times_years.append(
             time_years
@@ -595,10 +583,7 @@ def calculate_forward_sensitivity_locality(
         in absolute_sensitivities
     ]
 
-    shock_pillar_years = (
-        shock_pillar_date
-        - reference_date
-    ).days / 360.0
+    shock_pillar_years = act_360(reference_date, shock_pillar_date)
 
     weighted_center_years = (
         fsum(

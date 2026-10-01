@@ -8,6 +8,7 @@ from math import isfinite, sqrt
 from typing import Protocol, Sequence, runtime_checkable
 
 from .conventions import act_360
+from .date_grids import iter_forward_start_dates
 
 @runtime_checkable
 class DiagnosticCurve(Protocol):
@@ -108,9 +109,11 @@ def build_forward_observations(
         ForwardObservation
     ] = []
 
-    start_date = reference_date
-
-    while start_date <= last_start_date:
+    for start_date in iter_forward_start_dates(
+        reference_date=reference_date,
+        last_start_date=last_start_date,
+        grid_step_days=grid_step_days,
+    ):
         end_date = (
             start_date
             + timedelta(
@@ -142,10 +145,6 @@ def build_forward_observations(
                 ),
                 rate=rate,
             )
-        )
-
-        start_date += timedelta(
-            days=grid_step_days
         )
 
     return tuple(

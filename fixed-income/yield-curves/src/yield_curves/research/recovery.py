@@ -25,6 +25,7 @@ from math import fsum, sqrt
 from typing import Protocol, Sequence, runtime_checkable
 
 
+from ..date_grids import inclusive_date_grid as _build_date_grid
 from ..tenors import add_calendar_months
 
 @runtime_checkable
@@ -142,40 +143,6 @@ def _summarize_errors(
         max_abs_error=absolute_errors[max_index],
         max_abs_error_date=dates[max_index],
     )
-
-
-def _build_date_grid(
-    *,
-    start_date: date,
-    end_date: date,
-    step_days: int,
-) -> tuple[date, ...]:
-    """Build deterministic date grid including the final date."""
-
-    if step_days <= 0:
-        raise ValueError(
-            "Grid step must be positive."
-        )
-
-    if end_date < start_date:
-        raise ValueError(
-            "End date cannot precede start date."
-        )
-
-    dates: list[date] = []
-
-    current = start_date
-
-    while current < end_date:
-        dates.append(current)
-        current += timedelta(
-            days=step_days
-        )
-
-    if not dates or dates[-1] != end_date:
-        dates.append(end_date)
-
-    return tuple(dates)
 
 
 def calculate_recovery_metrics(
