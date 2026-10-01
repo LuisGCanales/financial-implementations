@@ -58,7 +58,7 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 markers = [
-    "slow: expensive full integration tests",
+    "slow: expensive repeated recalibration or research-scale numerical work",
 ]
 testpaths = ["tests"]
 addopts = [

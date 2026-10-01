@@ -61,7 +61,9 @@ source .venv/bin/activate
 python -m pip install -e ".[dev]"
 ```
 
-Runtime dependencies are NumPy, SciPy, and PyYAML. Plotting dependencies are optional:
+Runtime dependencies are NumPy and SciPy. Install only the core package with
+`python -m pip install -e .`. The `dev` extra adds pytest. Full test collection
+(including plotting tests) requires both extras:
 
 ```bash
 python -m pip install -e ".[dev,plots]"
@@ -148,7 +150,11 @@ Fast unit and calibration tests:
 pytest -m "not slow"
 ```
 
-The global sensitivity integration tests are marked `slow`. Some historical quote-sensitivity fixtures still perform repeated recalibration without the `slow` marker; run those tests selectively when needed. See [docs/testing.md](docs/testing.md).
+Install `.[dev,plots]` before collecting the whole suite. Full quote-sensitivity
+and global-sensitivity recalibration experiments are marked `slow`; individual
+calibration and small contract tests remain in normal feedback. Plain `pytest`
+runs all tests. See [docs/testing.md](docs/testing.md) for selection and safe
+reference-candidate tooling.
 
 ## Scope and limitations
 

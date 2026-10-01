@@ -1,7 +1,11 @@
-"""Generate canonical synthetic F-TIIE OIS reference quotes."""
+"""Generate candidate synthetic F-TIIE OIS reference quotes for human review."""
 
+import argparse
 from datetime import date
 from pathlib import Path
+from tempfile import TemporaryDirectory
+
+from yield_curves.tooling.reference_candidates import validate_candidate_path, write_candidate
 
 from yield_curves.tooling.project_paths import (find_project_root)
 
@@ -25,6 +29,15 @@ TRADE_DATE = date(
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--output", type=Path, required=True,
+                        help="New candidate CSV path; frozen and existing paths are rejected.")
+    args = parser.parse_args()
+    try:
+        validate_candidate_path(args.output, root=PROJECT_ROOT)
+    except ValueError as error:
+        parser.error(str(error))
+
     calendar = build_projected_mxmc_calendar(
         start_year=2026,
         end_year=2057,
@@ -47,17 +60,13 @@ def main() -> None:
         true_curve=true_curve,
     )
 
-    output_path = (
-        PROJECT_ROOT
-        / "data"
-        / "synthetic"
-        / "ftiie_ois_quotes_v1.csv"
-    )
-
-    write_synthetic_ois_quotes_csv(
-        quotes=quotes,
-        path=output_path,
-    )
+    output_path = args.output
+    # Reuse the deterministic CSV serializer without allowing its overwrite
+    # behavior at the user destination.
+    with TemporaryDirectory(prefix="ftiie-candidate-") as temporary:
+        staged = Path(temporary) / "quotes.csv"
+        write_synthetic_ois_quotes_csv(quotes=quotes, path=staged)
+        write_candidate(output_path, staged.read_bytes(), root=PROJECT_ROOT)
 
     print(
         f"Synthetic scenario: "

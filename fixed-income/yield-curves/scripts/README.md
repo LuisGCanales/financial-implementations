@@ -15,7 +15,7 @@ The current historical scripts are intentionally placed under `experiments/`.
 
 | Script | Purpose | Inputs | Outputs | Depends on | Cost |
 |---|---|---|---|---|---|
-| `generate_synthetic_reference_data.py` | Generate the frozen synthetic F-TIIE OIS quote set. | Projected MXMC calendar and the synthetic known-truth model. | Writes `data/synthetic/ftiie_ois_quotes_v1.csv` when executed. | `yield_curves.research.calendars`, `yield_curves.schedules`, `yield_curves.research.synthetic`. | MEDIUM |
+| `generate_synthetic_reference_data.py` | Generate a candidate synthetic F-TIIE OIS quote set for human review. | Projected MXMC calendar and the synthetic known-truth model. | Requires `--output`; writes a new candidate CSV and never overwrites `data/synthetic/ftiie_ois_quotes_v1.csv`. | `yield_curves.research.calendars`, `yield_curves.schedules`, `yield_curves.research.synthetic`. | MEDIUM |
 | `plot_synthetic_reference_data.py` | Plot the known-truth zero/forward curves and synthetic par quotes. | Existing synthetic quote CSV and known-truth model. | Writes figures and tables under `reports/{figures,tables}/01_synthetic_reference/`. | `yield_curves.research.synthetic`, `reporting`. | LOW |
 
 ### `experiments/bootstrap`

@@ -57,6 +57,7 @@ def report(
     )
 
 
+@pytest.mark.slow
 def test_one_perturbation_per_quote(
     quotes,
     report,
@@ -68,6 +69,7 @@ def test_one_perturbation_per_quote(
     )
 
 
+@pytest.mark.slow
 def test_each_perturbation_contains_one_response_per_node(
     quotes,
     report,
@@ -83,6 +85,7 @@ def test_each_perturbation_contains_one_response_per_node(
         )
 
 
+@pytest.mark.slow
 def test_upstream_nodes_are_invariant(
     report,
 ) -> None:
@@ -94,6 +97,7 @@ def test_upstream_nodes_are_invariant(
     )
 
 
+@pytest.mark.slow
 def test_upstream_df_changes_are_numerically_negligible(
     report,
 ) -> None:
@@ -108,6 +112,7 @@ def test_upstream_df_changes_are_numerically_negligible(
         )
 
 
+@pytest.mark.slow
 def test_shocked_node_changes(
     report,
 ) -> None:
@@ -120,6 +125,7 @@ def test_shocked_node_changes(
         ) > 0
 
 
+@pytest.mark.slow
 def test_shocked_node_zero_rate_changes(
     report,
 ) -> None:
@@ -132,6 +138,7 @@ def test_shocked_node_zero_rate_changes(
         ) > 0
 
 
+@pytest.mark.slow
 def test_quote_bump_is_exactly_one_basis_point(
     report,
 ) -> None:
@@ -148,6 +155,7 @@ def test_quote_bump_is_exactly_one_basis_point(
         )
 
 
+@pytest.mark.slow
 def test_first_quote_shock_can_propagate_downstream(
     report,
 ) -> None:
@@ -174,6 +182,7 @@ def test_first_quote_shock_can_propagate_downstream(
     )
 
 
+@pytest.mark.slow
 def test_last_quote_shock_leaves_all_previous_nodes_unchanged(
     report,
 ) -> None:
@@ -203,6 +212,7 @@ def test_last_quote_shock_leaves_all_previous_nodes_unchanged(
     )
 
 
+@pytest.mark.slow
 def test_each_quote_shock_changes_forward_curve(
     report,
 ) -> None:
@@ -234,6 +244,7 @@ def central_report(
     )
 
 
+@pytest.mark.slow
 def test_central_analysis_has_one_result_per_quote(
     quotes,
     central_report,
@@ -245,6 +256,7 @@ def test_central_analysis_has_one_result_per_quote(
     )
 
 
+@pytest.mark.slow
 def test_central_upstream_sensitivities_are_zero(
     central_report,
 ) -> None:
@@ -261,6 +273,7 @@ def test_central_upstream_sensitivities_are_zero(
         )
 
 
+@pytest.mark.slow
 def test_central_upstream_curvature_is_zero(
     central_report,
 ) -> None:
@@ -277,6 +290,7 @@ def test_central_upstream_curvature_is_zero(
         )
 
 
+@pytest.mark.slow
 def test_own_node_central_sensitivity_is_nonzero(
     central_report,
 ) -> None:
@@ -289,6 +303,7 @@ def test_own_node_central_sensitivity_is_nonzero(
         ) > 0
 
 
+@pytest.mark.slow
 def test_directional_responses_average_to_central_sensitivity(
     central_report,
 ) -> None:
@@ -316,6 +331,7 @@ def test_directional_responses_average_to_central_sensitivity(
             )
 
 
+@pytest.mark.slow
 def test_forward_central_sensitivity_is_nonzero(
     central_report,
 ) -> None:
@@ -330,6 +346,7 @@ def test_forward_central_sensitivity_is_nonzero(
         )
 
 
+@pytest.mark.slow
 def test_forward_curvature_is_finite(
     central_report,
 ) -> None:
