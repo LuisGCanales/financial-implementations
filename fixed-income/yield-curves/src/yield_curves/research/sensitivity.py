@@ -37,18 +37,8 @@ from ..bootstrap import (
     BootstrapResult,
     bootstrap_ftiie_ois_curve,
 )
-from ..quotes import OISCalibrationQuote
+from ..quotes import OISCalibrationQuote, OISQuote, bump_ois_quotes
 from ..calendars import BusinessCalendar
-
-
-@dataclass(frozen=True, slots=True)
-class PerturbedCalibrationQuote:
-    """Minimal calibration quote used for one-factor perturbations."""
-
-    tenor: str
-    trade_date: date
-    contractual_maturity_date: date
-    par_rate: float
 
 
 @dataclass(frozen=True, slots=True)
@@ -143,54 +133,13 @@ def _build_perturbed_quotes(
     quotes: Sequence[OISCalibrationQuote],
     shock_index: int,
     bump_bp: float,
-) -> tuple[
-    PerturbedCalibrationQuote,
-    ...
-]:
-    """Return quote set with exactly one par rate perturbed."""
-
+) -> tuple[OISQuote, ...]:
+    """Return neutral quotes with exactly one selected par rate perturbed."""
     if not quotes:
-        raise ValueError(
-            "At least one quote is required."
-        )
+        raise ValueError("At least one quote is required.")
 
-    if not (
-        0 <= shock_index < len(quotes)
-    ):
-        raise IndexError(
-            "Shock index is outside quote set."
-        )
-
-    bump_rate = (
-        bump_bp
-        / 10_000.0
-    )
-
-    perturbed: list[
-        PerturbedCalibrationQuote
-    ] = []
-
-    for index, quote in enumerate(
-        quotes
-    ):
-        par_rate = quote.par_rate
-
-        if index == shock_index:
-            par_rate += bump_rate
-
-        perturbed.append(
-            PerturbedCalibrationQuote(
-                tenor=quote.tenor,
-                trade_date=quote.trade_date,
-                contractual_maturity_date=(
-                    quote.contractual_maturity_date
-                ),
-                par_rate=par_rate,
-            )
-        )
-
-    return tuple(
-        perturbed
+    return bump_ois_quotes(
+        quotes=quotes, shock_index=shock_index, bump_bp=bump_bp,
     )
 
 

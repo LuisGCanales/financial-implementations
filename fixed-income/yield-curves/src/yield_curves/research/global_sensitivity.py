@@ -16,7 +16,7 @@ from math import fsum, isfinite, sqrt
 from time import perf_counter
 from typing import Callable, Sequence
 
-from ..quotes import OISCalibrationQuote
+from ..quotes import OISCalibrationQuote, OISQuote, bump_ois_quotes
 from ..calendars import BusinessCalendar
 from ..calibration import (
     GlobalCalibrationResult,
@@ -26,16 +26,6 @@ from ..curves import CurveInterpolationMethod
 
 
 ProgressCallback = Callable[[str], None]
-
-
-@dataclass(frozen=True, slots=True)
-class PerturbedGlobalQuote:
-    """Minimal calibration quote used by quote-shock experiments."""
-
-    tenor: str
-    trade_date: date
-    contractual_maturity_date: date
-    par_rate: float
 
 
 @dataclass(frozen=True, slots=True)
@@ -215,48 +205,13 @@ def _perturb_quotes(
     quotes: Sequence[OISCalibrationQuote],
     shock_index: int,
     bump_bp: float,
-) -> tuple[PerturbedGlobalQuote, ...]:
-    """Return a quote set with exactly one selected quote perturbed."""
-
+) -> tuple[OISQuote, ...]:
+    """Return neutral quotes with exactly one selected par rate perturbed."""
     if shock_index < 0 or shock_index >= len(quotes):
-        raise IndexError(
-            "Shock index is outside the calibration quote set."
-        )
+        raise IndexError("Shock index is outside the calibration quote set.")
 
-    bump_rate = (
-        bump_bp
-        / 10_000.0
-    )
-
-    result: list[
-        PerturbedGlobalQuote
-    ] = []
-
-    for index, quote in enumerate(
-        quotes
-    ):
-        par_rate = (
-            quote.par_rate
-            + (
-                bump_rate
-                if index == shock_index
-                else 0.0
-            )
-        )
-
-        result.append(
-            PerturbedGlobalQuote(
-                tenor=quote.tenor,
-                trade_date=quote.trade_date,
-                contractual_maturity_date=(
-                    quote.contractual_maturity_date
-                ),
-                par_rate=par_rate,
-            )
-        )
-
-    return tuple(
-        result
+    return bump_ois_quotes(
+        quotes=quotes, shock_index=shock_index, bump_bp=bump_bp,
     )
 
 

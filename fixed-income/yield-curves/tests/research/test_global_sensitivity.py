@@ -1529,3 +1529,37 @@ def test_global_forward_locality_metrics_are_valid(
             locality.sensitivity_mass_within_2y
             >= locality.sensitivity_mass_within_1y
         )
+
+def test_neutral_quotes_reach_global_engine(monkeypatch):
+    from dataclasses import replace
+    from yield_curves.calendars import BusinessCalendar
+    from yield_curves.quotes import OISQuote
+    from yield_curves.research import global_sensitivity
+
+    quotes = (
+        OISQuote('1M', date(2026, 1, 5), date(2026, 2, 7), 0.08),
+        OISQuote('3M', date(2026, 1, 5), date(2026, 4, 7), 0.081),
+    )
+    actual = global_sensitivity.calibrate_ftiie_ois_curve_simultaneously
+    calls = []
+
+    def capture(**kwargs):
+        calls.append(tuple(kwargs['quotes']))
+        return actual(**kwargs)
+
+    monkeypatch.setattr(global_sensitivity, 'calibrate_ftiie_ois_curve_simultaneously', capture)
+    result = analyze_global_quote_sensitivity(
+        quotes=quotes, calendar=BusinessCalendar('test', frozenset()),
+        interpolation_method=CurveInterpolationMethod.CUBIC_CONTINUOUS_ZERO,
+    )
+    expected = [quotes]
+    for index in range(len(quotes)):
+        for direction in (1.0, -1.0):
+            bumped = list(quotes)
+            bumped[index] = replace(bumped[index], par_rate=bumped[index].par_rate + direction / 10_000.0)
+            expected.append(tuple(bumped))
+    assert calls == expected
+    assert all(type(q) is OISQuote for call in calls[1:] for q in call)
+    assert [(s.shock_index, s.shock_tenor, s.bump_bp) for s in result.shocks] == [
+        (index, q.tenor, 1.0) for index, q in enumerate(quotes)
+    ]

@@ -183,3 +183,23 @@ def test_research_comparison_lists_remain_explicit():
         identities = tuple(node.attr if isinstance(node, ast.Attribute) else node.value
                            for node in methods.elts)
         assert identities == expected, path
+
+
+def test_research_has_no_parallel_neutral_quote_dataclasses():
+    from dataclasses import fields
+    from yield_curves.quotes import OISQuote
+
+    financial_fields = {'tenor', 'trade_date', 'contractual_maturity_date', 'par_rate'}
+    assert {field.name for field in fields(OISQuote)} == financial_fields
+    for path in (PACKAGE / 'research').rglob('*.py'):
+        for node in ast.walk(ast.parse(path.read_text())):
+            if isinstance(node, ast.ClassDef):
+                declared = {item.target.id for item in node.body
+                            if isinstance(item, ast.AnnAssign) and isinstance(item.target, ast.Name)}
+                assert declared != financial_fields, (path, node.name)
+    for module_name, removed in [
+        ('sensitivity', 'PerturbedCalibrationQuote'),
+        ('global_sensitivity', 'PerturbedGlobalQuote'),
+    ]:
+        module = importlib.import_module('yield_curves.research.' + module_name)
+        assert not hasattr(module, removed)
