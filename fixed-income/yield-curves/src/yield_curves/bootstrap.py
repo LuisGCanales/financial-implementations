@@ -31,6 +31,10 @@ from .curves import (
     NodalCurve,
     build_nodal_curve,
 )
+from .engine_capabilities import (
+    CurveConstructionEngine,
+    require_supported_method,
+)
 from .instruments import (
     build_calibration_ftiie_ois,
 )
@@ -176,18 +180,10 @@ def bootstrap_ftiie_ois_curve_with_method(
     by the payment lag.
     """
 
-    if interpolation_method in {
-        CurveInterpolationMethod.CUBIC_CONTINUOUS_ZERO,
-        CurveInterpolationMethod.PCHIP_CONTINUOUS_ZERO,
-    }:
-        raise ValueError(
-            f"{interpolation_method.value} may alter "
-            "previously represented intervals when new "
-            "nodes are introduced and is not supported "
-            "by the sequential bootstrap. Use simultaneous "
-            "nodal calibration."
-        )
-        
+    require_supported_method(
+        interpolation_method, CurveConstructionEngine.SEQUENTIAL,
+    )
+
     if not quotes:
         raise ValueError(
             "At least one calibration quote is required."
@@ -595,9 +591,9 @@ def bootstrap_ftiie_ois_curve(
     rtol: float = 1e-12,
     maxiter: int = 200,
 ) -> BootstrapResult:
-    """Bootstrap the canonical F-TIIE curve.
+    """Bootstrap an F-TIIE curve using log-linear discount factors.
 
-    Canonical interpolation methodology:
+    Fixed interpolation method for this wrapper:
 
         LOG_LINEAR_DF
 

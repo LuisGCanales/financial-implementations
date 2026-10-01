@@ -1,6 +1,6 @@
 """Simultaneous nodal calibration for F-TIIE OIS curves.
 
-Unlike the canonical sequential bootstrap, this calibration engine
+Unlike the sequential bootstrap, this calibration engine
 solves all nodal discount factors simultaneously.
 
 It is required for interpolation methods whose value on earlier
@@ -33,6 +33,10 @@ from .curves import (
     CurveInterpolationMethod,
     NodalCurve,
     build_nodal_curve,
+)
+from .engine_capabilities import (
+    CurveConstructionEngine,
+    require_supported_method,
 )
 from .instruments import (
     FTiieOIS,
@@ -183,12 +187,16 @@ def calibrate_ftiie_ois_curve_simultaneously(
 ) -> GlobalCalibrationResult:
     """Calibrate all nodal discount factors simultaneously.
 
-    A canonical log-linear sequential bootstrap is used only to
+    A log-linear sequential bootstrap is used only to
     provide a robust initial guess.
 
     The final solution is determined by the requested interpolation
     method and the simultaneous calibration objective.
     """
+
+    require_supported_method(
+        interpolation_method, CurveConstructionEngine.SIMULTANEOUS,
+    )
 
     if lower_df_bound <= 0:
         raise ValueError(
@@ -218,7 +226,7 @@ def calibrate_ftiie_ois_curve_simultaneously(
     #
     # Default:
     #     obtain a financially coherent initial guess from the
-    #     canonical sequential bootstrap.
+    #     log-linear sequential bootstrap.
     #
     # Optional warm start:
     #     callers performing nearby repeated calibrations may provide

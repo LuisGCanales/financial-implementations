@@ -167,3 +167,65 @@ def test_methods_use_same_pillar_dates(
         log_linear.curve.node_dates
         == linear_zero.curve.node_dates
     )
+
+
+def test_capabilities_cover_every_known_method_explicitly():
+    from yield_curves.engine_capabilities import (
+        METHOD_CAPABILITIES, CurveConstructionEngine, supports,
+    )
+
+    expected = {
+        CurveInterpolationMethod.LOG_LINEAR_DF: (True, True),
+        CurveInterpolationMethod.LINEAR_CONTINUOUS_ZERO: (True, True),
+        CurveInterpolationMethod.CUBIC_CONTINUOUS_ZERO: (False, True),
+        CurveInterpolationMethod.PCHIP_CONTINUOUS_ZERO: (False, True),
+    }
+    assert set(METHOD_CAPABILITIES) == set(CurveInterpolationMethod) == set(expected)
+    for method, (sequential, simultaneous) in expected.items():
+        assert supports(method, CurveConstructionEngine.SEQUENTIAL) is sequential
+        assert supports(method, CurveConstructionEngine.SIMULTANEOUS) is simultaneous
+
+
+def test_capability_map_and_descriptors_are_immutable():
+    from dataclasses import FrozenInstanceError
+    from yield_curves.engine_capabilities import METHOD_CAPABILITIES
+
+    method = CurveInterpolationMethod.LOG_LINEAR_DF
+    with pytest.raises(TypeError):
+        METHOD_CAPABILITIES[method] = METHOD_CAPABILITIES[method]
+    with pytest.raises(FrozenInstanceError):
+        METHOD_CAPABILITIES[method].sequential = False
+
+
+@pytest.mark.parametrize("engine", ("sequential bootstrap", "simultaneous nodal calibration"))
+def test_unknown_method_has_no_capability(engine):
+    from yield_curves.engine_capabilities import supports
+
+    with pytest.raises(ValueError, match="Unknown interpolation method"):
+        supports("UNKNOWN", engine)
+
+
+def test_unknown_engine_is_rejected():
+    from yield_curves.engine_capabilities import supports
+
+    with pytest.raises(ValueError):
+        supports(CurveInterpolationMethod.LOG_LINEAR_DF, "UNKNOWN")
+
+
+@pytest.mark.parametrize("method, message", (
+    (CurveInterpolationMethod.CUBIC_CONTINUOUS_ZERO, "not supported.*sequential bootstrap"),
+    (CurveInterpolationMethod.PCHIP_CONTINUOUS_ZERO, "not supported.*sequential bootstrap"),
+    ("UNKNOWN", "Unknown interpolation method"),
+))
+def test_sequential_rejects_before_preparation_or_solve(monkeypatch, quotes, calendar, method, message):
+    import yield_curves.bootstrap as engine
+
+    def forbidden(*args, **kwargs):
+        pytest.fail("Unsupported method reached preparation or solver")
+
+    monkeypatch.setattr(engine, "brentq", forbidden)
+    monkeypatch.setattr(engine, "build_calibration_ftiie_ois", forbidden)
+    with pytest.raises(ValueError, match=message):
+        engine.bootstrap_ftiie_ois_curve_with_method(
+            quotes=quotes[:2], calendar=calendar, interpolation_method=method,
+        )

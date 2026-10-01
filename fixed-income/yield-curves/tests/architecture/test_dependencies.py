@@ -11,7 +11,8 @@ import sys
 ROOT = Path(__file__).resolve().parents[2]
 PACKAGE = ROOT / "src/yield_curves"
 OPERATIONAL = {"baseline", "inputs", "snapshots", "snapshot_assurance", "quote_io", "calendar_io", "execution"}
-CORE = {"bootstrap", "calibration", "calendars", "conventions", "curves",
+ENGINES = {"bootstrap", "calibration", "engine_capabilities"}
+CORE = {"engine_capabilities", "bootstrap", "calibration", "calendars", "conventions", "curves",
         "diagnostics", "log_linear_diagnostics", "instruments", "observations",
         "pricing", "quotes", "repricing", "schedules", "tenors"}
 
@@ -57,6 +58,10 @@ def test_package_layers_are_explicit_and_imports_point_inward():
                 assert name not in {"yield_curves.calendar_io", "yield_curves.quote_io",
                                     "yield_curves.execution", "yield_curves.snapshots",
                                     "yield_curves.snapshot_assurance"}, (start, name)
+            if start == "yield_curves.curves":
+                assert name not in {f"yield_curves.{engine}" for engine in ENGINES}, (start, name)
+            if start == "yield_curves.engine_capabilities":
+                assert name not in {"yield_curves.bootstrap", "yield_curves.calibration"}, (start, name)
             pending.extend(graph[name] - visited)
 
 
@@ -150,3 +155,31 @@ def test_snapshot_assurance_has_no_solver_or_publication_calls():
         if isinstance(node, ast.Call):
             name = node.func.id if isinstance(node.func, ast.Name) else getattr(node.func, "attr", "")
             assert name not in forbidden
+
+
+
+def test_research_comparison_lists_remain_explicit():
+    two = ("LOG_LINEAR_DF", "LINEAR_CONTINUOUS_ZERO")
+    three = (*two, "CUBIC_CONTINUOUS_ZERO")
+    experiments = {
+        "interpolation/compare_interpolation_methods.py": two,
+        "interpolation/compare_interpolation_methods_by_horizon.py": two,
+        "interpolation/compare_three_interpolation_methods.py": three,
+        "interpolation/plot_three_interpolation_methods.py": three,
+        "sensitivity/report_global_sensitivity.py": three,
+        "sensitivity/report_forward_sensitivity_locality.py": three,
+        "sensitivity/plot_global_forward_sensitivity_heatmaps.py": three,
+    }
+    for relative, expected in experiments.items():
+        path = ROOT / "scripts/experiments" / relative
+        tree = ast.parse(path.read_text())
+        assignments = [node.value for node in ast.walk(tree)
+                       if isinstance(node, ast.Assign)
+                       and any(isinstance(target, ast.Name) and target.id in {"METHODS", "methods"}
+                               for target in node.targets)]
+        assert len(assignments) == 1, path
+        methods = assignments[0]
+        assert isinstance(methods, ast.Tuple), path
+        identities = tuple(node.attr if isinstance(node, ast.Attribute) else node.value
+                           for node in methods.elts)
+        assert identities == expected, path
