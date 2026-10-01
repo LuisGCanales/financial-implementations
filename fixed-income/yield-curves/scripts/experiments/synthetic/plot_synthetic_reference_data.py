@@ -33,6 +33,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 
+from yield_curves.date_grids import inclusive_date_grid
 from yield_curves.tooling.project_paths import (find_project_root)
 from yield_curves.tooling.reporting import (save_csv, save_figure)
 from yield_curves.research.synthetic import (build_synthetic_known_truth_curve)
@@ -81,35 +82,11 @@ def build_dense_curve_grid(
 ) -> list[date]:
     """Generate dense deterministic date grid for visualization."""
 
-    if step_days <= 0:
-        raise ValueError(
-            "Grid step must be positive."
-        )
-
-    if end_date < start_date:
-        raise ValueError(
-            "End date cannot precede start date."
-        )
-
-    dates: list[date] = []
-
-    current = start_date
-
-    while current < end_date:
-        dates.append(
-            current
-        )
-
-        current += timedelta(
-            days=step_days
-        )
-
-    if not dates or dates[-1] != end_date:
-        dates.append(
-            end_date
-        )
-
-    return dates
+    return list(inclusive_date_grid(
+        start_date=start_date,
+        end_date=end_date,
+        step_days=step_days,
+    ))
 
 
 def load_synthetic_quotes(

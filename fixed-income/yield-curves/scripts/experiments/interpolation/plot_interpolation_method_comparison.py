@@ -37,6 +37,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 
+from yield_curves.date_grids import inclusive_date_grid
 from yield_curves.tooling.project_paths import (find_project_root)
 from yield_curves.bootstrap import (
     bootstrap_ftiie_ois_curve_with_method,
@@ -88,36 +89,10 @@ def build_date_grid(
 ) -> tuple[date, ...]:
     """Build deterministic date grid including final date."""
 
-    if step_days <= 0:
-        raise ValueError(
-            "Grid step must be positive."
-        )
-
-    if end_date < start_date:
-        raise ValueError(
-            "End date cannot precede start date."
-        )
-
-    dates: list[date] = []
-
-    current = start_date
-
-    while current < end_date:
-        dates.append(
-            current
-        )
-
-        current += timedelta(
-            days=step_days
-        )
-
-    if not dates or dates[-1] != end_date:
-        dates.append(
-            end_date
-        )
-
-    return tuple(
-        dates
+    return inclusive_date_grid(
+        start_date=start_date,
+        end_date=end_date,
+        step_days=step_days,
     )
 
 
