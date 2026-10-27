@@ -1,9 +1,11 @@
 """Operational input rejection and assessment of existing calibrations."""
 
-from copy import copy
+from copy import copy, deepcopy
 from dataclasses import replace
 from datetime import date, datetime
+from math import isfinite, nextafter
 from types import SimpleNamespace
+from unittest.mock import Mock
 
 import pytest
 
@@ -170,16 +172,61 @@ def test_invalid_acceptance_configuration_raises(result, pass_bp, fail_bp):
         )
 
 
-def test_pricing_domain_error_becomes_rejection(result, monkeypatch):
-    def fail(**kwargs):
-        raise ValueError("Curve cannot price requested date")
+@pytest.mark.parametrize("case", ["empty_checks", "pass_checks_with_issue"])
+def test_valid_structure_still_requires_checks_and_no_issues(result, monkeypatch, case):
+    prepared = prepare_baseline_inputs(quotes=QUOTES, calendar=CALENDAR)
+    checks = () if case == "empty_checks" else result.acceptance.checks
+    issues = () if case == "empty_checks" else ("CONTROLLED_ISSUE",)
+    reprice = Mock(return_value=(checks, issues))
+    monkeypatch.setattr(baseline, "_independently_reprice", reprice)
+
+    acceptance = baseline._assess_prepared_calibration(
+        calibration_result=result.calibration_result,
+        quotes=prepared.quotes, calendar=prepared.calendar.to_calendar(),
+        prepared=prepared, input_issues=(),
+        acceptance_policy=baseline.STANDARD_ACCEPTANCE_POLICY,
+    )
+
+    reprice.assert_called_once_with(
+        calibration_result=result.calibration_result,
+        quotes=prepared.quotes, calendar=prepared.calendar.to_calendar(),
+        pass_tolerance_bp=baseline.STANDARD_ACCEPTANCE_POLICY.pass_tolerance_bp,
+        fail_tolerance_bp=baseline.STANDARD_ACCEPTANCE_POLICY.fail_tolerance_bp,
+    )
+    assert acceptance.calibration_success is True
+    assert acceptance.structural_valid is True
+    assert acceptance.checks == checks
+    assert acceptance.issues == issues
+    assert acceptance.accepted_for_use is False
+    if case == "empty_checks":
+        assert acceptance.checks == ()
+        assert acceptance.issues == ()
+        assert acceptance.max_abs_repricing_error_bp == float("inf")
+    else:
+        assert acceptance.checks
+        assert all(c.status is repricing.InstrumentValidationStatus.PASS
+                   for c in acceptance.checks)
+        assert isfinite(acceptance.max_abs_repricing_error_bp)
+        assert acceptance.issues == ("CONTROLLED_ISSUE",)
+
+
+@pytest.mark.parametrize("error", [
+    ValueError("Curve cannot price requested date"),
+    ZeroDivisionError("Controlled pricing arithmetic failure"),
+], ids=["value_error", "arithmetic_error"])
+def test_pricing_domain_error_becomes_rejection(result, monkeypatch, error):
+    fail = Mock(side_effect=error)
     monkeypatch.setattr(repricing, "calculate_par_rate", fail)
     acceptance = baseline.assess_baseline_calibration(
         calibration_result=result.calibration_result, quotes=QUOTES, calendar=CALENDAR
     )
-    assert not acceptance.accepted_for_use
+    fail.assert_called_once()
+    assert acceptance.calibration_success is True
+    assert acceptance.structural_valid is True
+    assert acceptance.accepted_for_use is False
     assert acceptance.issues == ("REPRICING_FAILED",)
     assert acceptance.max_abs_repricing_error_bp == float("inf")
+    assert acceptance.checks == ()
 
 
 @pytest.mark.parametrize("rate", [0.0, -0.01])
@@ -346,13 +393,134 @@ def test_absent_curve_and_nonfinite_diagnostics_have_explicit_rejected_binding(r
     assert assessed.binding.discount_factors == ()
 
 
-def test_mutating_calibration_after_build_invalidates_live_result(result):
-    from copy import deepcopy
-
+@pytest.mark.parametrize("field", [
+    "success", "message", "function_evaluations", "jacobian_evaluations",
+    "cost", "optimality", "max_abs_repricing_error_bp", "rmse_repricing_error_bp",
+    "checks[0].tenor", "checks[0].market_quote", "checks[0].model_quote",
+    "checks[0].error_bp",
+])
+def test_mutating_calibration_after_build_invalidates_live_result(result, field):
     changed = deepcopy(result)
-    object.__setattr__(changed.calibration_result, 'success', False)
-    assert not changed.accepted_for_use
-    assert result.accepted_for_use
+    assert result.accepted_for_use is True
+    assert changed.accepted_for_use is True
+    assert changed.acceptance.is_bound_to(changed.calibration_result, changed.financial_context)
+
+    target = changed.calibration_result
+    original = result.calibration_result
+    if field.startswith("checks[0]."):
+        target = target.checks[0]
+        original = original.checks[0]
+        field = field.split(".", 1)[1]
+    old_value = getattr(target, field)
+    if field == "success":
+        new_value = False
+    elif field in ("message", "tenor"):
+        new_value = old_value + "_CONTROLLED_MUTATION"
+    elif field in ("function_evaluations", "jacobian_evaluations"):
+        new_value = 1 if old_value is None else old_value + 1
+    else:
+        assert isfinite(old_value)
+        new_value = nextafter(old_value, float("inf"))
+        assert new_value.hex() != float(old_value).hex()
+    assert new_value != old_value
+    # Bypass frozen fields only on the copied payload, one retained value per case.
+    object.__setattr__(target, field, new_value)
+
+    assert changed.accepted_for_use is False
+    assert changed.acceptance.is_bound_to(
+        changed.calibration_result, changed.financial_context,
+    ) is False
+    assert changed.acceptance.accepted_for_use is True
+    assert getattr(original, field) == old_value
+    assert result.accepted_for_use is True
+
+
+@pytest.mark.parametrize("state,historical_accepted,bound,expected", [
+    ("accepted_bound", True, True, True),
+    ("rejected_bound", False, True, False),
+    ("accepted_stale", True, False, False),
+], ids=["accepted_bound", "rejected_bound", "accepted_stale"])
+def test_live_acceptance_query_does_no_financial_work(
+    result, monkeypatch, state, historical_accepted, bound, expected,
+):
+    from yield_curves import bootstrap, calibration, inputs, pricing
+
+    # Finish financial setup before installing any sentinels.
+    candidate = result
+    if state == "rejected_bound":
+        failed = replace(result.calibration_result, success=False)
+        prepared = result.financial_context.inputs
+        assessed = baseline._assess_prepared_calibration(
+            calibration_result=failed,
+            quotes=prepared.quotes, calendar=prepared.calendar.to_calendar(),
+            prepared=prepared, input_issues=(),
+            acceptance_policy=result.acceptance.acceptance_policy,
+            financial_context=result.financial_context,
+        )
+        assert assessed.issues == ("CALIBRATION_SOLVER_FAILED",)
+        candidate = baseline.BaselineResult(failed, assessed, result.financial_context)
+    elif state == "accepted_stale":
+        candidate = deepcopy(result)
+        object.__setattr__(candidate.calibration_result, "message",
+                           candidate.calibration_result.message + "_STALE")
+
+    assert candidate.acceptance.accepted_for_use is historical_accepted
+    assert candidate.acceptance.is_bound_to(
+        candidate.calibration_result, candidate.financial_context,
+    ) is bound
+    historical_assessment = candidate.acceptance
+    historical_binding = historical_assessment.binding
+    assessment_before = deepcopy(historical_assessment)
+    calibration_before = candidate.calibration_result
+    context_before = candidate.financial_context
+    payload_before = baseline.BaselinePayloadBinding.capture(
+        calibration_before, historical_binding.evaluation_inputs,
+        context_before, historical_assessment.acceptance_policy,
+    )
+
+    # Patch the defining modules and the aliases actually imported by each caller.
+    boundaries = (
+        (baseline, ("prepare_baseline_inputs", "_independently_reprice",
+                    "reprice_calibration_instruments", "assess_baseline_calibration",
+                    "_assess_prepared_calibration", "build_baseline_ftiie_curve",
+                    "calibrate_ftiie_ois_curve_simultaneously")),
+        (inputs, ("prepare_baseline_inputs",)),
+        (repricing, ("reprice_calibration_instruments", "calculate_par_rate")),
+        (pricing, ("calculate_par_rate", "value_ftiie_ois")),
+        (calibration, ("calibrate_ftiie_ois_curve_simultaneously",
+                       "bootstrap_ftiie_ois_curve", "least_squares", "calculate_par_rate")),
+        (bootstrap, ("bootstrap_ftiie_ois_curve", "bootstrap_ftiie_ois_curve_with_method",
+                     "brentq", "calculate_par_rate", "value_ftiie_ois")),
+    )
+    sentinels = []
+    with monkeypatch.context() as blocked:
+        for module, names in boundaries:
+            for name in names:
+                location = f"{module.__name__}.{name}"
+                sentinel = Mock(name=location, side_effect=AssertionError(location))
+                blocked.setattr(module, name, sentinel)
+                sentinels.append(sentinel)
+        value_1 = candidate.accepted_for_use
+        value_2 = candidate.accepted_for_use
+        assert value_1 is expected
+        assert value_2 is expected
+        for sentinel in sentinels:
+            sentinel.assert_not_called()
+
+    assert candidate.acceptance is historical_assessment
+    assert candidate.acceptance == assessment_before
+    assert candidate.acceptance.binding is historical_binding
+    assert candidate.acceptance.binding == assessment_before.binding
+    assert candidate.calibration_result is calibration_before
+    assert candidate.financial_context is context_before
+    assert baseline.BaselinePayloadBinding.capture(
+        candidate.calibration_result, historical_binding.evaluation_inputs,
+        candidate.financial_context, candidate.acceptance.acceptance_policy,
+    ) == payload_before
+    assert candidate.acceptance.accepted_for_use is historical_accepted
+    assert candidate.acceptance.is_bound_to(
+        candidate.calibration_result, candidate.financial_context,
+    ) is bound
 
 
 def test_initial_vector_is_copied_before_preparation(result, monkeypatch):
