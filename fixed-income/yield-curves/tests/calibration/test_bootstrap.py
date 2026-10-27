@@ -179,3 +179,66 @@ def test_curve_does_not_extend_beyond_last_pillar(
                 curve.last_node_date.day,
             )
         )
+
+
+@pytest.mark.parametrize("scenario,message,brent_calls", [
+    pytest.param("nonfinite", "Non-finite bootstrap objective for 1M", 0, id="nonfinite-endpoint"),
+    pytest.param("no-bracket", "Bootstrap root is not bracketed for 1M", 0, id="no-sign-change"),
+    pytest.param("not-converged", "Bootstrap solver did not converge for 1M", 1, id="not-converged"),
+    pytest.param("nan-root", "Bootstrap produced invalid discount factor for 1M", 1, id="nan-root"),
+    pytest.param("zero-root", "Bootstrap produced invalid discount factor for 1M", 1, id="zero-root"),
+])
+def test_sequential_rejects_invalid_objective_or_root_without_retry(
+    monkeypatch, quotes, calendar, scenario, message, brent_calls,
+):
+    from types import SimpleNamespace
+    from unittest.mock import Mock
+    from yield_curves import bootstrap, calibration
+    from yield_curves.curves import LogLinearDiscountCurve
+
+    quote = quotes[0]
+    expected_ois = build_ftiie_ois(
+        trade_date=quote.trade_date, maturity_date=quote.contractual_maturity_date,
+        fixed_rate=quote.par_rate, notional=1.0, calendar=calendar,
+    )
+    evaluated_dfs = []
+
+    def adverse_valuation(*, ois, projection_curve, discount_curve):
+        assert ois == expected_ois
+        assert projection_curve is discount_curve
+        assert type(projection_curve) is LogLinearDiscountCurve
+        candidate_df, = projection_curve.discount_factors
+        evaluated_dfs.append(candidate_df)
+        if scenario == "nonfinite" and candidate_df == 1e-6:
+            npv = float("nan")
+        elif scenario == "no-bracket":
+            npv = 1.0
+        else:
+            npv = candidate_df - 1.0
+        return SimpleNamespace(npv_receive_float_pay_fixed=npv)
+
+    def invalid_root(objective, lower, upper, **kwargs):
+        assert brent_calls == 1, "Invalid endpoints reached Brent"
+        assert (lower, upper) == (1e-6, 2.0)
+        root = {"not-converged": 0.99, "nan-root": float("nan"), "zero-root": 0.0}[scenario]
+        return root, SimpleNamespace(
+            converged=scenario != "not-converged", iterations=2, function_calls=3,
+        )
+
+    brent = Mock(side_effect=invalid_root)
+    other_solver = Mock(side_effect=AssertionError("Sequential failure reached another solver"))
+    monkeypatch.setattr(bootstrap, "value_ftiie_ois", adverse_valuation)
+    monkeypatch.setattr(bootstrap, "brentq", brent)
+    monkeypatch.setattr(calibration, "least_squares", other_solver)
+
+    with pytest.raises(RuntimeError, match=message) as error:
+        bootstrap.bootstrap_ftiie_ois_curve(quotes=quotes[:1], calendar=calendar)
+
+    assert evaluated_dfs == [1e-6, 2.0]
+    assert brent.call_count == brent_calls
+    other_solver.assert_not_called()
+    if scenario == "no-bracket":
+        assert "NPV(1e-06)=1" in str(error.value)
+        assert "NPV(2.0)=1" in str(error.value)
+    elif scenario in ("nan-root", "zero-root"):
+        assert str(error.value).endswith("nan." if scenario == "nan-root" else "0.0.")

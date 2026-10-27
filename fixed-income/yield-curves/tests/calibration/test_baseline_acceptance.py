@@ -2,7 +2,7 @@
 
 from copy import copy
 from dataclasses import replace
-from datetime import date
+from datetime import date, datetime
 from types import SimpleNamespace
 
 import pytest
@@ -44,6 +44,8 @@ INVALID_INPUTS = [
     (invalid_second(tenor="1M"), "DUPLICATE_TENOR:1M"),
     (invalid_second(trade_date=date(2026, 9, 14)), "MULTIPLE_TRADE_DATES"),
     (invalid_second(trade_date="2026-09-15"), "INVALID_QUOTE_DATE:3M"),
+    (invalid_second(trade_date=datetime(2026, 9, 15)), "INVALID_QUOTE_DATE:3M"),
+    (invalid_second(contractual_maturity_date=datetime(2026, 12, 17)), "INVALID_QUOTE_DATE:3M"),
     (invalid_second(contractual_maturity_date=date(2026, 9, 15)), "INVALID_MATURITY:3M"),
     (invalid_second(contractual_maturity_date=QUOTES[0].contractual_maturity_date), "DUPLICATE_MATURITY:3M"),
     (QUOTES[::-1], "NON_INCREASING_MATURITY:1M"),
@@ -376,13 +378,37 @@ def test_initial_vector_is_copied_before_preparation(result, monkeypatch):
 
 @pytest.mark.parametrize("success", [True, False])
 def test_builder_always_captures_standard_acceptance(result, monkeypatch, success):
+    from types import MappingProxyType
+    from yield_curves import engine_capabilities
+
+    capabilities = engine_capabilities.METHOD_CAPABILITIES
+    reordered = MappingProxyType(dict(reversed(tuple(capabilities.items()))))
+    assert reordered == capabilities
+    assert tuple(reordered) != tuple(capabilities)
+    monkeypatch.setattr(engine_capabilities, "METHOD_CAPABILITIES", reordered)
+    initial_dfs = list(result.curve.discount_factors)
+    calls = []
+
+    def solve(*, quotes, calendar, interpolation_method, initial_discount_factors):
+        calls.append(interpolation_method)
+        assert interpolation_method is CurveInterpolationMethod.CUBIC_CONTINUOUS_ZERO
+        assert quotes == QUOTES
+        assert calendar == CALENDAR
+        assert initial_discount_factors == tuple(initial_dfs)
+        return replace(result.calibration_result, success=success)
+
     monkeypatch.setattr(
-        baseline, "calibrate_ftiie_ois_curve_simultaneously",
-        lambda **kwargs: replace(result.calibration_result, success=success),
+        baseline, "calibrate_ftiie_ois_curve_simultaneously", solve,
     )
-    built = baseline.build_baseline_ftiie_curve(quotes=QUOTES, calendar=CALENDAR)
+    built = baseline.build_baseline_ftiie_curve(
+        quotes=QUOTES, calendar=CALENDAR, initial_discount_factors=initial_dfs,
+    )
+    assert calls == [CurveInterpolationMethod.CUBIC_CONTINUOUS_ZERO]
+    assert built.financial_context.policy.interpolation_method is CurveInterpolationMethod.CUBIC_CONTINUOUS_ZERO
     policy = built.acceptance.acceptance_policy
     assert built.acceptance.is_standard_acceptance
+    assert policy == baseline.STANDARD_ACCEPTANCE_POLICY
+    assert built.financial_context.policy == result.financial_context.policy
     assert policy.kind is baseline.AcceptanceKind.STANDARD_BASELINE_ACCEPTANCE
     assert policy.identifier == "FTIIE_STANDARD_BASELINE_ACCEPTANCE_V1"
     assert policy.pass_tolerance_bp == built.acceptance.pass_tolerance_bp == 0.01
