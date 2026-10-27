@@ -588,6 +588,216 @@ def _rehash(run, root):
     pointer_path.write_text(json.dumps(pointer))
 
 
+def _snapshot_tree_state(root):
+    """Capture the complete inventory and file bytes, including a corrupt pointer."""
+    return {path.relative_to(root): path.read_bytes() if path.is_file() else None
+            for path in root.rglob("*")}
+
+
+@pytest.mark.parametrize("mutation, expected_exception, expected_error", [
+    pytest.param("missing_current_pointer", FileNotFoundError, r"current\.json",
+                 id="missing_current_pointer"),
+    pytest.param("invalid_current_json", json.JSONDecodeError,
+                 "Expecting property name enclosed in double quotes", id="invalid_current_json"),
+    pytest.param("malformed_pointer_run_id", ValueError, r"^Invalid snapshot pointer\.$",
+                 id="malformed_pointer_run_id"),
+    pytest.param("pointer_run_path_mismatch", ValueError, r"^Invalid snapshot pointer\.$",
+                 id="pointer_run_path_mismatch"),
+    pytest.param("referenced_run_absent", FileNotFoundError, r"manifest\.json",
+                 id="referenced_run_absent"),
+    pytest.param("manifest_raw_sha_mismatch", ValueError, r"^Snapshot manifest checksum mismatch\.$",
+                 id="manifest_raw_sha_mismatch"),
+    pytest.param("manifest_run_id_mismatch", ValueError, r"^Invalid snapshot manifest\.$",
+                 id="manifest_run_id_mismatch"),
+    pytest.param("manifest_not_accepted", ValueError, r"^Invalid snapshot manifest\.$",
+                 id="manifest_not_accepted"),
+    pytest.param("manifest_inventory_missing", ValueError, r"^Invalid snapshot manifest\.$",
+                 id="manifest_inventory_missing"),
+    pytest.param("manifest_inventory_extra", ValueError, r"^Invalid snapshot manifest\.$",
+                 id="manifest_inventory_extra"),
+    pytest.param("metadata_created_at_mismatch", ValueError,
+                 r"^Snapshot metadata does not describe an accepted run\.$", id="metadata_created_at_mismatch"),
+    pytest.param("metadata_status_mismatch", ValueError,
+                 r"^Snapshot metadata does not describe an accepted run\.$", id="metadata_status_mismatch"),
+    pytest.param("metadata_historical_acceptance_false", ValueError,
+                 r"^Snapshot metadata does not describe an accepted run\.$", id="metadata_historical_acceptance_false"),
+    pytest.param("pointer_execution_sha_mismatch", ValueError,
+                 r"^Snapshot metadata does not describe an accepted run\.$", id="pointer_execution_sha_mismatch"),
+    pytest.param("manifest_execution_sha_mismatch", ValueError,
+                 r"^Snapshot metadata does not describe an accepted run\.$", id="manifest_execution_sha_mismatch"),
+    pytest.param("metadata_execution_sha_mismatch", ValueError,
+                 r"^Snapshot metadata does not describe an accepted run\.$", id="metadata_execution_sha_mismatch"),
+])
+def test_current_reader_rejects_invalid_pointer_manifest_or_metadata_without_fallback(
+    run_inputs, tmp_path, mutation, expected_exception, expected_error,
+):
+    execution = run_inputs["execution"]
+    first = snapshots.export_baseline_snapshot(execution=execution, output_root=tmp_path)
+    second = snapshots.export_baseline_snapshot(execution=execution, output_root=tmp_path)
+    assert first.published is True
+    assert second.published is True
+    assert first.run_id != second.run_id
+    for exported in (first, second):
+        _assert_complete_run_archive(exported.run_path, execution=execution, accepted=True)
+    assert snapshots.resolve_current_snapshot(tmp_path) == second.run_path
+    first_bytes = _snapshot_tree_state(first.run_path)
+
+    pointer_path = tmp_path / "current.json"
+    manifest_path = second.run_path / "manifest.json"
+    metadata_path = second.run_path / "metadata.json"
+    pointer = json.loads(pointer_path.read_text())
+    manifest = json.loads(manifest_path.read_text())
+    metadata = json.loads(metadata_path.read_text())
+    invalid_sha = "0" * 64
+    assert invalid_sha != execution.binding_sha256
+    absent_run = tmp_path / "runs" / ("0" * 32)
+    assert not absent_run.exists()
+
+    if mutation == "missing_current_pointer":
+        pointer_path.unlink()
+    elif mutation == "invalid_current_json":
+        pointer_path.write_text("{")
+    elif mutation in {"malformed_pointer_run_id", "pointer_run_path_mismatch",
+                      "referenced_run_absent", "pointer_execution_sha_mismatch"}:
+        if mutation == "malformed_pointer_run_id":
+            pointer["run_id"] = "invalid-run-id"
+        elif mutation == "pointer_run_path_mismatch":
+            pointer["run_path"] = f"runs/{first.run_id}"
+        elif mutation == "referenced_run_absent":
+            pointer["run_id"] = absent_run.name
+            pointer["run_path"] = f"runs/{absent_run.name}"
+        else:
+            pointer["execution_binding_sha256"] = invalid_sha
+        pointer_path.write_text(json.dumps(pointer))
+    elif mutation == "manifest_raw_sha_mismatch":
+        # Keep JSON and all declarations valid; do not repair the raw SHA under test.
+        manifest_path.write_bytes(manifest_path.read_bytes() + b"\n")
+    elif mutation.startswith("manifest_"):
+        if mutation == "manifest_run_id_mismatch":
+            manifest["run_id"] = first.run_id
+        elif mutation == "manifest_not_accepted":
+            manifest["accepted_for_use"] = False
+        elif mutation == "manifest_inventory_missing":
+            del manifest["files_sha256"]["calendar.json"]
+        elif mutation == "manifest_inventory_extra":
+            manifest["files_sha256"]["unexpected.json"] = invalid_sha
+        else:
+            assert mutation == "manifest_execution_sha_mismatch"
+            manifest["execution_binding_sha256"] = invalid_sha
+        # Only repair the enclosing manifest SHA, never its inventory or execution SHA.
+        manifest_path.write_text(json.dumps(manifest))
+        pointer["manifest_sha256"] = hashlib.sha256(manifest_path.read_bytes()).hexdigest()
+        pointer_path.write_text(json.dumps(pointer))
+    else:
+        if mutation == "metadata_created_at_mismatch":
+            metadata["created_at_utc"] = "2000-01-01T00:00:00+00:00"
+            assert metadata["created_at_utc"] != manifest["created_at_utc"]
+        elif mutation == "metadata_status_mismatch":
+            metadata["status"] = "rejected"
+        elif mutation == "metadata_historical_acceptance_false":
+            metadata["acceptance"]["accepted_for_use"] = False
+        else:
+            assert mutation == "metadata_execution_sha_mismatch"
+            metadata["execution_binding_sha256"] = invalid_sha
+        metadata_path.write_text(json.dumps(metadata))
+        _rehash(second.run_path, tmp_path)
+
+    # Compare the corrupt state immediately around the read, not against initial setup.
+    before_read = _snapshot_tree_state(tmp_path)
+    with pytest.raises(expected_exception, match=expected_error) as error:
+        snapshots.resolve_current_snapshot(tmp_path)
+    assert _snapshot_tree_state(tmp_path) == before_read
+    if mutation == "missing_current_pointer":
+        assert error.value.filename == str(pointer_path)
+    elif mutation == "referenced_run_absent":
+        assert error.value.filename == str(absent_run / "manifest.json")
+    elif mutation == "invalid_current_json":
+        assert error.value.doc == "{"
+    assert first.run_path.is_dir()
+    assert second.run_path.is_dir()
+    assert _snapshot_tree_state(first.run_path) == first_bytes
+    _assert_complete_run_archive(first.run_path, execution=execution, accepted=True)
+
+
+@pytest.mark.parametrize("mutation, expected_error", [
+    pytest.param("unsupported_construction_flag", r"^Unsupported baseline policy identity\.$",
+                 id="unsupported_construction_flag"),
+    pytest.param("missing_historical_policy_field", r"^Unsupported baseline policy identity\.$",
+                 id="missing_historical_policy_field"),
+    pytest.param("custom_historical_acceptance",
+                 r"^Snapshot standard acceptance policy binding mismatch\.$", id="custom_historical_acceptance"),
+])
+def test_assurance_rejects_unsupported_historical_policy_after_outer_integrity_passes(
+    run_inputs, tmp_path, monkeypatch, mutation, expected_error,
+):
+    import copy
+    from yield_curves import baseline, pricing, repricing, snapshot_assurance
+
+    exported = snapshots.export_baseline_snapshot(execution=run_inputs["execution"], output_root=tmp_path)
+    assert exported.published is True
+    metadata_path = exported.run_path / "metadata.json"
+    manifest_path = exported.run_path / "manifest.json"
+    pointer_path = tmp_path / "current.json"
+    metadata = json.loads(metadata_path.read_text())
+    manifest = json.loads(manifest_path.read_text())
+    pointer = json.loads(pointer_path.read_text())
+    original = copy.deepcopy(metadata)
+    execution = metadata["execution"]
+    policy = execution["financial_context"]["policy"]
+    historical = execution["acceptance"]
+    payload_bytes = {name: (exported.run_path / name).read_bytes()
+                     for name in manifest["files_sha256"] if name != "metadata.json"}
+
+    if mutation == "custom_historical_acceptance":
+        descriptor = historical["acceptance_policy"]
+        assert descriptor["pass_tolerance_bp"] == 0.01
+        assert descriptor["fail_tolerance_bp"] == 0.10
+        descriptor.update(kind="CUSTOM_ANALYTICAL_ASSESSMENT", identifier=None)
+        metadata["acceptance"] = copy.deepcopy(historical)
+        metadata["acceptance_sha256"] = workflow.fingerprint(historical)
+        assert policy == original["execution"]["financial_context"]["policy"]
+    else:
+        assert policy["extrapolation"] is False
+        if mutation == "unsupported_construction_flag":
+            policy["extrapolation"] = True
+        else:
+            assert mutation == "missing_historical_policy_field"
+            del policy["extrapolation"]
+        metadata["financial_context_sha256"] = workflow.fingerprint(execution["financial_context"])
+        assert historical == original["execution"]["acceptance"]
+    for field in ("baseline_identifier", "calibration_approach", "interpolation_method"):
+        assert policy[field] == original["execution"]["financial_context"]["policy"][field]
+    assert historical["binding"] == original["execution"]["acceptance"]["binding"]
+    assert metadata["payload_sha256"] == original["payload_sha256"]
+
+    execution_sha = workflow.fingerprint(execution)
+    for path, record in ((metadata_path, metadata), (manifest_path, manifest), (pointer_path, pointer)):
+        record["execution_binding_sha256"] = execution_sha
+        path.write_text(json.dumps(record))
+    _rehash(exported.run_path, tmp_path)
+    assert {name: (exported.run_path / name).read_bytes() for name in payload_bytes} == payload_bytes
+
+    before_read = _snapshot_tree_state(tmp_path)
+    assert snapshots.resolve_current_snapshot(tmp_path) == exported.run_path
+    repricing_calls = []
+
+    def forbidden_repricing(*args, **kwargs):
+        repricing_calls.append(True)
+        pytest.fail("Historical policy must be rejected before independent repricing")
+
+    with monkeypatch.context() as blocked:
+        # Cover the baseline entrypoint and par-rate function at their effective aliases.
+        functions = (baseline._independently_reprice, repricing.calculate_par_rate)
+        for module in (baseline, pricing, repricing, snapshot_assurance):
+            for name, value in tuple(vars(module).items()):
+                if any(value is function for function in functions):
+                    blocked.setattr(module, name, forbidden_repricing)
+        with pytest.raises(ValueError, match=expected_error):
+            snapshot_assurance.assess_current_snapshot(tmp_path)
+    assert repricing_calls == []
+    assert _snapshot_tree_state(tmp_path) == before_read
+
+
 @pytest.mark.parametrize("target", ["pointer_schema", "manifest_schema", "metadata_schema",
     "policy", "acceptance_policy", "node_date", "quote_date", "quote_rate", "calendar_holidays",
     "calendar_weekends", "calendar_coverage", "quote_provenance", "calendar_provenance",
