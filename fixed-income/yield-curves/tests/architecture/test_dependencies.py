@@ -15,6 +15,7 @@ ENGINES = {"bootstrap", "calibration", "engine_capabilities"}
 CORE = {"engine_capabilities", "bootstrap", "calibration", "calendars", "conventions", "curves",
         "date_grids", "diagnostics", "log_linear_diagnostics", "instruments", "observations",
         "pricing", "quotes", "repricing", "schedules", "tenors"}
+DOMAIN = CORE - ENGINES
 
 
 def _imports(path):
@@ -58,7 +59,7 @@ def test_package_layers_are_explicit_and_imports_point_inward():
                 assert name not in {"yield_curves.calendar_io", "yield_curves.quote_io",
                                     "yield_curves.execution", "yield_curves.snapshots",
                                     "yield_curves.snapshot_assurance"}, (start, name)
-            if start == "yield_curves.curves":
+            if start in {f"yield_curves.{primitive}" for primitive in DOMAIN}:
                 assert name not in {f"yield_curves.{engine}" for engine in ENGINES}, (start, name)
             if start == "yield_curves.engine_capabilities":
                 assert name not in {"yield_curves.bootstrap", "yield_curves.calibration"}, (start, name)

@@ -26,6 +26,60 @@ def run_inputs(tmp_path_factory):
     return dict(execution=execution, result=execution.result, dataset=dataset, calendar=calendar)
 
 
+def test_export_uses_completed_execution_without_solver(run_inputs, tmp_path, monkeypatch):
+    import scipy.optimize as optimize
+    from yield_curves import baseline, bootstrap, calibration
+
+    # The fixture completes construction before any solver entrypoint is blocked.
+    execution = run_inputs["execution"]
+    assert execution.result.acceptance.is_standard_acceptance
+    assert execution.result.accepted_for_use
+    execution.validate()
+    forbidden_functions = (
+        workflow.build_baseline_execution,
+        baseline.build_baseline_ftiie_curve,
+        bootstrap.bootstrap_ftiie_ois_curve,
+        bootstrap.bootstrap_ftiie_ois_curve_with_method,
+        calibration.calibrate_ftiie_ois_curve_simultaneously,
+        optimize.brentq,
+        optimize.least_squares,
+    )
+    calls = []
+
+    def sentinel(location):
+        def forbidden(*args, **kwargs):
+            calls.append(location)
+            pytest.fail(f"Exporter invoked forbidden construction/solver: {location}")
+        return forbidden
+
+    with monkeypatch.context() as blocked:
+        # Match original function identities, including already imported aliases
+        # (and any alias added to snapshots), not only definition-site names.
+        for module in (snapshots, workflow, baseline, bootstrap, calibration, optimize):
+            for name, value in tuple(vars(module).items()):
+                if any(value is function for function in forbidden_functions):
+                    blocked.setattr(module, name, sentinel(f"{module.__name__}.{name}"))
+        exported = snapshots.export_baseline_snapshot(execution=execution, output_root=tmp_path)
+
+    assert calls == []
+    assert exported.published is True
+    assert exported.run_path == tmp_path / "runs" / exported.run_id
+    assert exported.run_path.is_dir()
+    assert {path.name for path in exported.run_path.iterdir()} == {
+        "input_quotes.csv", "calendar.json", "curve_nodes.csv",
+        "quote_repricing.csv", "metadata.json", "manifest.json",
+    }
+    assert all(path.is_file() and path.stat().st_size > 0
+               for path in exported.run_path.iterdir())
+    pointer = json.loads((tmp_path / "current.json").read_text())
+    assert pointer["run_id"] == exported.run_id
+    assert pointer["run_path"] == f"runs/{exported.run_id}"
+    assert snapshots.resolve_current_snapshot(tmp_path) == exported.run_path
+    metadata = json.loads((exported.run_path / "metadata.json").read_text())
+    assert metadata["execution"] == execution.record()
+    assert metadata["execution_binding_sha256"] == execution.binding_sha256
+
+
 def test_publish_accepted_and_preserve_previous_runs(run_inputs, tmp_path):
     first = snapshots.export_baseline_snapshot(execution=run_inputs["execution"], output_root=tmp_path)
     assert first.published
