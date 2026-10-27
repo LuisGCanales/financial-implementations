@@ -3,6 +3,9 @@ from datetime import date
 import hashlib
 import json
 from pathlib import Path
+import subprocess
+import sys
+from textwrap import dedent
 
 import pytest
 
@@ -199,3 +202,85 @@ def test_baseline_public_signature_remains_fixed():
     assert tuple(parameters) == ('quotes', 'calendar', 'initial_discount_factors')
     assert all(p.kind is Parameter.KEYWORD_ONLY for p in parameters.values())
     assert parameters['initial_discount_factors'].default is None
+
+
+def test_public_in_memory_consumer_needs_only_provider_contract(tmp_path):
+    script = dedent("""
+        from datetime import date, timedelta
+        import math
+        import sys
+        from types import SimpleNamespace
+
+        from yield_curves.baseline import BaselineResult, build_baseline_ftiie_curve
+        from yield_curves.quotes import OISCalibrationQuote
+        from yield_curves.calendars import BusinessCalendar
+        from yield_curves.curves import DiscountFactorCurve
+
+        quotes: tuple[OISCalibrationQuote, ...] = (
+            SimpleNamespace(
+                tenor="1M", trade_date=date(2026, 9, 15),
+                contractual_maturity_date=date(2026, 10, 19), par_rate=0.05,
+            ),
+            SimpleNamespace(
+                tenor="3M", trade_date=date(2026, 9, 15),
+                contractual_maturity_date=date(2026, 12, 17), par_rate=0.051,
+            ),
+        )
+        for quote in quotes:
+            assert set(vars(quote)) == {
+                "tenor", "trade_date", "contractual_maturity_date", "par_rate",
+            }
+
+        calendar = BusinessCalendar(
+            name="TEST", coverage_start=date(2026, 1, 1),
+            coverage_end=date(2026, 12, 31), weekend_days=frozenset({5, 6}),
+            holidays=frozenset(),
+        )
+        result = build_baseline_ftiie_curve(quotes=quotes, calendar=calendar)
+
+        assert isinstance(result, BaselineResult)
+        assert result.calibration_result.success is True
+        assert result.acceptance.calibration_success is True
+        assert result.acceptance.structural_valid is True
+        assert result.acceptance.accepted_for_use is True
+        assert result.accepted_for_use is True
+        assert result.acceptance.issues == ()
+
+        curve = result.curve
+        expected_reference = calendar.add_business_days(quotes[0].trade_date, 2)
+        assert curve.reference_date == expected_reference == date(2026, 9, 17)
+        assert isinstance(curve, DiscountFactorCurve)
+        assert math.isclose(curve.discount_factor(curve.reference_date), 1.0)
+        interior_date = curve.reference_date + timedelta(days=14)
+        assert curve.reference_date < interior_date < curve.node_dates[-1]
+        interior_df = curve.discount_factor(interior_date)
+        assert math.isfinite(interior_df) and interior_df > 0.0
+
+        checks = result.acceptance.checks
+        assert len(checks) == len(quotes) == 2
+        assert tuple(check.tenor for check in checks) == ("1M", "3M")
+        assert tuple(check.market_quote for check in checks) == (0.05, 0.051)
+        assert all(check.status.value == "PASS" for check in checks)
+
+        forbidden = (
+            "yield_curves.research", "yield_curves.tooling", "yield_curves.quote_io",
+            "yield_curves.calendar_io", "yield_curves.execution",
+            "yield_curves.snapshots", "yield_curves.snapshot_assurance",
+        )
+        loaded_forbidden = sorted(
+            name for name in sys.modules
+            if any(name == prefix or name.startswith(prefix + ".")
+                   for prefix in forbidden)
+        )
+        assert loaded_forbidden == [], loaded_forbidden
+    """)
+    try:
+        subprocess.run(
+            [sys.executable, "-c", script], check=True, cwd=tmp_path,
+            capture_output=True, text=True, timeout=60,
+        )
+    except subprocess.CalledProcessError as error:
+        pytest.fail(
+            f"Public consumer exited with {error.returncode}\n"
+            f"stdout:\n{error.stdout}\nstderr:\n{error.stderr}"
+        )

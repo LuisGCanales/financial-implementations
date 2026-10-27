@@ -1,10 +1,12 @@
 from datetime import date
 from math import exp
+from typing import get_type_hints
 
 import pytest
 
 from yield_curves.curves import (
     CurveInterpolationMethod,
+    DiscountFactorCurve,
     FlatContinuousZeroCurve,
 )
 
@@ -127,3 +129,23 @@ def test_nodal_factory_rejects_unknown_method():
     with pytest.raises(ValueError, match="Unsupported interpolation method"):
         build_nodal_curve(method="UNKNOWN", reference_date=date(2026, 1, 1),
                           node_dates=(), discount_factors=())
+
+
+@pytest.mark.parametrize("has_reference_date", [
+    pytest.param(True, id="minimal-structural-curve"),
+    pytest.param(False, id="missing-reference-date"),
+])
+def test_discount_factor_curve_minimal_protocol(has_reference_date):
+    class MinimalCurve:
+        reference_date = date(2026, 9, 17)
+
+        def discount_factor(self, target_date: date) -> float:
+            return 1.0
+
+    class MethodOnlyCurve:
+        def discount_factor(self, target_date: date) -> float:
+            return 1.0
+
+    curve = MinimalCurve() if has_reference_date else MethodOnlyCurve()
+    assert isinstance(curve, DiscountFactorCurve) is has_reference_date
+    assert get_type_hints(DiscountFactorCurve)["reference_date"] is date
