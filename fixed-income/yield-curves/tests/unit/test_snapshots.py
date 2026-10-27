@@ -1,5 +1,7 @@
 from dataclasses import replace
 from datetime import date
+import csv
+import hashlib
 import importlib.util
 import json
 from pathlib import Path
@@ -9,8 +11,74 @@ import pytest
 from yield_curves import snapshots, execution as workflow
 from yield_curves.execution import build_baseline_execution
 from yield_curves.baseline import assess_baseline_calibration
+from yield_curves.calendars import BusinessCalendar, CalendarProvenance, CalendarSource
 from yield_curves.research.calendars import (build_projected_mxmc_calendar)
-from yield_curves.quote_io import load_ois_quote_dataset_csv, QuoteSource
+from yield_curves.quote_io import (
+    load_ois_quote_dataset_csv, OISQuoteDataset, QuoteProvenance, QuoteSource,
+)
+from yield_curves.quotes import OISQuote
+
+
+def _assert_complete_run_archive(run_path, *, execution, accepted):
+    """Inspect archive bytes directly, including runs that are never current."""
+    csv_headers = {
+        "input_quotes.csv": ["tenor", "trade_date", "contractual_maturity_date", "par_rate"],
+        "curve_nodes.csv": ["tenor", "pillar_date", "discount_factor", "continuous_zero_rate"],
+        "quote_repricing.csv": ["tenor", "input_quote", "repriced_quote", "error_bp", "status"],
+    }
+    payloads = set(csv_headers) | {"calendar.json", "metadata.json"}
+    assert {path.name for path in run_path.iterdir()} == payloads | {"manifest.json"}
+    assert all(path.is_file() for path in run_path.iterdir())
+    records = {}
+    for name in ("calendar.json", "metadata.json", "manifest.json"):
+        records[name] = json.loads(
+            (run_path / name).read_text(encoding="utf-8"),
+            parse_constant=lambda value: pytest.fail(f"Nonstandard JSON: {value}"),
+        )
+        assert isinstance(records[name], dict)
+    for name, header in csv_headers.items():
+        with (run_path / name).open(encoding="utf-8", newline="") as file:
+            rows = list(csv.reader(file, strict=True))
+        assert rows and rows[0] == header
+        assert all(len(row) == len(header) for row in rows[1:])
+    metadata, manifest = records["metadata.json"], records["manifest.json"]
+    assert set(manifest["files_sha256"]) == payloads
+    for name in payloads:
+        assert hashlib.sha256((run_path / name).read_bytes()).hexdigest() == manifest["files_sha256"][name]
+    assert metadata["artifact_schema_version"] == manifest["artifact_schema_version"] == "3.0"
+    assert metadata["run_id"] == manifest["run_id"] == run_path.name
+    assert metadata["created_at_utc"] == manifest["created_at_utc"]
+    assert metadata["status"] == ("accepted" if accepted else "rejected")
+    assert metadata["acceptance"]["accepted_for_use"] is accepted
+    assert manifest["accepted_for_use"] is accepted
+    assert metadata["execution_binding_sha256"] == manifest["execution_binding_sha256"] == execution.binding_sha256
+    assert metadata["execution"] == execution.record()
+    return metadata
+
+
+def _block_snapshot_writes(blocked):
+    """Install only inside a monkeypatch context, after legitimate setup."""
+    targets = [
+        (Path, "mkdir"), (snapshots.tempfile, "mkdtemp"),
+        (snapshots, "_write_csv"), (snapshots, "_write_json"),
+        (Path, "rename"), (snapshots.os, "replace"),
+    ]
+    functions = [getattr(owner, name) for owner, name in targets]
+    # Also cover any definition-time aliases imported directly by the exporter.
+    targets.extend((snapshots, name) for name, value in tuple(vars(snapshots).items())
+                   if any(value is function for function in functions)
+                   and (snapshots, name) not in targets)
+    calls = []
+
+    def sentinel(location):
+        def forbidden(*args, **kwargs):
+            calls.append(location)
+            pytest.fail(f"Publication guard attempted a write: {location}")
+        return forbidden
+
+    for owner, name in targets:
+        blocked.setattr(owner, name, sentinel(f"{owner.__name__}.{name}"))
+    return calls
 
 
 @pytest.fixture(scope="module")
@@ -24,6 +92,68 @@ def run_inputs(tmp_path_factory):
     calendar = build_projected_mxmc_calendar(start_year=2026, end_year=2026)
     execution = build_baseline_execution(dataset=dataset, calendar=calendar)
     return dict(execution=execution, result=execution.result, dataset=dataset, calendar=calendar)
+
+
+def test_same_financial_inputs_keep_distinct_declared_provenance():
+    quotes = (
+        OISQuote("1M", date(2026, 9, 15), date(2026, 10, 18), 0.08),
+        OISQuote("3M", date(2026, 9, 15), date(2026, 12, 18), 0.081),
+    )
+    # These in-memory declarations are retained, not authenticated as market data.
+    provenance_a = QuoteProvenance(QuoteSource.UNKNOWN, "caller A", "/declared/a.csv", "a" * 64)
+    provenance_b = QuoteProvenance(QuoteSource.OBSERVED, "caller B", "/declared/b.csv", "b" * 64)
+    dataset_a = OISQuoteDataset(quotes, provenance_a)
+    dataset_b = OISQuoteDataset(quotes, provenance_b)
+    calendar_provenance_a = CalendarProvenance("calendar A", CalendarSource.PROJECTED, "c" * 64)
+    calendar_provenance_b = CalendarProvenance("calendar B", CalendarSource.PROVIDED, "d" * 64)
+    calendar_a = BusinessCalendar(
+        "SAME", holidays=frozenset({date(2026, 9, 16)}), weekend_days=frozenset({5, 6}),
+        coverage_start=date(2026, 1, 1), coverage_end=date(2026, 12, 31),
+        provenance=calendar_provenance_a,
+    )
+    calendar_b = replace(calendar_a, provenance=calendar_provenance_b)
+    execution_a = build_baseline_execution(dataset=dataset_a, calendar=calendar_a)
+    execution_b = build_baseline_execution(dataset=dataset_b, calendar=calendar_b)
+    assert execution_a.inputs == execution_b.inputs
+    assert execution_a.inputs.quotes == quotes
+    assert execution_a.result.financial_context == execution_b.result.financial_context
+    assert execution_a.result.financial_context.policy == execution_b.result.financial_context.policy
+    assert execution_a.result.acceptance.acceptance_policy == execution_b.result.acceptance.acceptance_policy
+    for execution, provenance, calendar_provenance in (
+        (execution_a, provenance_a, calendar_provenance_a),
+        (execution_b, provenance_b, calendar_provenance_b),
+    ):
+        assert execution.result.acceptance.is_standard_acceptance
+        assert execution.result.accepted_for_use
+        checks = execution.result.acceptance.checks
+        assert [(check.tenor, check.market_quote) for check in checks] == [
+            (quote.tenor, quote.par_rate) for quote in quotes
+        ]
+        assert all(check.status.value == "PASS" for check in checks)
+        assert [check.model_quote for check in checks] == pytest.approx(
+            [quote.par_rate for quote in quotes], abs=1e-6, rel=0,
+        )
+        assert execution.quote_provenance == provenance
+        assert execution.calendar_provenance == calendar_provenance
+        record = execution.record()
+        assert record["quote_provenance"] == {
+            "classification": provenance.classification.value, "source": provenance.source,
+            "path": provenance.path, "sha256": provenance.sha256,
+        }
+        assert record["calendar_provenance"] == {
+            "source": calendar_provenance.source, "kind": calendar_provenance.kind.value,
+            "sha256": calendar_provenance.sha256,
+        }
+        financial_context = json.dumps(record["financial_context"], sort_keys=True)
+        for key in ("source", "path", "sha256", "classification", "provenance",
+                    "quote_provenance", "calendar_provenance"):
+            assert f'"{key}":' not in financial_context
+        for declaration in (provenance.source, provenance.path, provenance.sha256,
+                            calendar_provenance.source, calendar_provenance.sha256):
+            assert declaration not in financial_context
+        assert workflow.fingerprint(record) == execution.binding_sha256
+    # Execution UUID/time also contribute: unequal hashes alone cannot isolate provenance.
+    assert execution_a.binding_sha256 != execution_b.binding_sha256
 
 
 def test_export_uses_completed_execution_without_solver(run_inputs, tmp_path, monkeypatch):
@@ -106,13 +236,14 @@ def test_publish_accepted_and_preserve_previous_runs(run_inputs, tmp_path):
 def test_rejected_run_is_archived_without_replacing_current(run_inputs, tmp_path, monkeypatch, missing_curve):
     published = snapshots.export_baseline_snapshot(execution=run_inputs["execution"], output_root=tmp_path)
     pointer = (tmp_path / "current.json").read_bytes()
+    previous_bytes = {path.name: path.read_bytes() for path in published.run_path.iterdir()}
     rejected = _rejected_execution(run_inputs, monkeypatch, missing_curve)
     archive = snapshots.export_baseline_snapshot(execution=rejected, output_root=tmp_path)
     assert not archive.published
     assert (tmp_path / "current.json").read_bytes() == pointer
     assert snapshots.resolve_current_snapshot(tmp_path) == published.run_path
-    meta = json.loads((archive.run_path / "metadata.json").read_text(),
-                      parse_constant=lambda value: pytest.fail(f"Nonstandard JSON: {value}"))
+    assert {path.name: path.read_bytes() for path in published.run_path.iterdir()} == previous_bytes
+    meta = _assert_complete_run_archive(archive.run_path, execution=rejected, accepted=False)
     assert meta["status"] == "rejected"
     assert not meta["acceptance"]["accepted_for_use"]
     if missing_curve:
@@ -157,6 +288,8 @@ def test_partial_write_cannot_change_current(run_inputs, tmp_path, monkeypatch, 
 def test_failed_pointer_replace_leaves_complete_unpublished_run(run_inputs, tmp_path, monkeypatch):
     published = snapshots.export_baseline_snapshot(execution=run_inputs["execution"], output_root=tmp_path)
     pointer = (tmp_path / "current.json").read_bytes()
+    previous_bytes = {path.name: path.read_bytes() for path in published.run_path.iterdir()}
+    previous_runs = set((tmp_path / "runs").iterdir())
     def interrupted(*args):
         raise OSError("pointer replacement failed")
     monkeypatch.setattr(snapshots.os, "replace", interrupted)
@@ -166,6 +299,10 @@ def test_failed_pointer_replace_leaves_complete_unpublished_run(run_inputs, tmp_
     assert snapshots.resolve_current_snapshot(tmp_path) == published.run_path
     assert len(list((tmp_path / "runs").iterdir())) == 2
     assert not list(tmp_path.glob(".current-*.tmp"))
+    assert {path.name: path.read_bytes() for path in published.run_path.iterdir()} == previous_bytes
+    new_runs = set((tmp_path / "runs").iterdir()) - previous_runs
+    assert len(new_runs) == 1
+    _assert_complete_run_archive(new_runs.pop(), execution=run_inputs["execution"], accepted=True)
 
 
 def test_resolver_detects_modified_files(run_inputs, tmp_path):
@@ -175,13 +312,23 @@ def test_resolver_detects_modified_files(run_inputs, tmp_path):
         snapshots.resolve_current_snapshot(tmp_path)
 
 
-def test_separate_result_and_provenance_cannot_be_published(run_inputs, tmp_path):
+def test_separate_result_and_provenance_cannot_be_published(run_inputs, tmp_path, monkeypatch):
     with pytest.raises(TypeError):
         snapshots.export_baseline_snapshot(result=run_inputs["result"],
             dataset=run_inputs["dataset"], calendar=run_inputs["calendar"], output_root=tmp_path)
     with pytest.raises(TypeError, match="issued by"):
         workflow.ExecutionEnvelope(result=run_inputs["result"])
     assert not (tmp_path / "current.json").exists()
+    root = tmp_path / "absent"
+    assert not root.exists()
+    with monkeypatch.context() as blocked:
+        calls = _block_snapshot_writes(blocked)
+        with pytest.raises(TypeError, match="ExecutionEnvelope"):
+            snapshots.export_baseline_snapshot(execution=run_inputs["result"], output_root=root)
+    assert calls == []
+    assert not root.exists()
+    assert not (root / "runs").exists()
+    assert not (root / "current.json").exists()
 
 
 def test_operational_script_uses_exporter_and_preserves_legacy_files(run_inputs, tmp_path):
@@ -213,10 +360,18 @@ def test_reader_observes_old_complete_run_until_atomic_commit(run_inputs, tmp_pa
     assert snapshots.resolve_current_snapshot(tmp_path) == second.run_path
 
 
-def test_custom_pass_cannot_publish(run_inputs, tmp_path):
+@pytest.mark.parametrize("existing_root", [True, False])
+def test_custom_pass_cannot_publish(run_inputs, tmp_path, monkeypatch, existing_root):
     import copy
-    snapshots.export_baseline_snapshot(execution=run_inputs["execution"], output_root=tmp_path)
-    pointer = (tmp_path / "current.json").read_bytes()
+    root = tmp_path / "output"
+    if existing_root:
+        snapshots.export_baseline_snapshot(execution=run_inputs["execution"], output_root=root)
+        pointer = (root / "current.json").read_bytes()
+    else:
+        assert not root.exists()
+    inventory = {path.relative_to(root) for path in root.rglob("*")}
+    previous_bytes = {path.relative_to(root): path.read_bytes()
+                      for path in root.rglob("*") if path.is_file()}
     acceptance = assess_baseline_calibration(
         calibration_result=run_inputs["result"].calibration_result,
         quotes=run_inputs["dataset"].quotes, calendar=run_inputs["calendar"],
@@ -226,10 +381,23 @@ def test_custom_pass_cannot_publish(run_inputs, tmp_path):
     result = replace(run_inputs["result"], acceptance=acceptance, financial_context=None)
     execution = copy.copy(run_inputs["execution"])
     object.__setattr__(execution, "result", result)
-    with pytest.raises(ValueError, match="custom"):
-        snapshots.export_baseline_snapshot(execution=execution, output_root=tmp_path)
-    assert (tmp_path / "current.json").read_bytes() == pointer
-    assert len(list((tmp_path / "runs").iterdir())) == 1
+    with monkeypatch.context() as blocked:
+        calls = _block_snapshot_writes(blocked)
+        with pytest.raises(ValueError, match="custom"):
+            snapshots.export_baseline_snapshot(execution=execution, output_root=root)
+    assert calls == []
+    assert {path.relative_to(root) for path in root.rglob("*")} == inventory
+    assert {path.relative_to(root): path.read_bytes()
+            for path in root.rglob("*") if path.is_file()} == previous_bytes
+    if existing_root:
+        assert (root / "current.json").read_bytes() == pointer
+        assert len(list((root / "runs").iterdir())) == 1
+    else:
+        assert not root.exists()
+        assert not (root / "runs").exists()
+        assert not (root / "current.json").exists()
+    assert not list(root.rglob(".staging-*"))
+    assert not list(root.glob(".current-*.tmp"))
 
 
 def _script(relative_path):
@@ -499,6 +667,8 @@ def test_assurance_unsupported_policy_is_explicit(run_inputs, tmp_path):
 def test_commit_failure_semantics(run_inputs, tmp_path, monkeypatch, phase):
     first = snapshots.export_baseline_snapshot(execution=run_inputs["execution"], output_root=tmp_path)
     previous = (tmp_path / "current.json").read_bytes()
+    previous_bytes = {path.name: path.read_bytes() for path in first.run_path.iterdir()}
+    previous_runs = set((tmp_path / "runs").iterdir())
     sync, rename, write, replace_pointer = snapshots._sync_directory, Path.rename, snapshots._write_json, snapshots.os.replace
     def failing_sync(path):
         if ((phase == "staging_sync" and path.name.startswith(".staging-"))
@@ -530,6 +700,16 @@ def test_commit_failure_semantics(run_inputs, tmp_path, monkeypatch, phase):
     assert (current != first.run_path) == after_commit
     assert len(list((tmp_path / "runs").iterdir())) == (1 if phase in {"staging_sync", "rename"} else 2)
     assert not list(tmp_path.glob(".current-*.tmp"))
+    assert {path.name: path.read_bytes() for path in first.run_path.iterdir()} == previous_bytes
+    new_runs = set((tmp_path / "runs").iterdir()) - previous_runs
+    if phase in {"staging_sync", "rename"}:
+        assert new_runs == set()
+    else:
+        assert len(new_runs) == 1
+        new_run = new_runs.pop()
+        _assert_complete_run_archive(new_run, execution=run_inputs["execution"], accepted=True)
+        if after_commit:
+            assert current == new_run
 
 
 def test_assurance_reprices_without_solver_or_any_write(run_inputs, tmp_path, monkeypatch):

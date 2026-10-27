@@ -40,6 +40,19 @@ def test_minimal_csv_preserves_order_and_decimal_rates(tmp_path):
     )
 
 
+def test_quote_csv_strips_required_financial_fields(tmp_path):
+    path = write_csv(
+        tmp_path, HEADER
+        + " 1M , 2026-09-15 , 2026-10-18 , 0.08 \n"
+        + " 3M , 2026-09-15 , 2026-12-18 , -0.01 \n",
+    )
+    quotes = read_ois_quotes_csv(path)
+    assert quotes == (
+        OISQuote("1M", date(2026, 9, 15), date(2026, 10, 18), 0.08),
+        OISQuote("3M", date(2026, 9, 15), date(2026, 12, 18), -0.01),
+    )
+
+
 def test_zero_rate_bom_and_optional_columns(tmp_path):
     text = "\ufeff" + HEADER.rstrip() + ",note\n" + ROW.rstrip().replace("0.08", "0") + ',"note, with comma"\n'
     quotes = read_ois_quotes_csv(write_csv(tmp_path, text))
