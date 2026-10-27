@@ -177,3 +177,32 @@ def test_direct_callers_validate_profile(entrypoint, name, canonical, unsupporte
 def test_invalid_profile_types_and_nonfinite_values(name, value):
     with pytest.raises(ValueError, match=name):
         FTiieOISConventions(**{name: value})
+
+
+@pytest.mark.parametrize("field,value,accepted", [
+    pytest.param("floating_spread", 0, True, id="spread-int-zero"),
+    pytest.param("floating_spread", 0.0, True, id="spread-float-zero"),
+    pytest.param("floating_spread", False, False, id="spread-bool-false"),
+    pytest.param("calibration_notional", 1, True, id="notional-int-one"),
+    pytest.param("calibration_notional", 1.0, True, id="notional-float-one"),
+    pytest.param("calibration_notional", True, False, id="notional-bool-true"),
+    pytest.param("currency", "MXN", False, id="currency-str-subclass"),
+])
+def test_core_v1_accepts_only_documented_default_types(field, value, accepted):
+    if field == "currency":
+        class CurrencyString(str):
+            pass
+
+        value = CurrencyString(value)
+        assert isinstance(value, str)
+        assert type(value) is not str
+        assert value == "MXN"
+
+    if accepted:
+        profile = FTiieOISConventions(**{field: value})
+        assert profile == FTIIE_OIS_CONVENTIONS
+        assert type(getattr(profile, field)) is type(value)
+        assert getattr(profile, field) == value
+    else:
+        with pytest.raises(ValueError, match=field):
+            FTiieOISConventions(**{field: value})
