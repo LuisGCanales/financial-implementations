@@ -798,6 +798,201 @@ def test_assurance_rejects_unsupported_historical_policy_after_outer_integrity_p
     assert _snapshot_tree_state(tmp_path) == before_read
 
 
+def test_assurance_reconstructs_payload_binding_after_node_zero_check_passes(
+    run_inputs, tmp_path, monkeypatch,
+):
+    from math import isfinite
+    from yield_curves import baseline, snapshot_assurance
+    from yield_curves.curves import CubicContinuousZeroCurve
+
+    exported = snapshots.export_baseline_snapshot(execution=run_inputs["execution"], output_root=tmp_path)
+    assert exported.published is True
+    original_tree = _snapshot_tree_state(tmp_path)
+    metadata_path = exported.run_path / "metadata.json"
+    metadata = json.loads(metadata_path.read_text())
+    historical_binding = metadata["execution"]["acceptance"]["binding"]
+    nodes_path = exported.run_path / "curve_nodes.csv"
+    with nodes_path.open(newline="") as file:
+        reader = csv.DictReader(file)
+        header, rows = reader.fieldnames, list(reader)
+    original_rows = [dict(row) for row in rows]
+    rows[0]["discount_factor"] = str(float(rows[0]["discount_factor"]) * 0.999)
+    discount_factors = tuple(float(row["discount_factor"]) for row in rows)
+    assert all(isfinite(df) and df > 0 for df in discount_factors)
+    assert discount_factors[0] != float(original_rows[0]["discount_factor"])
+    curve = CubicContinuousZeroCurve(
+        reference_date=date.fromisoformat(metadata["curve_reference_date"]),
+        node_dates=tuple(date.fromisoformat(row["pillar_date"]) for row in rows),
+        discount_factors=discount_factors,
+    )
+    # Match the exact float evaluations used by reconstruction, including rounding.
+    # The binding oracle remains the untouched historical identity, not this curve.
+    for row, day in zip(rows, curve.node_dates, strict=True):
+        row["continuous_zero_rate"] = str(curve.zero_rate(day))
+    with nodes_path.open("w", newline="") as file:
+        writer = csv.DictWriter(file, fieldnames=header)
+        writer.writeheader()
+        writer.writerows(rows)
+    _rehash(exported.run_path, tmp_path)
+
+    with nodes_path.open(newline="") as file:
+        serialized_rows = list(csv.DictReader(file))
+    assert [(row["tenor"], row["pillar_date"]) for row in serialized_rows] == [
+        (row["tenor"], row["pillar_date"]) for row in original_rows
+    ]
+    reconstructed = CubicContinuousZeroCurve(
+        reference_date=curve.reference_date,
+        node_dates=tuple(date.fromisoformat(row["pillar_date"]) for row in serialized_rows),
+        discount_factors=tuple(float(row["discount_factor"]) for row in serialized_rows),
+    )
+    assert all(float(row["continuous_zero_rate"]) == reconstructed.zero_rate(day)
+               for row, day in zip(serialized_rows, reconstructed.node_dates, strict=True))
+    assert json.loads(metadata_path.read_text()) == metadata
+    assert json.loads(metadata_path.read_text())["execution"]["acceptance"]["binding"] == historical_binding
+    before_read = _snapshot_tree_state(tmp_path)
+    assert before_read.keys() == original_tree.keys()
+    assert {path for path in original_tree if before_read[path] != original_tree[path]} == {
+        nodes_path.relative_to(tmp_path),
+        (exported.run_path / "manifest.json").relative_to(tmp_path), Path("current.json"),
+    }
+    assert snapshots.resolve_current_snapshot(tmp_path) == exported.run_path
+    repricing_calls = []
+
+    def forbidden_repricing(*args, **kwargs):
+        repricing_calls.append((args, kwargs))
+        pytest.fail("Payload binding must be checked before independent repricing")
+
+    original_reprice = baseline._independently_reprice
+    with monkeypatch.context() as blocked:
+        for module in (baseline, snapshot_assurance):
+            for name, value in tuple(vars(module).items()):
+                if value is original_reprice:
+                    blocked.setattr(module, name, forbidden_repricing)
+        with pytest.raises(ValueError) as error:
+            snapshot_assurance.assess_current_snapshot(tmp_path)
+    assert str(error.value) == "Snapshot curve / payload / acceptance binding mismatch."
+    assert repricing_calls == []
+    assert _snapshot_tree_state(tmp_path) == before_read
+
+
+@pytest.mark.parametrize("variant, expected_error", [
+    pytest.param("fresh_history",
+                 "Snapshot independent repricing / historical acceptance binding mismatch.",
+                 id="fresh_history"),
+    pytest.param("repricing_artifact", "Snapshot repricing artifact binding mismatch.",
+                 id="repricing_artifact"),
+])
+def test_assurance_rejects_fresh_history_or_repricing_artifact_mismatch(
+    run_inputs, tmp_path, monkeypatch, variant, expected_error,
+):
+    from yield_curves import baseline, repricing, snapshot_assurance
+
+    execution = run_inputs["execution"]
+    exported = snapshots.export_baseline_snapshot(execution=execution, output_root=tmp_path)
+    assert exported.published is True
+    original_tree = _snapshot_tree_state(tmp_path)
+    metadata_path = exported.run_path / "metadata.json"
+    metadata = json.loads(metadata_path.read_text())
+    historical = metadata["execution"]["acceptance"]
+    historical_binding = historical["binding"]
+    assert historical["accepted_for_use"] is True
+    target_quote = next(quote for quote in execution.inputs.quotes if quote.tenor == "1M")
+
+    if variant == "repricing_artifact":
+        path = exported.run_path / "quote_repricing.csv"
+        with path.open(newline="") as file:
+            reader = csv.DictReader(file)
+            header, rows = reader.fieldnames, list(reader)
+        original_rows = [dict(row) for row in rows]
+        target_row = next(row for row in rows if row["tenor"] == target_quote.tenor)
+        target_row["repriced_quote"] = str(float(target_row["repriced_quote"]) + 0.001)
+        assert target_row["repriced_quote"] != next(
+            row["repriced_quote"] for row in original_rows if row["tenor"] == target_quote.tenor
+        )
+        assert [{k: v for k, v in row.items() if k != "repriced_quote"} for row in rows] == [
+            {k: v for k, v in row.items() if k != "repriced_quote"} for row in original_rows
+        ]
+        with path.open("w", newline="") as file:
+            writer = csv.DictWriter(file, fieldnames=header)
+            writer.writeheader()
+            writer.writerows(rows)
+        _rehash(exported.run_path, tmp_path)
+
+    before_read = _snapshot_tree_state(tmp_path)
+    assert before_read.keys() == original_tree.keys()
+    changed = {path for path in original_tree if before_read[path] != original_tree[path]}
+    assert changed == (set() if variant == "fresh_history" else {
+        (exported.run_path / "quote_repricing.csv").relative_to(tmp_path),
+        (exported.run_path / "manifest.json").relative_to(tmp_path), Path("current.json"),
+    })
+    assert snapshots.resolve_current_snapshot(tmp_path) == exported.run_path
+    original_reprice = baseline._independently_reprice
+    original_par_rate = repricing.calculate_par_rate
+    repricing_calls, repricing_results, pricing_calls = [], [], []
+    delta = 1e-7  # Decimal rate: 0.001 bp, below the STANDARD PASS threshold.
+
+    def reprice(**kwargs):
+        repricing_calls.append(kwargs)
+        result = original_reprice(**kwargs)
+        repricing_results.append(result)
+        return result
+
+    def perturbed_par_rate(*, ois, projection_curve, discount_curve):
+        rate = original_par_rate(ois=ois, projection_curve=projection_curve, discount_curve=discount_curve)
+        adjusted = rate + delta if ois.contractual_maturity_date == target_quote.contractual_maturity_date else rate
+        pricing_calls.append((ois.contractual_maturity_date, rate, adjusted))
+        return adjusted
+
+    with monkeypatch.context() as patched:
+        for module in (baseline, snapshot_assurance):
+            for name, value in tuple(vars(module).items()):
+                if value is original_reprice:
+                    patched.setattr(module, name, reprice)
+        if variant == "fresh_history":
+            # Effective alias used inside reprice_calibration_instruments.
+            patched.setattr(repricing, "calculate_par_rate", perturbed_par_rate)
+        with pytest.raises(ValueError) as error:
+            snapshot_assurance.assess_current_snapshot(tmp_path)
+
+    assert str(error.value) == expected_error
+    assert len(repricing_calls) == len(repricing_results) == 1
+    arguments = repricing_calls[0]
+    calibration = arguments["calibration_result"]
+    assert calibration.success is True
+    assert calibration.curve.reference_date == execution.inputs.reference_date
+    assert calibration.curve.node_dates == execution.inputs.pillar_dates
+    assert calibration.curve.discount_factors == execution.result.curve.discount_factors
+    assert tuple(arguments["quotes"]) == execution.inputs.quotes
+    assert arguments["calendar"] == execution.inputs.calendar.to_calendar()
+    assert arguments["pass_tolerance_bp"] == historical["pass_tolerance_bp"]
+    assert arguments["fail_tolerance_bp"] == historical["fail_tolerance_bp"]
+    checks, issues = repricing_results[0]
+    assert issues == ()
+    assert len(checks) == len(execution.inputs.quotes)
+    assert all(check.status is repricing.InstrumentValidationStatus.PASS for check in checks)
+    assert all(check.absolute_error_bp <= arguments["pass_tolerance_bp"] for check in checks)
+    if variant == "fresh_history":
+        assert [maturity for maturity, _, _ in pricing_calls] == [
+            quote.contractual_maturity_date for quote in execution.inputs.quotes
+        ]
+        assert sum(maturity == target_quote.contractual_maturity_date for maturity, _, _ in pricing_calls) == 1
+        for maturity, rate, adjusted in pricing_calls:
+            if maturity == target_quote.contractual_maturity_date:
+                assert adjusted == rate + delta
+                assert adjusted != rate
+            else:
+                assert adjusted == rate
+        assert workflow.json_value(checks) != historical["checks"]
+    else:
+        assert pricing_calls == []
+        assert workflow.json_value(checks) == historical["checks"]
+    after_metadata = json.loads(metadata_path.read_text())
+    assert after_metadata == metadata
+    assert after_metadata["execution"]["acceptance"] == historical
+    assert after_metadata["execution"]["acceptance"]["binding"] == historical_binding
+    assert _snapshot_tree_state(tmp_path) == before_read
+
+
 @pytest.mark.parametrize("target", ["pointer_schema", "manifest_schema", "metadata_schema",
     "policy", "acceptance_policy", "node_date", "quote_date", "quote_rate", "calendar_holidays",
     "calendar_weekends", "calendar_coverage", "quote_provenance", "calendar_provenance",
@@ -925,30 +1120,88 @@ def test_commit_failure_semantics(run_inputs, tmp_path, monkeypatch, phase):
 def test_assurance_reprices_without_solver_or_any_write(run_inputs, tmp_path, monkeypatch):
     import builtins
     import io
-    import yield_curves.baseline as baseline
-    import yield_curves.calibration as calibration
-    import yield_curves.snapshot_assurance as assurance
-    snapshots.export_baseline_snapshot(execution=run_inputs["execution"], output_root=tmp_path)
-    def forbidden(*args, **kwargs):
-        pytest.fail("Assurance attempted solver or write")
-    for module, name in ((baseline, "calibrate_ftiie_ois_curve_simultaneously"),
-                         (calibration, "calibrate_ftiie_ois_curve_simultaneously"),
-                         (snapshots, "export_baseline_snapshot")):
-        monkeypatch.setattr(module, name, forbidden)
-    for module in (builtins, io):
-        original = module.open
-        def readonly(file, mode="r", *args, _open=original, **kwargs):
-            assert not any(c in mode for c in "wax+")
-            return _open(file, mode, *args, **kwargs)
-        monkeypatch.setattr(module, "open", readonly)
-    count = []
-    original = baseline._independently_reprice
+    import os
+    import scipy.optimize as optimize
+    from yield_curves import baseline, bootstrap, calibration, snapshot_assurance as assurance
+
+    exported = snapshots.export_baseline_snapshot(execution=run_inputs["execution"], output_root=tmp_path)
+    assert exported.published is True
+    assert snapshots.resolve_current_snapshot(tmp_path) == exported.run_path
+    before_read = _snapshot_tree_state(tmp_path)
+    forbidden_calls, repricing_calls = [], []
+    original_reprice = baseline._independently_reprice
+
     def reprice(**kwargs):
-        count.append(True)
-        return original(**kwargs)
-    monkeypatch.setattr(baseline, "_independently_reprice", reprice)
-    assert assurance.assess_current_snapshot(tmp_path).accepted_for_use
-    assert count == [True]
+        repricing_calls.append(kwargs)
+        return original_reprice(**kwargs)
+
+    def sentinel(location):
+        def forbidden(*args, **kwargs):
+            forbidden_calls.append(location)
+            pytest.fail(f"Assurance attempted forbidden operation: {location}")
+        return forbidden
+
+    def readonly_open(original, location):
+        def readonly(file, mode="r", *args, **kwargs):
+            if any(char in mode for char in "wax+"):
+                return sentinel(location)(file, mode, *args, **kwargs)
+            return original(file, mode, *args, **kwargs)
+        return readonly
+
+    original_os_open = os.open
+    write_flags = os.O_CREAT | os.O_TRUNC | os.O_APPEND
+    # O_TMPFILE also creates a writable file without a directory entry.
+    temporary_flag = getattr(os, "O_TMPFILE", 0)
+
+    def readonly_os_open(path, flags, mode=0o777, *, dir_fd=None):
+        if ((flags & os.O_ACCMODE) in (os.O_WRONLY, os.O_RDWR)
+                or flags & write_flags
+                or (temporary_flag and flags & temporary_flag == temporary_flag)):
+            return sentinel("os.open")(path, flags, mode, dir_fd=dir_fd)
+        return original_os_open(path, flags, mode, dir_fd=dir_fd)
+
+    forbidden_functions = (
+        bootstrap.bootstrap_ftiie_ois_curve,
+        bootstrap.bootstrap_ftiie_ois_curve_with_method,
+        calibration.calibrate_ftiie_ois_curve_simultaneously,
+        optimize.brentq, optimize.least_squares,
+        workflow.build_baseline_execution, baseline.build_baseline_ftiie_curve,
+        snapshots.export_baseline_snapshot,
+    )
+    # Capture all originals before patching shared modules or Path methods.
+    replacements = [(function, sentinel(function.__name__)) for function in forbidden_functions]
+    replacements.extend((getattr(owner, name), sentinel(f"{owner.__name__}.{name}"))
+                        for owner, names in (
+                            (os, ("mkdir", "makedirs", "unlink", "remove", "rmdir", "rename", "replace")),
+                            (Path, ("mkdir", "unlink", "rmdir", "rename", "replace")),
+                            (snapshots.tempfile, ("mkdtemp",)),
+                        ) for name in names)
+    replacements.extend([
+        (builtins.open, readonly_open(builtins.open, "builtins.open")),
+        (io.open, readonly_open(io.open, "io.open")),
+        (original_os_open, readonly_os_open),
+        (original_reprice, reprice),
+    ])
+    targets = []
+    for owner in (baseline, bootstrap, calibration, workflow, snapshots, assurance,
+                  optimize, builtins, io, os, Path, snapshots.tempfile):
+        for name, value in tuple(vars(owner).items()):
+            for original, replacement in replacements:
+                if value is original:
+                    targets.append((owner, name, replacement))
+                    break
+
+    with monkeypatch.context() as blocked:
+        # Includes definition-time aliases, even in the reader and assurance.
+        for owner, name, replacement in targets:
+            blocked.setattr(owner, name, replacement)
+        assessment = assurance.assess_current_snapshot(tmp_path)
+
+    # All global entrypoints are restored before filesystem checks and teardown.
+    assert assessment.accepted_for_use is True
+    assert len(repricing_calls) == 1
+    assert forbidden_calls == []
+    assert _snapshot_tree_state(tmp_path) == before_read
 
 
 @pytest.mark.parametrize("version", ["1.0", "2.0", "999.0"])

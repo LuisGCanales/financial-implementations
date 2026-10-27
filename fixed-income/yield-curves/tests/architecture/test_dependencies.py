@@ -150,8 +150,9 @@ def test_financial_context_policy_has_no_filesystem_or_adapter_dependencies():
 def test_snapshot_assurance_has_no_solver_or_publication_calls():
     tree = ast.parse((PACKAGE / "snapshot_assurance.py").read_text())
     forbidden = {"build_baseline_ftiie_curve", "build_baseline_execution",
-                 "calibrate_ftiie_ois_curve_simultaneously", "least_squares",
-                 "bootstrap_ftiie_ois_curve", "export_baseline_snapshot"}
+                 "calibrate_ftiie_ois_curve_simultaneously", "least_squares", "brentq",
+                 "bootstrap_ftiie_ois_curve", "bootstrap_ftiie_ois_curve_with_method",
+                 "export_baseline_snapshot"}
     for node in ast.walk(tree):
         if isinstance(node, ast.Call):
             name = node.func.id if isinstance(node.func, ast.Name) else getattr(node.func, "attr", "")
