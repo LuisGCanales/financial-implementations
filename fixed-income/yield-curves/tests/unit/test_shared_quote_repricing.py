@@ -200,6 +200,27 @@ def test_four_paths_rebuild_identical_contracts(monkeypatch, holidays):
     for module in (inputs, bootstrap, calibration, repricing):
         monkeypatch.setattr(module, "build_calibration_ftiie_ois", capture(module.__name__))
 
+    pricing_calls = {}
+
+    def observe_pricing(module, name):
+        price = getattr(module, name)
+        calls = pricing_calls[module.__name__, name] = []
+
+        def same_curve(**kwargs):
+            assert kwargs["projection_curve"] is kwargs["discount_curve"]
+            calls.append(kwargs["ois"])
+            return price(**kwargs)
+
+        monkeypatch.setattr(module, name, same_curve)
+
+    for module, name in (
+        (bootstrap, "value_ftiie_ois"),
+        (bootstrap, "calculate_par_rate"),
+        (calibration, "calculate_par_rate"),
+        (repricing, "calculate_par_rate"),
+    ):
+        observe_pricing(module, name)
+
     prepared = inputs.prepare_baseline_inputs(quotes=quotes, calendar=calendar)
     sequential = bootstrap.bootstrap_ftiie_ois_curve(quotes=quotes, calendar=calendar)
     simultaneous = calibration.calibrate_ftiie_ois_curve_simultaneously(
@@ -212,6 +233,9 @@ def test_four_paths_rebuild_identical_contracts(monkeypatch, holidays):
     )
     assert simultaneous.success
     assert all(check.status.value == "PASS" for check in checks)
+    for (module_name, _), calls in pricing_calls.items():
+        assert calls, f"No pricing observed in {module_name}"
+        assert all(any(ois is built for built in captured[module_name]) for ois in calls)
     assert prepared.reference_date == date(2026, 9, 18 if holidays else 17)
     assert prepared.pillar_dates == (
         date(2026, 10, 22 if holidays else 21), date(2026, 12, 21),
