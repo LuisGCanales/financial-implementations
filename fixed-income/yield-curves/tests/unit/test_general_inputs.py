@@ -2,6 +2,7 @@ from dataclasses import replace
 from datetime import date
 import hashlib
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -10,7 +11,9 @@ from yield_curves.calendars import (BusinessCalendar, CalendarCoverageError, Cal
 from yield_curves.calendar_io import build_mxmc_calendar_from_csv
 from yield_curves.research.calendars import (build_projected_mxmc_calendar)
 from yield_curves.conventions import BusinessDayConvention
-from yield_curves.inputs import validate_calendar_coverage
+from yield_curves.inputs import (
+    CalendarFinancialIdentity, prepare_baseline_inputs, validate_calendar_coverage,
+)
 from yield_curves.quote_io import (
     QuoteSource,
     load_ois_quote_dataset_csv,
@@ -51,6 +54,50 @@ def test_quote_csv_strips_required_financial_fields(tmp_path):
         OISQuote("1M", date(2026, 9, 15), date(2026, 10, 18), 0.08),
         OISQuote("3M", date(2026, 9, 15), date(2026, 12, 18), -0.01),
     )
+
+
+@pytest.mark.parametrize("quote_type", [OISQuote, SimpleNamespace])
+def test_h01_preparation_canonicalizes_tenors_without_mutating_callers(quote_type):
+    canonical = (
+        OISQuote("1M", date(2026, 9, 15), date(2026, 10, 18), 0.08),
+        OISQuote("3M", date(2026, 9, 15), date(2026, 12, 18), -0.01),
+    )
+    padded = tuple(quote_type(
+        tenor=tenor, trade_date=q.trade_date,
+        contractual_maturity_date=q.contractual_maturity_date, par_rate=q.par_rate,
+    ) for q, tenor in zip(canonical, (" 1M ", "3M "), strict=True))
+    # OISQuote and arbitrary Protocol implementations retain their raw labels.
+    assert tuple(q.tenor for q in padded) == (" 1M ", "3M ")
+    calendar = BusinessCalendar(
+        " H01 calendar ", holidays=frozenset({date(2026, 9, 16)}),
+        coverage_start=date(2026, 1, 1), coverage_end=date(2026, 12, 31),
+    )
+    expected = prepare_baseline_inputs(quotes=canonical, calendar=calendar)
+    prepared = prepare_baseline_inputs(quotes=padded, calendar=calendar)
+    assert prepared == expected
+    assert prepared.quotes == canonical
+    assert prepared.reference_date == expected.reference_date
+    assert prepared.pillar_dates == expected.pillar_dates
+    assert prepared.calendar == CalendarFinancialIdentity.capture(calendar)
+    assert prepared.calendar.name == " H01 calendar "
+    for original, captured, tenor in zip(padded, prepared.quotes, (" 1M ", "3M "), strict=True):
+        assert original.tenor == tenor
+        assert captured is not original
+        assert (captured.trade_date, captured.contractual_maturity_date, captured.par_rate) == (
+            original.trade_date, original.contractual_maturity_date, original.par_rate,
+        )
+
+
+def test_h01_preparation_only_strips_outer_whitespace():
+    quotes = (
+        OISQuote(" \t1m\n", date(2026, 9, 15), date(2026, 10, 18), 0.08),
+        OISQuote(" 1 M ", date(2026, 9, 15), date(2026, 12, 18), 0.081),
+    )
+    calendar = BusinessCalendar(
+        "H01", coverage_start=date(2026, 1, 1), coverage_end=date(2026, 12, 31),
+    )
+    prepared = prepare_baseline_inputs(quotes=quotes, calendar=calendar)
+    assert tuple(q.tenor for q in prepared.quotes) == ("1m", "1 M")
 
 
 def test_zero_rate_bom_and_optional_columns(tmp_path):
