@@ -134,6 +134,18 @@ baseline: construction now performs quote and calendar checks automatically.
 Call `inputs.prepare_baseline_inputs` to run the complete operational input check
 without calibration, or `validate_calendar_coverage` for coverage alone.
 
+`prepare_baseline_inputs` requires string tenors and strips outer whitespace
+before capturing financial inputs, identifying valid tenors in issues and
+checking uniqueness. Thus `" 1M "` and `"1M"` share financial identity and, in
+the same quote set, raise `DUPLICATE_TENOR:1M`. Empty or whitespace-only strings
+and non-string tenors raise `INVALID_TENOR`. Case and internal whitespace are
+preserved; no tenor aliases or maturity conversions are applied.
+
+This baseline preparation rule applies equally to in-memory and CSV inputs.
+It preserves quote order, dates and rates without mutating caller objects.
+Execution context and snapshot quote artifacts use the prepared tenors; source
+declarations and raw-file hashes remain separate and unchanged.
+
 Preflight reconstructs each OIS to visit actual required dates, including
 adjustments, payment lags and overnight observations. Coverage errors identify
 the quote tenor. Construction rejects invalid inputs before invoking the solver;

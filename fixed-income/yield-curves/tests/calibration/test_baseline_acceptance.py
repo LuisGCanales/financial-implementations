@@ -86,6 +86,71 @@ def test_assessment_rejects_bad_inputs_without_repricing(result, quotes, code, m
     assert code in acceptance.issues
 
 
+@pytest.mark.parametrize("tenor,code", [
+    (" 1M ", "DUPLICATE_TENOR:1M"),
+    ("   ", "INVALID_TENOR:quote[1]"),
+    (None, "INVALID_TENOR:quote[1]"),
+    (3, "INVALID_TENOR:quote[1]"),
+    (b"3M", "INVALID_TENOR:quote[1]"),
+])
+def test_h01_invalid_tenors_reject_before_solver_or_repricing(result, tenor, code, monkeypatch):
+    quotes = invalid_second(tenor=tenor)  # Distinct, increasing, valid maturities.
+    solver = Mock(side_effect=AssertionError("Unexpected solver call"))
+    reprice = Mock(side_effect=AssertionError("Unexpected repricing"))
+    monkeypatch.setattr(baseline, "calibrate_ftiie_ois_curve_simultaneously", solver)
+    monkeypatch.setattr(baseline, "_independently_reprice", reprice)
+    with pytest.raises(BaselineInputError) as error:
+        prepare_baseline_inputs(quotes=quotes, calendar=CALENDAR)
+    assert error.value.issues == (code,)
+    with pytest.raises(BaselineInputError) as error:
+        baseline.build_baseline_ftiie_curve(quotes=quotes, calendar=CALENDAR)
+    assert error.value.issues == (code,)
+    acceptance = baseline.assess_baseline_calibration(
+        calibration_result=result.calibration_result, quotes=quotes, calendar=CALENDAR,
+    )
+    assert code in acceptance.issues
+    assert not acceptance.accepted_for_use
+    assert acceptance.checks == ()
+    solver.assert_not_called()
+    reprice.assert_not_called()
+
+
+@pytest.mark.parametrize("changes,codes", [
+    ({"trade_date": "2026-09-15"}, ("INVALID_QUOTE_DATE:3M",)),
+    ({"contractual_maturity_date": date(2026, 9, 15)},
+     ("INVALID_MATURITY:3M", "NON_INCREASING_MATURITY:3M")),
+    ({"par_rate": True}, ("NON_FINITE_OR_INVALID_QUOTE:3M",)),
+])
+def test_h01_valid_tenor_issue_labels_are_canonical(changes, codes):
+    with pytest.raises(BaselineInputError) as error:
+        prepare_baseline_inputs(quotes=invalid_second(tenor=" 3M ", **changes), calendar=CALENDAR)
+    assert error.value.issues == codes
+
+
+def test_h01_public_baseline_uses_canonical_financial_context_and_checks(result):
+    padded = tuple(replace(q, tenor=tenor) for q, tenor in zip(
+        QUOTES, (" 1M ", "3M "), strict=True,
+    ))
+    other = baseline.build_baseline_ftiie_curve(quotes=padded, calendar=CALENDAR)
+    assert other.financial_context == result.financial_context
+    assert other.financial_context.inputs.quotes == QUOTES
+    assert other.curve.reference_date == result.curve.reference_date
+    assert other.curve.node_dates == result.curve.node_dates
+    assert other.curve.discount_factors == result.curve.discount_factors
+    assert other.accepted_for_use is True
+    assert other.acceptance.is_standard_acceptance
+    assert other.acceptance.acceptance_policy == baseline.STANDARD_ACCEPTANCE_POLICY
+    assert tuple(check.tenor for check in other.acceptance.checks) == ("1M", "3M")
+    assert other.acceptance.checks == result.acceptance.checks
+    assessed = baseline.assess_baseline_calibration(
+        calibration_result=other.calibration_result, quotes=padded, calendar=CALENDAR,
+    )
+    assert assessed.accepted_for_use
+    assert assessed.binding.evaluation_inputs == result.financial_context.inputs
+    assert assessed.checks == result.acceptance.checks
+    assert tuple(q.tenor for q in padded) == (" 1M ", "3M ")
+
+
 @pytest.mark.parametrize("calendar,code", [
     (BusinessCalendar("UNKNOWN"), "CALENDAR_COVERAGE_UNSPECIFIED"),
     (replace(CALENDAR, coverage_end=date(2026, 10, 19)), "CALENDAR_COVERAGE_INSUFFICIENT"),

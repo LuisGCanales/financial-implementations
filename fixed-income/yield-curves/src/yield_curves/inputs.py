@@ -88,7 +88,9 @@ def prepare_baseline_inputs(
     """Validate operational inputs before solving or assessing a baseline.
 
     Requires two or more quotes for the cubic representation and declared
-    calendar coverage. Source authenticity is outside this input contract.
+    calendar coverage. Tenor outer whitespace is stripped before capturing
+    financial identity and checking duplicates; caller objects are unchanged.
+    Source authenticity is outside this input contract.
     """
     quotes = tuple(quotes)
     calendar_identity = CalendarFinancialIdentity.capture(calendar)
@@ -106,13 +108,14 @@ def prepare_baseline_inputs(
     for index, quote in enumerate(quotes):
         label = f"quote[{index}]"
         tenor = getattr(quote, "tenor", None)
-        if not isinstance(tenor, str) or not tenor.strip():
+        canonical_tenor = str(tenor).strip() if isinstance(tenor, str) else None
+        if not canonical_tenor:
             issues.append(f"INVALID_TENOR:{label}")
         else:
-            if tenor in tenors:
-                issues.append(f"DUPLICATE_TENOR:{tenor}")
-            tenors.add(tenor)
-            label = tenor
+            if canonical_tenor in tenors:
+                issues.append(f"DUPLICATE_TENOR:{canonical_tenor}")
+            tenors.add(canonical_tenor)
+            label = canonical_tenor
         trade = getattr(quote, "trade_date", None)
         maturity = getattr(quote, "contractual_maturity_date", None)
         if type(trade) is not date or type(maturity) is not date:
@@ -135,7 +138,7 @@ def prepare_baseline_inputs(
         if not finite:
             issues.append(f"NON_FINITE_OR_INVALID_QUOTE:{label}")
         if not issues:
-            captured_quotes.append(OISQuote(str(tenor), trade, maturity, float(rate)))
+            captured_quotes.append(OISQuote(canonical_tenor, trade, maturity, float(rate)))
     if len(trade_dates) > 1:
         issues.append("MULTIPLE_TRADE_DATES")
     if issues:

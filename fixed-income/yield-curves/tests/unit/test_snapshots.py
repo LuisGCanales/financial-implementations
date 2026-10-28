@@ -10,7 +10,7 @@ import pytest
 
 from yield_curves import snapshots, execution as workflow
 from yield_curves.execution import build_baseline_execution
-from yield_curves.baseline import assess_baseline_calibration
+from yield_curves.baseline import STANDARD_ACCEPTANCE_POLICY, assess_baseline_calibration
 from yield_curves.calendars import BusinessCalendar, CalendarProvenance, CalendarSource
 from yield_curves.research.calendars import (build_projected_mxmc_calendar)
 from yield_curves.quote_io import (
@@ -154,6 +154,75 @@ def test_same_financial_inputs_keep_distinct_declared_provenance():
         assert workflow.fingerprint(record) == execution.binding_sha256
     # Execution UUID/time also contribute: unequal hashes alone cannot isolate provenance.
     assert execution_a.binding_sha256 != execution_b.binding_sha256
+
+
+def test_h01_padded_in_memory_execution_round_trips_with_raw_csv_provenance(tmp_path):
+    from yield_curves.snapshot_assurance import assess_current_snapshot
+
+    header = "tenor,trade_date,contractual_maturity_date,par_rate\n"
+    rows = ("1M,2026-09-15,2026-10-18,0.08\n"
+            "3M,2026-09-15,2026-12-18,0.081\n")
+    canonical_path, padded_path = tmp_path / "canonical.csv", tmp_path / "padded.csv"
+    canonical_path.write_text(header + rows, encoding="utf-8")
+    padded_path.write_text(header + rows.replace("1M,", " 1M ,").replace("3M,", "3M ,"),
+                           encoding="utf-8")
+    datasets = tuple(load_ois_quote_dataset_csv(
+        path, classification=QuoteSource.UNKNOWN, source=f" source {path.stem} ",
+    ) for path in (canonical_path, padded_path))
+    assert datasets[0].quotes == datasets[1].quotes  # Real CSV adapter convergence.
+    assert datasets[0].provenance.sha256 != datasets[1].provenance.sha256
+    # Feed raw labels through the in-memory boundary as well as the CSV reader.
+    padded_quotes = tuple(replace(q, tenor=tenor) for q, tenor in zip(
+        datasets[1].quotes, (" 1M ", "3M "), strict=True,
+    ))
+    padded_dataset = replace(datasets[1], quotes=padded_quotes)
+    calendar = build_projected_mxmc_calendar(start_year=2026, end_year=2026)
+    executions = tuple(build_baseline_execution(dataset=dataset, calendar=calendar)
+                       for dataset in (datasets[0], padded_dataset))
+    assert executions[0].inputs == executions[1].inputs
+    assert executions[0].result.financial_context == executions[1].result.financial_context
+    for execution, dataset, path in zip(executions, datasets, (canonical_path, padded_path), strict=True):
+        assert execution.inputs.quotes == datasets[0].quotes
+        assert execution.result.financial_context.inputs == execution.inputs
+        assert execution.result.accepted_for_use is True
+        assert execution.result.acceptance.acceptance_policy == STANDARD_ACCEPTANCE_POLICY
+        assert execution.result.acceptance.is_standard_acceptance
+        assert tuple(c.tenor for c in execution.result.acceptance.checks) == ("1M", "3M")
+        provenance = dataset.provenance
+        assert provenance.sha256 == hashlib.sha256(path.read_bytes()).hexdigest()
+        assert provenance.path == str(path.resolve())
+        assert provenance.source == f" source {path.stem} "
+        assert provenance.classification is QuoteSource.UNKNOWN
+        assert execution.quote_provenance == provenance
+        assert execution.calendar_provenance == calendar.provenance
+        record = execution.record()
+        root = tmp_path / path.stem
+        exported = snapshots.export_baseline_snapshot(execution=execution, output_root=root)
+        assert exported.published is True
+        metadata = _assert_complete_run_archive(exported.run_path, execution=execution, accepted=True)
+        assert metadata["quote_provenance"] == record["quote_provenance"]
+        with (exported.run_path / "input_quotes.csv").open(newline="", encoding="utf-8") as file:
+            archived_quotes = list(csv.DictReader(file))
+        assert archived_quotes == [
+            {"tenor": q.tenor, "trade_date": q.trade_date.isoformat(),
+             "contractual_maturity_date": q.contractual_maturity_date.isoformat(),
+             "par_rate": str(q.par_rate)} for q in datasets[0].quotes
+        ]
+        before_read = _snapshot_tree_state(tmp_path)
+        assert snapshots.resolve_current_snapshot(root) == exported.run_path
+        assert _snapshot_tree_state(tmp_path) == before_read
+        assessment = assess_current_snapshot(root)
+        assert assessment.accepted_for_use is True
+        assert assessment.is_standard_acceptance
+        assert assessment.acceptance_policy == STANDARD_ACCEPTANCE_POLICY
+        assert assessment.binding.evaluation_inputs == execution.inputs
+        assert assessment.checks == execution.result.acceptance.checks
+        assert _snapshot_tree_state(tmp_path) == before_read
+        assert execution.record() == record
+        execution.validate()
+    assert padded_dataset.provenance == datasets[1].provenance
+    assert tuple(q.tenor for q in padded_dataset.quotes) == (" 1M ", "3M ")
+    # Separate runs carry UUID/time; financial equivalence does not imply equal bindings.
 
 
 def test_export_uses_completed_execution_without_solver(run_inputs, tmp_path, monkeypatch):
