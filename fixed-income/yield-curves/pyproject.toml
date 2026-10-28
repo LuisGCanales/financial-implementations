@@ -42,6 +42,12 @@ dependencies = [
 ]
 
 
+[project.urls]
+Repository = "https://github.com/LuisGCanales/financial-implementations"
+Documentation = "https://github.com/LuisGCanales/financial-implementations/tree/main/fixed-income/yield-curves/docs"
+Issues = "https://github.com/LuisGCanales/financial-implementations/issues"
+
+
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0"

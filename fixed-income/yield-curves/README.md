@@ -36,7 +36,7 @@ yield_curves.baseline
         ↓
 operational workflow
         ↓
-outputs/baseline/
+explicit output_root (for example, outputs/baseline/)
         ↓
 external consumer / flagship
 ```
@@ -53,35 +53,48 @@ The flagship must depend on the Python baseline API, not on research scripts or 
 
 ## Quick start
 
-Python 3.11 or later is required.
+The package requires Python 3.11 or later. The workflow below uses Python 3.11;
+Python 3.12 and later have not yet been validated in the compatibility matrix.
+Run from a checkout of `financial-implementations`, starting at its repository
+root, with no existing `.venv` in the project directory:
 
 ```bash
-python -m venv .venv
+cd fixed-income/yield-curves
+python3.11 -m venv .venv
 source .venv/bin/activate
-python -m pip install -e ".[dev]"
+python -m pip install -e .
+
+DEMO_ROOT="$(mktemp -d)"
+python scripts/demo/build_synthetic_baseline.py \
+  --output-root "$DEMO_ROOT"
+
+python scripts/assurance/validate_baseline_curve.py \
+  snapshot --output-root "$DEMO_ROOT"
 ```
 
-Runtime dependencies are NumPy and SciPy. Install only the core package with
-`python -m pip install -e .`. The `dev` extra adds pytest. Full test collection
-(including plotting tests) requires both extras:
+This demo uses frozen **synthetic quotes** and a **projected 2026–2057 calendar**,
+not observed market inputs. Both commands use the same explicit temporary
+`output_root`; generated archives stay outside the checkout's tracked outputs.
+Snapshot assurance verifies the published archive without recalibration or writes.
+The operational CLI requires explicit inputs and an explicit output destination;
+it does not select demo defaults. See [CLI workflows](docs/cli.md).
+
+### Installation modes
+
+- **Checkout development and repository scripts:** the editable installation above
+  supplies the library while scripts, fixtures and frozen demonstration datasets
+  come from the checkout. Runtime dependencies are NumPy and SciPy.
+- **Wheel/sdist installation:** `python -m pip install /path/to/yield_curves-0.1.0-py3-none-any.whl`
+  or `python -m pip install /path/to/yield_curves-0.1.0.tar.gz` installs the Python
+  library. These distributions do not supply the repository scripts, test fixtures
+  or frozen demonstration datasets needed for this Quickstart. There is no
+  installed CLI command; script workflows require a checkout.
+- **Optional tests and plots in a checkout:** `dev` adds pytest and `plots` adds
+  Matplotlib. Full test collection, including plotting tests, requires both:
 
 ```bash
 python -m pip install -e ".[dev,plots]"
 ```
-
-Build the current demonstration baseline from the frozen synthetic quote set:
-
-```bash
-python scripts/operational/build_baseline_curve.py
-```
-
-Validate the current baseline:
-
-```bash
-python scripts/assurance/validate_baseline_curve.py
-```
-
-The operational snapshot is written to `outputs/baseline/`.
 
 ## Python API
 
@@ -106,11 +119,12 @@ yield-curves/
 ├── config/                 # descriptive project specifications
 ├── data/                   # calendars and frozen synthetic inputs
 ├── docs/                   # conventions, methodology, contracts, limits
-├── outputs/baseline/       # current operational snapshot
+├── outputs/baseline/       # example operational destination; legacy archive
 ├── outputs/research/       # historical analytical and research evidence
 ├── scripts/
 │   ├── operational/        # current baseline workflow
 │   ├── assurance/          # current baseline acceptance workflow
+│   ├── demo/               # synthetic quotes and projected calendar
 │   └── experiments/        # historical and research workflows
 ├── src/yield_curves/       # reusable financial library and baseline API
 ├── tests/
@@ -120,7 +134,9 @@ yield-curves/
 
 ## Operational outputs
 
-`outputs/baseline/current.json` resolves the current run under `runs/<run-id>/`.
+At the caller's explicit `output_root`, `current.json` resolves the current run
+under `runs/<run-id>/`. For example, `--output-root outputs/baseline` uses
+`outputs/baseline/current.json`; this is not an operational default.
 The run contains these payloads among others (see [snapshots](docs/snapshots.md)):
 
 - `curve_nodes.csv`: tenor, pillar date, discount factor, and continuous zero rate.

@@ -1,7 +1,9 @@
 # Baseline command-line workflows
 
-Stage 6 separates explicit operational inputs, manual assurance and the synthetic demo.
-Run these commands from the project root after installing the package.
+Operational inputs, manual assurance and the synthetic demo are separate workflows.
+Run these repository scripts from `fixed-income/yield-curves` in a checkout after
+installing the package; see the [README Quickstart](../README.md#quick-start).
+Wheel/sdist installations provide the library, not these scripts or demo datasets.
 
 ## Operational build
 
@@ -25,7 +27,7 @@ The provided-calendar label is provenance, not certification of completeness.
 The CLI does not generate projected holidays or infer coverage from holiday extrema.
 
 The script exports each result and publishes accepted runs as described in
-[snapshots.md](snapshots.md). Its Python helper now takes `dataset`, `calendar`
+[snapshots.md](snapshots.md). Its Python helper takes `dataset`, `calendar`
 and `output_root`; the public baseline Python API is unchanged.
 
 ## Manual assurance
@@ -49,14 +51,21 @@ To assess the persisted current run without running calibration:
 python scripts/assurance/validate_baseline_curve.py snapshot --output-root outputs/baseline
 ```
 
-Snapshot mode resolves the pointer once, checks hashes and baseline identity,
-reconstructs the cubic curve from persisted dates and discount factors, and
-repeats structural checks and independent repricing using the archived quotes
-and calendar. It applies the **current default baseline acceptance tolerances**;
-the original tolerances remain in metadata for audit. Stored solver success is a
-historical declaration, not an independently repeated optimization. Hashes check
-integrity, not authenticity. This mode validates a published accepted run; it
-does not load legacy flat files or select unpublished/rejected runs.
+Snapshot mode resolves the pointer once and loads a supported bound schema-3.0
+archive. It verifies hashes, stored baseline-policy identity and the standard
+`FTIIE_STANDARD_BASELINE_ACCEPTANCE_V1` identity, including PASS `0.01` bp and FAIL
+`0.10` bp tolerances. It reconstructs the cubic curve from persisted dates and
+discount factors without solving, verifies financial context and payload bindings,
+and repeats structural checks and independent repricing with the archived quotes
+and calendar under those same supported historical V1 rules. Fresh acceptance and
+repricing must match historical acceptance and repricing evidence. It does not
+silently apply a new policy or reinterpret historical acceptance; unsupported
+historical policies and schemas are rejected explicitly.
+
+Stored solver success is a historical declaration, not an independently repeated
+optimization. Hashes check integrity, not authenticity. This mode validates a
+published accepted run; it does not load legacy flat files or select
+unpublished/rejected runs. It performs no writes or recalibration.
 
 Both modes return 0 for accepted and 1 for rejected assessments. Missing CLI
 arguments return 2. Invalid files, integrity failures, insufficient coverage
@@ -76,7 +85,7 @@ The demo alone selects the frozen synthetic CSV and projected 2026–2057 calend
 Its default destination is `outputs/demo/baseline`, separate from operational
 outputs. `--output-root` overrides that destination explicitly.
 
-## Migration
+## Required inputs and subcommands
 
 The former no-argument operational and assurance commands are replaced by the
 explicit demo and the assurance subcommands above. No operational default paths,
