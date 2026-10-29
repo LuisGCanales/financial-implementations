@@ -53,8 +53,7 @@ The flagship must depend on the Python baseline API, not on research scripts or 
 
 ## Quick start
 
-The package requires Python 3.11 or later. The workflow below uses Python 3.11;
-Python 3.12 and later have not yet been validated in the compatibility matrix.
+The package supports Python 3.11 only (`>=3.11,<3.12`).
 Run from a checkout of `financial-implementations`, starting at its repository
 root, with no existing `.venv` in the project directory:
 
@@ -195,3 +194,9 @@ Perfect instrument calibration is not the same as true-curve recovery. A calibra
 ## Status
 
 The yield-curve implementation is functionally closed for feeding the future `valuation-price-validation` flagship through the baseline API and operational snapshot. Historical methodology research remains available for maintenance and future, separately scoped investigation.
+
+## License
+
+The `fixed-income/yield-curves` subproject is licensed under the
+[MIT License](LICENSE), copyright (c) 2026 Luis Gerardo Canales Ocampo.
+This license applies only to this subproject, not to the rest of the monorepo.
