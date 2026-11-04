@@ -28,6 +28,7 @@ Tables:
 
 from __future__ import annotations
 
+import argparse
 from datetime import date, timedelta
 from pathlib import Path
 
@@ -124,6 +125,7 @@ def plot_discount_factor_recovery(
     result,
     true_curve,
     recovered_curve,
+    reports_root: Path | None = None,
 ) -> None:
     """Plot and persist true vs recovered discount-factor curves."""
 
@@ -186,6 +188,7 @@ def plot_discount_factor_recovery(
     # --------------------------------------------------------------
 
     save_csv(
+        reports_root=reports_root,
         section=REPORT_SECTION,
         stem="discount_factor_recovery_dense",
         header=(
@@ -266,6 +269,7 @@ def plot_discount_factor_recovery(
     fig.tight_layout()
 
     save_figure(
+        reports_root=reports_root,
         fig=fig,
         section=REPORT_SECTION,
         stem="discount_factor_recovery",
@@ -278,6 +282,7 @@ def plot_discount_factor_errors(
     *,
     result,
     true_curve,
+    reports_root: Path | None = None,
 ) -> None:
     """Plot and persist recovered-minus-true DF error by pillar."""
 
@@ -340,6 +345,7 @@ def plot_discount_factor_errors(
     # --------------------------------------------------------------
 
     save_csv(
+        reports_root=reports_root,
         section=REPORT_SECTION,
         stem="discount_factor_error_by_pillar",
         header=(
@@ -428,6 +434,7 @@ def plot_discount_factor_errors(
     fig.tight_layout()
 
     save_figure(
+        reports_root=reports_root,
         fig=fig,
         section=REPORT_SECTION,
         stem="discount_factor_error_by_pillar",
@@ -440,6 +447,7 @@ def plot_zero_rate_recovery(
     *,
     true_curve,
     recovered_curve,
+    reports_root: Path | None = None,
 ) -> None:
     """Plot and persist true vs recovered continuous zero curves."""
 
@@ -493,6 +501,7 @@ def plot_zero_rate_recovery(
     # --------------------------------------------------------------
 
     save_csv(
+        reports_root=reports_root,
         section=REPORT_SECTION,
         stem="zero_rate_recovery_dense",
         header=(
@@ -576,6 +585,7 @@ def plot_zero_rate_recovery(
     fig.tight_layout()
 
     save_figure(
+        reports_root=reports_root,
         fig=fig,
         section=REPORT_SECTION,
         stem="zero_rate_recovery",
@@ -588,6 +598,7 @@ def plot_forward_rate_recovery(
     *,
     true_curve,
     recovered_curve,
+    reports_root: Path | None = None,
 ) -> None:
     """Plot and persist true vs recovered 28-day simple forwards."""
 
@@ -655,6 +666,7 @@ def plot_forward_rate_recovery(
     # --------------------------------------------------------------
 
     save_csv(
+        reports_root=reports_root,
         section=REPORT_SECTION,
         stem="forward_28d_recovery_dense",
         header=(
@@ -741,6 +753,7 @@ def plot_forward_rate_recovery(
     fig.tight_layout()
 
     save_figure(
+        reports_root=reports_root,
         fig=fig,
         section=REPORT_SECTION,
         stem="forward_28d_recovery",
@@ -749,7 +762,7 @@ def plot_forward_rate_recovery(
     plt.show()
 
 
-def main() -> None:
+def main(*, reports_root: Path | None = None) -> None:
     (
         _,
         result,
@@ -758,26 +771,37 @@ def main() -> None:
     ) = build_recovery_objects()
 
     plot_discount_factor_recovery(
+        reports_root=reports_root,
         result=result,
         true_curve=true_curve,
         recovered_curve=recovered_curve,
     )
 
     plot_discount_factor_errors(
+        reports_root=reports_root,
         result=result,
         true_curve=true_curve,
     )
 
     plot_zero_rate_recovery(
+        reports_root=reports_root,
         true_curve=true_curve,
         recovered_curve=recovered_curve,
     )
 
     plot_forward_rate_recovery(
+        reports_root=reports_root,
         true_curve=true_curve,
         recovered_curve=recovered_curve,
     )
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--reports-root",
+        type=lambda value: Path(value).expanduser().resolve(),
+        help="Research output root (default: project outputs/research).",
+    )
+    args = parser.parse_args()
+    main(reports_root=args.reports_root)

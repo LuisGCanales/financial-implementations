@@ -32,6 +32,7 @@ Metadata:
 
 from __future__ import annotations
 
+import argparse
 from pathlib import Path
 
 from yield_curves.tooling.project_paths import (find_project_root)
@@ -296,7 +297,27 @@ def append_calibration_diagnostics(
     text_report.line()
 
 
-def main() -> None:
+def project_relative_path(
+    path: Path,
+) -> str:
+    """Return a POSIX path relative to the project root when possible."""
+
+    try:
+        return (
+            path.resolve()
+            .relative_to(
+                PROJECT_ROOT
+            )
+            .as_posix()
+        )
+
+    except ValueError:
+        return (
+            path.resolve().as_posix()
+        )
+
+
+def main(*, reports_root: Path | None = None) -> None:
     quotes = read_synthetic_ois_quotes_csv(
         QUOTES_PATH
     )
@@ -401,7 +422,8 @@ def main() -> None:
     # Persist global recovery comparison.
     # --------------------------------------------------------------
 
-    save_csv(
+    global_recovery_path = save_csv(
+        reports_root=reports_root,
         section=REPORT_SECTION,
         stem="three_method_global_recovery",
         header=(
@@ -464,7 +486,8 @@ def main() -> None:
     # one row per interpolation method and maturity horizon.
     # --------------------------------------------------------------
 
-    save_csv(
+    horizon_recovery_path = save_csv(
+        reports_root=reports_root,
         section=REPORT_SECTION,
         stem="three_method_recovery_by_horizon",
         header=(
@@ -531,7 +554,8 @@ def main() -> None:
     # Persist optimizer/calibration diagnostics.
     # --------------------------------------------------------------
 
-    save_csv(
+    calibration_diagnostics_path = save_csv(
+        reports_root=reports_root,
         section=REPORT_SECTION,
         stem="simultaneous_calibration_diagnostics",
         header=(
@@ -586,6 +610,7 @@ def main() -> None:
     # --------------------------------------------------------------
 
     save_json(
+        reports_root=reports_root,
         section=REPORT_SECTION,
         stem="experiment_metadata",
         data={
@@ -615,19 +640,13 @@ def main() -> None:
                 "for recovery analysis."
             ),
             "global_recovery_output": (
-                "outputs/research/tables/"
-                "06_interpolation_comparison/"
-                "three_method_global_recovery.csv"
+                project_relative_path(global_recovery_path)
             ),
             "horizon_recovery_output": (
-                "outputs/research/tables/"
-                "06_interpolation_comparison/"
-                "three_method_recovery_by_horizon.csv"
+                project_relative_path(horizon_recovery_path)
             ),
             "calibration_diagnostics_output": (
-                "outputs/research/tables/"
-                "06_interpolation_comparison/"
-                "simultaneous_calibration_diagnostics.csv"
+                project_relative_path(calibration_diagnostics_path)
             ),
         },
     )
@@ -700,6 +719,7 @@ def main() -> None:
     )
 
     text_report.save(
+        reports_root=reports_root,
         section=REPORT_SECTION,
         stem=(
             "three_method_interpolation_comparison"
@@ -709,4 +729,11 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--reports-root",
+        type=lambda value: Path(value).expanduser().resolve(),
+        help="Research output root (default: project outputs/research).",
+    )
+    args = parser.parse_args()
+    main(reports_root=args.reports_root)

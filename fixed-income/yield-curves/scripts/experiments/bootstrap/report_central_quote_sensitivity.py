@@ -24,6 +24,7 @@ Text:
         central_quote_sensitivity.txt
 """
 
+import argparse
 from pathlib import Path
 
 from yield_curves.tooling.project_paths import (find_project_root)
@@ -247,7 +248,7 @@ def append_own_node_curvature(
     text_report.line()
 
 
-def main() -> None:
+def main(*, reports_root: Path | None = None) -> None:
     quotes = read_synthetic_ois_quotes_csv(
         QUOTES_PATH
     )
@@ -276,6 +277,7 @@ def main() -> None:
     # --------------------------------------------------------------
 
     save_csv(
+        reports_root=reports_root,
         section=REPORT_SECTION,
         stem="central_quote_sensitivity_summary",
         header=(
@@ -371,6 +373,7 @@ def main() -> None:
         ]
 
         save_matrix_csv(
+            reports_root=reports_root,
             section=REPORT_SECTION,
             stem="central_zero_sensitivity_matrix",
             row_label_name="shock_tenor",
@@ -381,6 +384,7 @@ def main() -> None:
 
     else:
         save_csv(
+            reports_root=reports_root,
             section=REPORT_SECTION,
             stem="central_zero_sensitivity_matrix",
             header=(
@@ -397,6 +401,7 @@ def main() -> None:
     # --------------------------------------------------------------
 
     save_csv(
+        reports_root=reports_root,
         section=REPORT_SECTION,
         stem="own_node_local_curvature",
         header=(
@@ -449,6 +454,7 @@ def main() -> None:
     )
 
     text_report.save(
+        reports_root=reports_root,
         section=REPORT_SECTION,
         stem="central_quote_sensitivity",
         echo=True,
@@ -456,4 +462,11 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--reports-root",
+        type=lambda value: Path(value).expanduser().resolve(),
+        help="Research output root (default: project outputs/research).",
+    )
+    args = parser.parse_args()
+    main(reports_root=args.reports_root)

@@ -19,6 +19,7 @@ The validation-issues CSV is generated even when no issues are present,
 leaving a header-only artifact for reproducibility.
 """
 
+import argparse
 from pathlib import Path
 
 from yield_curves.tooling.project_paths import (find_project_root)
@@ -47,7 +48,7 @@ REPORT_SECTION = (
 )
 
 
-def main() -> None:
+def main(*, reports_root: Path | None = None) -> None:
     quotes = read_synthetic_ois_quotes_csv(
         QUOTES_PATH
     )
@@ -93,6 +94,7 @@ def main() -> None:
     # --------------------------------------------------------------
 
     save_csv(
+        reports_root=reports_root,
         section=REPORT_SECTION,
         stem="curve_validation_summary",
         header=(
@@ -134,6 +136,7 @@ def main() -> None:
     # --------------------------------------------------------------
 
     save_csv(
+        reports_root=reports_root,
         section=REPORT_SECTION,
         stem="independent_repricing",
         header=(
@@ -173,6 +176,7 @@ def main() -> None:
     # --------------------------------------------------------------
 
     save_csv(
+        reports_root=reports_root,
         section=REPORT_SECTION,
         stem="validation_issues",
         header=(
@@ -362,6 +366,7 @@ def main() -> None:
     report.line()
 
     report.save(
+        reports_root=reports_root,
         section=REPORT_SECTION,
         stem="curve_validation_report",
         echo=True,
@@ -369,4 +374,11 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--reports-root",
+        type=lambda value: Path(value).expanduser().resolve(),
+        help="Research output root (default: project outputs/research).",
+    )
+    args = parser.parse_args()
+    main(reports_root=args.reports_root)
