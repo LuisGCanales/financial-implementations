@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import csv
 
+import argparse
 from datetime import date, timedelta
 from pathlib import Path
 
@@ -106,7 +107,7 @@ def load_synthetic_quotes(
         )
 
 
-def plot_known_truth_zero_curve() -> None:
+def plot_known_truth_zero_curve(*, reports_root: Path | None = None) -> None:
     """Plot and persist synthetic continuous zero curve."""
 
     curve = build_synthetic_known_truth_curve(
@@ -146,6 +147,7 @@ def plot_known_truth_zero_curve() -> None:
     ]
 
     save_csv(
+        reports_root=reports_root,
         section=REPORT_SECTION,
         stem="known_truth_zero_curve_dense",
         header=(
@@ -205,6 +207,7 @@ def plot_known_truth_zero_curve() -> None:
     fig.tight_layout()
 
     save_figure(
+        reports_root=reports_root,
         fig=fig,
         section=REPORT_SECTION,
         stem="known_truth_zero_curve",
@@ -213,7 +216,7 @@ def plot_known_truth_zero_curve() -> None:
     plt.show()
 
 
-def plot_synthetic_par_curve() -> None:
+def plot_synthetic_par_curve(*, reports_root: Path | None = None) -> None:
     """Plot and persist synthetic F-TIIE OIS par quotes."""
 
     rows = load_synthetic_quotes(
@@ -258,6 +261,7 @@ def plot_synthetic_par_curve() -> None:
     ]
 
     save_csv(
+        reports_root=reports_root,
         section=REPORT_SECTION,
         stem="synthetic_ois_par_quotes",
         header=(
@@ -337,6 +341,7 @@ def plot_synthetic_par_curve() -> None:
     fig.tight_layout()
 
     save_figure(
+        reports_root=reports_root,
         fig=fig,
         section=REPORT_SECTION,
         stem="synthetic_ois_par_curve",
@@ -345,7 +350,7 @@ def plot_synthetic_par_curve() -> None:
     plt.show()
 
 
-def plot_synthetic_forward_curve() -> None:
+def plot_synthetic_forward_curve(*, reports_root: Path | None = None) -> None:
     """Plot and persist synthetic 28-day simple forward rates."""
 
     curve = build_synthetic_known_truth_curve(
@@ -413,6 +418,7 @@ def plot_synthetic_forward_curve() -> None:
     # --------------------------------------------------------------
 
     save_csv(
+        reports_root=reports_root,
         section=REPORT_SECTION,
         stem="known_truth_forward_28d_dense",
         header=(
@@ -481,6 +487,7 @@ def plot_synthetic_forward_curve() -> None:
     fig.tight_layout()
 
     save_figure(
+        reports_root=reports_root,
         fig=fig,
         section=REPORT_SECTION,
         stem="known_truth_forward_28d",
@@ -489,13 +496,20 @@ def plot_synthetic_forward_curve() -> None:
     plt.show()
 
 
-def main() -> None:
-    plot_known_truth_zero_curve()
+def main(*, reports_root: Path | None = None) -> None:
+    plot_known_truth_zero_curve(reports_root=reports_root)
 
-    plot_synthetic_forward_curve()
+    plot_synthetic_forward_curve(reports_root=reports_root)
 
-    plot_synthetic_par_curve()
+    plot_synthetic_par_curve(reports_root=reports_root)
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--reports-root",
+        type=lambda value: Path(value).expanduser().resolve(),
+        help="Research output root (default: project outputs/research).",
+    )
+    args = parser.parse_args()
+    main(reports_root=args.reports_root)

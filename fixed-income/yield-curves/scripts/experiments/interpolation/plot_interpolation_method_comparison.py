@@ -32,6 +32,7 @@ Tables:
 
 from __future__ import annotations
 
+import argparse
 from datetime import date, timedelta
 from pathlib import Path
 
@@ -174,6 +175,7 @@ def plot_discount_factors(
     log_linear_curve,
     linear_zero_curve,
     true_curve,
+    reports_root: Path | None = None,
 ) -> None:
     """Compare and persist recovered discount-factor functions."""
 
@@ -226,6 +228,7 @@ def plot_discount_factors(
     # --------------------------------------------------------------
 
     save_csv(
+        reports_root=reports_root,
         section=REPORT_SECTION,
         stem=(
             "discount_factor_recovery_"
@@ -316,6 +319,7 @@ def plot_discount_factors(
     fig.tight_layout()
 
     save_figure(
+        reports_root=reports_root,
         fig=fig,
         section=REPORT_SECTION,
         stem="discount_factor_recovery_two_methods",
@@ -329,6 +333,7 @@ def plot_zero_rates(
     log_linear_curve,
     linear_zero_curve,
     true_curve,
+    reports_root: Path | None = None,
 ) -> None:
     """Compare and persist continuously compounded zero curves."""
 
@@ -385,6 +390,7 @@ def plot_zero_rates(
     # --------------------------------------------------------------
 
     save_csv(
+        reports_root=reports_root,
         section=REPORT_SECTION,
         stem=(
             "zero_rate_recovery_"
@@ -492,6 +498,7 @@ def plot_zero_rates(
     fig.tight_layout()
 
     save_figure(
+        reports_root=reports_root,
         fig=fig,
         section=REPORT_SECTION,
         stem="zero_rate_recovery_two_methods",
@@ -506,6 +513,7 @@ def plot_forward_rates(
     linear_zero_curve,
     true_curve,
     forward_days: int = FORWARD_PERIOD_DAYS,
+    reports_root: Path | None = None,
 ) -> None:
     """Compare and persist 28-day simple forward curves."""
 
@@ -583,6 +591,7 @@ def plot_forward_rates(
     # --------------------------------------------------------------
 
     save_csv(
+        reports_root=reports_root,
         section=REPORT_SECTION,
         stem=(
             "forward_28d_recovery_"
@@ -693,6 +702,7 @@ def plot_forward_rates(
     fig.tight_layout()
 
     save_figure(
+        reports_root=reports_root,
         fig=fig,
         section=REPORT_SECTION,
         stem="forward_28d_recovery_two_methods",
@@ -701,7 +711,7 @@ def plot_forward_rates(
     plt.show()
 
 
-def main() -> None:
+def main(*, reports_root: Path | None = None) -> None:
     (
         log_linear_result,
         linear_zero_result,
@@ -717,18 +727,21 @@ def main() -> None:
     )
 
     plot_discount_factors(
+        reports_root=reports_root,
         log_linear_curve=log_linear_curve,
         linear_zero_curve=linear_zero_curve,
         true_curve=true_curve,
     )
 
     plot_zero_rates(
+        reports_root=reports_root,
         log_linear_curve=log_linear_curve,
         linear_zero_curve=linear_zero_curve,
         true_curve=true_curve,
     )
 
     plot_forward_rates(
+        reports_root=reports_root,
         log_linear_curve=log_linear_curve,
         linear_zero_curve=linear_zero_curve,
         true_curve=true_curve,
@@ -737,4 +750,11 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--reports-root",
+        type=lambda value: Path(value).expanduser().resolve(),
+        help="Research output root (default: project outputs/research).",
+    )
+    args = parser.parse_args()
+    main(reports_root=args.reports_root)

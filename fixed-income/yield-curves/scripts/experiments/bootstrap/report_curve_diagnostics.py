@@ -19,6 +19,7 @@ does not expose log-linear segment diagnostics, leaving a header-only
 artifact in that case.
 """
 
+import argparse
 from pathlib import Path
 
 from yield_curves.tooling.project_paths import (find_project_root)
@@ -50,7 +51,7 @@ FORWARD_PERIOD_DAYS = 28
 GRID_STEP_DAYS = 7
 
 
-def main() -> None:
+def main(*, reports_root: Path | None = None) -> None:
     quotes = read_synthetic_ois_quotes_csv(
         QUOTES_PATH
     )
@@ -107,6 +108,7 @@ def main() -> None:
     # --------------------------------------------------------------
 
     save_csv(
+        reports_root=reports_root,
         section=REPORT_SECTION,
         stem="curve_diagnostics_summary",
         header=(
@@ -224,6 +226,7 @@ def main() -> None:
     )
 
     save_csv(
+        reports_root=reports_root,
         section=REPORT_SECTION,
         stem="log_linear_forward_jumps",
         header=(
@@ -407,6 +410,7 @@ def main() -> None:
     report.line()
 
     report.save(
+        reports_root=reports_root,
         section=REPORT_SECTION,
         stem="curve_diagnostics",
         echo=True,
@@ -414,4 +418,11 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--reports-root",
+        type=lambda value: Path(value).expanduser().resolve(),
+        help="Research output root (default: project outputs/research).",
+    )
+    args = parser.parse_args()
+    main(reports_root=args.reports_root)

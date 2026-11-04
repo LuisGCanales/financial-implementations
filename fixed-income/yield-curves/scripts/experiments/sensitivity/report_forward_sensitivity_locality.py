@@ -53,6 +53,7 @@ Metadata:
 
 from __future__ import annotations
 
+import argparse
 import csv
 from collections import defaultdict
 from datetime import date
@@ -74,23 +75,21 @@ REPORT_SECTION = (
 )
 
 
-FORWARD_DATA_PATH = (
-    PROJECT_ROOT
-    / "outputs"
-    / "research"
-    / "tables"
-    / REPORT_SECTION
-    / "global_forward_sensitivity_dense.csv"
-)
-
-NODE_DATA_PATH = (
-    PROJECT_ROOT
-    / "outputs"
-    / "research"
-    / "tables"
-    / REPORT_SECTION
-    / "global_node_sensitivity_long.csv"
-)
+def sensitivity_data_paths(
+    *,
+    reports_root: Path | None = None,
+) -> tuple[Path, Path]:
+    """Resolve persisted research inputs without falling back to checkout data."""
+    root = (
+        PROJECT_ROOT / "outputs" / "research"
+        if reports_root is None
+        else reports_root
+    )
+    directory = root / "tables" / REPORT_SECTION
+    return (
+        directory / "global_forward_sensitivity_dense.csv",
+        directory / "global_node_sensitivity_long.csv",
+    )
 
 
 METHODS = (
@@ -117,7 +116,7 @@ def project_relative_path(
 ) -> str:
     try:
         return (
-            path
+            path.resolve()
             .relative_to(
                 PROJECT_ROOT
             )
@@ -126,7 +125,7 @@ def project_relative_path(
 
     except ValueError:
         return (
-            path.as_posix()
+            path.resolve().as_posix()
         )
 
 
@@ -150,16 +149,17 @@ def read_csv_rows(
         )
 
 
-def load_locality_results():
+def load_locality_results(*, reports_root: Path | None = None):
+    forward_data_path, node_data_path = sensitivity_data_paths(reports_root=reports_root)
     forward_rows = (
         read_csv_rows(
-            FORWARD_DATA_PATH
+            forward_data_path
         )
     )
 
     node_rows = (
         read_csv_rows(
-            NODE_DATA_PATH
+            node_data_path
         )
     )
 
@@ -356,6 +356,7 @@ def plot_metric(
     ylabel: str,
     stem: str,
     multiplier: float = 1.0,
+    reports_root: Path | None = None,
 ) -> tuple[Path, ...]:
     first_method = [
         item
@@ -462,6 +463,7 @@ def plot_metric(
 
     paths = (
         save_figure(
+            reports_root=reports_root,
             fig=fig,
             section=REPORT_SECTION,
             stem=stem,
@@ -479,17 +481,19 @@ def plot_metric(
     return paths
 
 
-def main() -> None:
+def main(*, reports_root: Path | None = None) -> None:
+    forward_data_path, node_data_path = sensitivity_data_paths(reports_root=reports_root)
     (
         scenario,
         reference_date,
         results,
     ) = (
-        load_locality_results()
+        load_locality_results(reports_root=reports_root)
     )
 
     table_path = (
         save_csv(
+            reports_root=reports_root,
             section=REPORT_SECTION,
             stem=(
                 "forward_sensitivity_locality"
@@ -565,6 +569,7 @@ def main() -> None:
 
     figure_paths.extend(
         plot_metric(
+            reports_root=reports_root,
             results=results,
             attribute=(
                 "rms_distance_from_shock_years"
@@ -585,6 +590,7 @@ def main() -> None:
 
     figure_paths.extend(
         plot_metric(
+            reports_root=reports_root,
             results=results,
             attribute=(
                 "weighted_spread_years"
@@ -606,6 +612,7 @@ def main() -> None:
 
     figure_paths.extend(
         plot_metric(
+            reports_root=reports_root,
             results=results,
             attribute=(
                 "center_offset_from_shock_years"
@@ -627,6 +634,7 @@ def main() -> None:
 
     figure_paths.extend(
         plot_metric(
+            reports_root=reports_root,
             results=results,
             attribute=(
                 "sensitivity_mass_within_2y"
@@ -744,6 +752,7 @@ def main() -> None:
 
     text_path = (
         text_report.save(
+            reports_root=reports_root,
             section=REPORT_SECTION,
             stem=(
                 "forward_sensitivity_"
@@ -755,6 +764,7 @@ def main() -> None:
 
     metadata_path = (
         save_json(
+            reports_root=reports_root,
             section=REPORT_SECTION,
             stem=(
                 "forward_sensitivity_"
@@ -769,12 +779,12 @@ def main() -> None:
                 ),
                 "source_forward_data": (
                     project_relative_path(
-                        FORWARD_DATA_PATH
+                        forward_data_path
                     )
                 ),
                 "source_node_data": (
                     project_relative_path(
-                        NODE_DATA_PATH
+                        node_data_path
                     )
                 ),
                 "primary_metric": {
@@ -832,4 +842,11 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--reports-root",
+        type=lambda value: Path(value).expanduser().resolve(),
+        help="Research output root (default: project outputs/research).",
+    )
+    args = parser.parse_args()
+    main(reports_root=args.reports_root)

@@ -63,6 +63,7 @@ Metadata:
 
 from __future__ import annotations
 
+import argparse
 import csv
 from datetime import date
 from pathlib import Path
@@ -84,23 +85,21 @@ REPORT_SECTION = (
 )
 
 
-FORWARD_DATA_PATH = (
-    PROJECT_ROOT
-    / "outputs"
-    / "research"
-    / "tables"
-    / REPORT_SECTION
-    / "global_forward_sensitivity_dense.csv"
-)
-
-NODE_DATA_PATH = (
-    PROJECT_ROOT
-    / "outputs"
-    / "research"
-    / "tables"
-    / REPORT_SECTION
-    / "global_node_sensitivity_long.csv"
-)
+def sensitivity_data_paths(
+    *,
+    reports_root: Path | None = None,
+) -> tuple[Path, Path]:
+    """Resolve persisted research inputs without falling back to checkout data."""
+    root = (
+        PROJECT_ROOT / "outputs" / "research"
+        if reports_root is None
+        else reports_root
+    )
+    directory = root / "tables" / REPORT_SECTION
+    return (
+        directory / "global_forward_sensitivity_dense.csv",
+        directory / "global_node_sensitivity_long.csv",
+    )
 
 
 ROBUST_QUANTILE = 0.995
@@ -142,7 +141,7 @@ def project_relative_path(
 
     try:
         return (
-            path
+            path.resolve()
             .relative_to(
                 PROJECT_ROOT
             )
@@ -151,7 +150,7 @@ def project_relative_path(
 
     except ValueError:
         return (
-            path.as_posix()
+            path.resolve().as_posix()
         )
 
 
@@ -167,7 +166,7 @@ def act_360(
     ).days / 360.0
 
 
-def read_dense_forward_sensitivity():
+def read_dense_forward_sensitivity(*, reports_root: Path | None = None):
     """Read and reshape persisted dense forward sensitivities.
 
     Returns
@@ -195,14 +194,15 @@ def read_dense_forward_sensitivity():
             columns = dense forward-start dates
             values  = central dF/dK in bp/bp
     """
+    forward_data_path, _ = sensitivity_data_paths(reports_root=reports_root)
 
-    if not FORWARD_DATA_PATH.exists():
+    if not forward_data_path.exists():
         raise FileNotFoundError(
             f"Missing persisted forward sensitivity data: "
-            f"{FORWARD_DATA_PATH}"
+            f"{forward_data_path}"
         )
 
-    with FORWARD_DATA_PATH.open(
+    with forward_data_path.open(
         "r",
         encoding="utf-8",
         newline="",
@@ -439,6 +439,7 @@ def read_dense_forward_sensitivity():
 def read_pillar_years(
     *,
     reference_date: date,
+    reports_root: Path | None = None,
 ) -> dict[int, float]:
     """Read actual calibrated pillar dates for shock-reference markers.
 
@@ -450,14 +451,15 @@ def read_pillar_years(
 
     Node dates are required to agree across interpolation methods.
     """
+    _, node_data_path = sensitivity_data_paths(reports_root=reports_root)
 
-    if not NODE_DATA_PATH.exists():
+    if not node_data_path.exists():
         raise FileNotFoundError(
             f"Missing persisted node sensitivity data: "
-            f"{NODE_DATA_PATH}"
+            f"{node_data_path}"
         )
 
-    with NODE_DATA_PATH.open(
+    with node_data_path.open(
         "r",
         encoding="utf-8",
         newline="",
@@ -735,6 +737,7 @@ def save_forward_heatmap(
     color_cap: float,
     scale_name: str,
     scale_description: str,
+    reports_root: Path | None = None,
 ) -> tuple[Path, ...]:
     """Persist one signed dense-forward sensitivity heatmap."""
 
@@ -892,6 +895,7 @@ def save_forward_heatmap(
     fig.tight_layout()
 
     paths = save_figure(
+        reports_root=reports_root,
         fig=fig,
         section=REPORT_SECTION,
         stem=(
@@ -912,17 +916,19 @@ def save_forward_heatmap(
     return paths
 
 
-def main() -> None:
+def main(*, reports_root: Path | None = None) -> None:
+    forward_data_path, node_data_path = sensitivity_data_paths(reports_root=reports_root)
     (
         reference_date,
         scenario,
         data,
     ) = (
-        read_dense_forward_sensitivity()
+        read_dense_forward_sensitivity(reports_root=reports_root)
     )
 
     pillar_years = (
         read_pillar_years(
+            reports_root=reports_root,
             reference_date=(
                 reference_date
             ),
@@ -968,6 +974,7 @@ def main() -> None:
 
     diagnostics_path = (
         save_csv(
+            reports_root=reports_root,
             section=REPORT_SECTION,
             stem=(
                 "forward_sensitivity_heatmap_"
@@ -1042,6 +1049,7 @@ def main() -> None:
     for method in METHODS:
         paths = (
             save_forward_heatmap(
+                reports_root=reports_root,
                 method=method,
                 method_data=(
                     data[
@@ -1084,6 +1092,7 @@ def main() -> None:
     for method in METHODS:
         paths = (
             save_forward_heatmap(
+                reports_root=reports_root,
                 method=method,
                 method_data=(
                     data[
@@ -1115,6 +1124,7 @@ def main() -> None:
 
     metadata_path = (
         save_json(
+            reports_root=reports_root,
             section=REPORT_SECTION,
             stem=(
                 "forward_sensitivity_"
@@ -1130,12 +1140,12 @@ def main() -> None:
                 ),
                 "source_forward_data": (
                     project_relative_path(
-                        FORWARD_DATA_PATH
+                        forward_data_path
                     )
                 ),
                 "source_node_data": (
                     project_relative_path(
-                        NODE_DATA_PATH
+                        node_data_path
                     )
                 ),
                 "matrix_definition": {
@@ -1204,4 +1214,11 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--reports-root",
+        type=lambda value: Path(value).expanduser().resolve(),
+        help="Research output root (default: project outputs/research).",
+    )
+    args = parser.parse_args()
+    main(reports_root=args.reports_root)

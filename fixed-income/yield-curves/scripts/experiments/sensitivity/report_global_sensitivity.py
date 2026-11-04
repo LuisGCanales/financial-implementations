@@ -68,6 +68,7 @@ Metadata:
 
 from __future__ import annotations
 
+import argparse
 from pathlib import Path
 from time import perf_counter
 
@@ -152,7 +153,7 @@ def project_relative_path(
 
     try:
         return (
-            path
+            path.resolve()
             .relative_to(
                 PROJECT_ROOT
             )
@@ -161,7 +162,7 @@ def project_relative_path(
 
     except ValueError:
         return (
-            path.as_posix()
+            path.resolve().as_posix()
         )
 
 
@@ -381,6 +382,7 @@ def save_node_sensitivity_heatmap(
     *,
     method: CurveInterpolationMethod,
     sensitivity_report,
+    reports_root: Path | None = None,
 ) -> tuple[Path, ...]:
     """Persist the quote-to-node zero-sensitivity matrix as a heatmap."""
 
@@ -476,6 +478,7 @@ def save_node_sensitivity_heatmap(
 
     paths = (
         save_figure(
+            reports_root=reports_root,
             fig=fig,
             section=REPORT_SECTION,
             stem=(
@@ -499,6 +502,7 @@ def save_node_sensitivity_heatmap(
 def save_off_diagonal_share_figure(
     *,
     reports,
+    reports_root: Path | None = None,
 ) -> tuple[Path, ...]:
     """Persist cross-method comparison of nodal sensitivity locality."""
 
@@ -586,6 +590,7 @@ def save_off_diagonal_share_figure(
 
     paths = (
         save_figure(
+            reports_root=reports_root,
             fig=fig,
             section=REPORT_SECTION,
             stem=(
@@ -608,6 +613,7 @@ def save_off_diagonal_share_figure(
 def save_forward_sensitivity_rmse_figure(
     *,
     reports,
+    reports_root: Path | None = None,
 ) -> tuple[Path, ...]:
     """Persist cross-method comparison of dense forward sensitivity RMSE."""
 
@@ -695,6 +701,7 @@ def save_forward_sensitivity_rmse_figure(
 
     paths = (
         save_figure(
+            reports_root=reports_root,
             fig=fig,
             section=REPORT_SECTION,
             stem=(
@@ -717,6 +724,7 @@ def save_forward_sensitivity_rmse_figure(
 def save_forward_max_sensitivity_figure(
     *,
     reports,
+    reports_root: Path | None = None,
 ) -> tuple[Path, ...]:
     """Persist cross-method maximum dense forward sensitivity comparison."""
 
@@ -804,6 +812,7 @@ def save_forward_max_sensitivity_figure(
 
     paths = (
         save_figure(
+            reports_root=reports_root,
             fig=fig,
             section=REPORT_SECTION,
             stem=(
@@ -823,7 +832,7 @@ def save_forward_max_sensitivity_figure(
     return paths
 
 
-def main() -> None:
+def main(*, reports_root: Path | None = None) -> None:
     experiment_start = (
         perf_counter()
     )
@@ -1069,6 +1078,7 @@ def main() -> None:
 
     summary_path = (
         save_csv(
+            reports_root=reports_root,
             section=REPORT_SECTION,
             stem=(
                 "global_sensitivity_summary"
@@ -1182,6 +1192,7 @@ def main() -> None:
 
     node_long_path = (
         save_csv(
+            reports_root=reports_root,
             section=REPORT_SECTION,
             stem=(
                 "global_node_sensitivity_long"
@@ -1258,6 +1269,7 @@ def main() -> None:
 
     forward_dense_path = (
         save_csv(
+            reports_root=reports_root,
             section=REPORT_SECTION,
             stem=(
                 "global_forward_sensitivity_dense"
@@ -1336,6 +1348,7 @@ def main() -> None:
 
     calibration_path = (
         save_csv(
+            reports_root=reports_root,
             section=REPORT_SECTION,
             stem=(
                 "global_calibration_diagnostics"
@@ -1465,6 +1478,7 @@ def main() -> None:
 
         sensitivity_matrix_path = (
             save_matrix_csv(
+                reports_root=reports_root,
                 section=REPORT_SECTION,
                 stem=(
                     "node_zero_sensitivity_matrix_"
@@ -1487,6 +1501,7 @@ def main() -> None:
 
         curvature_matrix_path = (
             save_matrix_csv(
+                reports_root=reports_root,
                 section=REPORT_SECTION,
                 stem=(
                     "node_zero_curvature_matrix_"
@@ -1532,6 +1547,7 @@ def main() -> None:
     for method in METHODS:
         figure_paths = (
             save_node_sensitivity_heatmap(
+                reports_root=reports_root,
                 method=method,
                 sensitivity_report=(
                     reports[
@@ -1553,6 +1569,7 @@ def main() -> None:
 
     off_diagonal_paths = (
         save_off_diagonal_share_figure(
+            reports_root=reports_root,
             reports=reports
         )
     )
@@ -1569,6 +1586,7 @@ def main() -> None:
 
     forward_rmse_paths = (
         save_forward_sensitivity_rmse_figure(
+            reports_root=reports_root,
             reports=reports
         )
     )
@@ -1585,6 +1603,7 @@ def main() -> None:
 
     forward_max_paths = (
         save_forward_max_sensitivity_figure(
+            reports_root=reports_root,
             reports=reports
         )
     )
@@ -1702,6 +1721,7 @@ def main() -> None:
 
     text_path = (
         text_report.save(
+            reports_root=reports_root,
             section=REPORT_SECTION,
             stem=(
                 "global_quote_sensitivity_report"
@@ -1734,6 +1754,7 @@ def main() -> None:
 
     metadata_path = (
         save_json(
+            reports_root=reports_root,
             section=REPORT_SECTION,
             stem=(
                 "experiment_metadata"
@@ -1883,4 +1904,11 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--reports-root",
+        type=lambda value: Path(value).expanduser().resolve(),
+        help="Research output root (default: project outputs/research).",
+    )
+    args = parser.parse_args()
+    main(reports_root=args.reports_root)

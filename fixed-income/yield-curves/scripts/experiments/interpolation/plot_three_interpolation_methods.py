@@ -42,6 +42,7 @@ without rerunning the simultaneous calibrations.
 
 from __future__ import annotations
 
+import argparse
 from datetime import date, timedelta
 from pathlib import Path
 
@@ -137,7 +138,7 @@ def build_date_grid(
     )
 
 
-def calibrate_curves():
+def calibrate_curves(*, reports_root: Path | None = None):
     """Calibrate all methods from the same quote set.
 
     The calibrated node values are persisted because simultaneous
@@ -251,6 +252,7 @@ def calibrate_curves():
     )
 
     save_csv(
+        reports_root=reports_root,
         section=REPORT_SECTION,
         stem="calibrated_nodes_three_methods",
         header=(
@@ -310,6 +312,7 @@ def plot_discount_factors(
     *,
     curves,
     true_curve,
+    reports_root: Path | None = None,
 ) -> None:
     """Plot and persist discount-factor recovery."""
 
@@ -360,6 +363,7 @@ def plot_discount_factors(
     # --------------------------------------------------------------
 
     save_csv(
+        reports_root=reports_root,
         section=REPORT_SECTION,
         stem=(
             "discount_factor_recovery_"
@@ -478,6 +482,7 @@ def plot_discount_factors(
     fig.tight_layout()
 
     save_figure(
+        reports_root=reports_root,
         fig=fig,
         section=REPORT_SECTION,
         stem="discount_factor_recovery_three_methods",
@@ -490,6 +495,7 @@ def plot_zero_rates(
     *,
     curves,
     true_curve,
+    reports_root: Path | None = None,
 ) -> None:
     """Plot and persist continuously compounded zero-rate recovery."""
 
@@ -546,6 +552,7 @@ def plot_zero_rates(
     # --------------------------------------------------------------
 
     save_csv(
+        reports_root=reports_root,
         section=REPORT_SECTION,
         stem=(
             "zero_rate_recovery_"
@@ -682,6 +689,7 @@ def plot_zero_rates(
     fig.tight_layout()
 
     save_figure(
+        reports_root=reports_root,
         fig=fig,
         section=REPORT_SECTION,
         stem="zero_rate_recovery_three_methods",
@@ -695,6 +703,7 @@ def plot_forward_rates(
     curves,
     true_curve,
     forward_days: int = FORWARD_PERIOD_DAYS,
+    reports_root: Path | None = None,
 ) -> None:
     """Plot and persist 28-day simple-forward recovery."""
 
@@ -772,6 +781,7 @@ def plot_forward_rates(
     # --------------------------------------------------------------
 
     save_csv(
+        reports_root=reports_root,
         section=REPORT_SECTION,
         stem=(
             "forward_28d_recovery_"
@@ -917,6 +927,7 @@ def plot_forward_rates(
     fig.tight_layout()
 
     save_figure(
+        reports_root=reports_root,
         fig=fig,
         section=REPORT_SECTION,
         stem="forward_28d_recovery_three_methods",
@@ -929,6 +940,7 @@ def plot_cubic_instantaneous_forward(
     *,
     curves,
     true_curve,
+    reports_root: Path | None = None,
 ) -> None:
     """Inspect and persist cubic-zero instantaneous-forward behavior.
 
@@ -1031,6 +1043,7 @@ def plot_cubic_instantaneous_forward(
     # --------------------------------------------------------------
 
     save_csv(
+        reports_root=reports_root,
         section=REPORT_SECTION,
         stem=(
             "cubic_zero_instantaneous_"
@@ -1126,6 +1139,7 @@ def plot_cubic_instantaneous_forward(
     fig.tight_layout()
 
     save_figure(
+        reports_root=reports_root,
         fig=fig,
         section=REPORT_SECTION,
         stem="cubic_zero_instantaneous_forward",
@@ -1134,34 +1148,45 @@ def plot_cubic_instantaneous_forward(
     plt.show()
 
 
-def main() -> None:
+def main(*, reports_root: Path | None = None) -> None:
     (
         _,
         curves,
         true_curve,
-    ) = calibrate_curves()
+    ) = calibrate_curves(reports_root=reports_root)
 
     plot_discount_factors(
+        reports_root=reports_root,
         curves=curves,
         true_curve=true_curve,
     )
 
     plot_zero_rates(
+        reports_root=reports_root,
         curves=curves,
         true_curve=true_curve,
     )
 
     plot_forward_rates(
+        reports_root=reports_root,
         curves=curves,
         true_curve=true_curve,
         forward_days=FORWARD_PERIOD_DAYS,
     )
 
     plot_cubic_instantaneous_forward(
+        reports_root=reports_root,
         curves=curves,
         true_curve=true_curve,
     )
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--reports-root",
+        type=lambda value: Path(value).expanduser().resolve(),
+        help="Research output root (default: project outputs/research).",
+    )
+    args = parser.parse_args()
+    main(reports_root=args.reports_root)
