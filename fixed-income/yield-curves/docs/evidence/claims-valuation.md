@@ -4,7 +4,7 @@
 
 Original C04a claim IDs and exact supported wording are preserved. Every statement is scoped to synthetic `FTIIE_KNOWN_TRUTH_V1`, trade/reference dates 2026-09-15/2026-09-18, projected MXMC coverage 2026–2057 and same-curve Core-v1. Original sources use commit `bee31fd0883660f171ebe84817b98641239eae5b`.
 
-**Availability:** S03/S05/S06 are public as unchanged standalone original payload exhibits. The complete accepted seven-file snapshot remains complete, unchanged and externally archived; its publication is `BLOCKED_PENDING_REVIEW` because S07 contains two machine-specific paths. S01/S02/S04/S07 are not distributed. The three exhibits are not a partial snapshot archive or valid snapshot-assurance input; original acceptance and execution bindings are not fully independently inspectable from this public collection. Original assurance logs and audit records remain external and are **not publicly distributed**. Rows marked external identify evidence by checkpoint and SHA-256 without pretending to provide a download. Included links resolve within this local review draft; publication has not occurred.
+**Availability:** S03/S05/S06 are public as unchanged standalone original payload exhibits. The complete accepted seven-file snapshot remains complete, unchanged and externally archived; its publication is `BLOCKED_PENDING_REVIEW` because S07 contains two machine-specific paths. S01/S02/S04/S07 are not distributed. The three exhibits are not a partial snapshot archive or valid snapshot-assurance input; original acceptance and execution bindings are not fully independently inspectable from this public collection. Original assurance logs and audit records remain external and are **not publicly distributed**. Rows marked external identify evidence by checkpoint and SHA-256 without pretending to provide a download. Included links resolve to versioned evidence in this public repository; after merge, the subset will be available on `main`. Repository evidence publication is not a formal tagged release or website deployment; complete snapshot publication remains `BLOCKED_PENDING_REVIEW`.
 
 <a id="c01"></a>
 
@@ -45,7 +45,7 @@ Original C04a claim IDs and exact supported wording are preserved. Every stateme
 
 **Units:** file-byte SHA-256; run identifiers.
 
-**Limitations:** Publication here means local snapshot publication by the original CLI. No public release, trusted timestamp or cryptographic authentication.
+**Limitations:** Snapshot publication in C02 means local snapshot publication by the original CLI. Public repository evidence availability does not publish the complete snapshot or imply a formal tagged release, website deployment, trusted timestamp or cryptographic authentication.
 
 **Public inspection boundary:** Original complete snapshot closure remains supported by external evidence only. Standalone S03/S05/S06 rows are public, but do not establish pointer/manifest closure, original acceptance or execution bindings; no copied or publicly accepted archive is claimed.
 

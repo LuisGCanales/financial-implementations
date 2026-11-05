@@ -2,7 +2,7 @@
 
 [Evidence index](index.md) · [Claims C01–C06](claims-valuation.md) · [Provenance manifest](../../evidence/c03/valuation-manifest.json)
 
-**Review status:** C04b subset; snapshot publication `BLOCKED_PENDING_REVIEW`. Eleven original exhibits are included, including standalone original payloads S03/S05/S06. The complete accepted snapshot remains unchanged and externally archived; S01/S02/S04/S07 and original audit records are not distributed. Results below describe C03 computations; C04b ran no financial computation, repricing or assurance CLI.
+**Repository evidence status:** C04b subset; snapshot publication `BLOCKED_PENDING_REVIEW`. Eleven original exhibits are included, including standalone original payloads S03/S05/S06. The complete accepted snapshot remains unchanged and externally archived; S01/S02/S04/S07 and original audit records are not distributed. The versioned evidence subset will be available on `main` after merge in this public repository; this is not a formal tagged release or website deployment. Results below describe C03 computations; C04b ran no financial computation, repricing or assurance CLI.
 
 ## A. Financial problem and Core-v1 scope
 
