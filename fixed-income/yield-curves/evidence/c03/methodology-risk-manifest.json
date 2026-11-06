@@ -2,14 +2,23 @@
   "schema_version": "1.1",
   "task": "C04c",
   "recommendation": "C04C_READY_FOR_PR_REVIEW",
-  "review_state": "LOCAL_IMPLEMENTATION_READY_FOR_PR_REVIEW",
+  "recommendation_semantics": "Historical C04c-F02 pre-PR curation recommendation; current PR publication state is recorded separately.",
+  "review_state": "OPEN_EXISTING_PR_PENDING_MERGE",
   "repository": "LuisGCanales/financial-implementations",
   "project": "fixed-income/yield-curves",
   "original_financial_source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
   "curation_base_commit": "39f24aff2e2c5e13d2eb53ab43d4fee53cc18dae",
   "curation_branch": "c04c-methodology-risk-evidence",
   "curation_timestamp_utc": "2026-11-06T01:33:42.310841+00:00",
-  "current_repository_commit_semantics": "C04c work is uncommitted; base commit is not the historical financial execution identity.",
+  "current_repository_commit_semantics": "C04c was uncommitted at the historical pre-PR curation checkpoints and is now committed on the existing PR branch. The curation base and PR commits are distinct from the original financial execution commit. H03/H04 rendering_source_revision records the uncommitted working-tree source at rendering time; it is not a statement that the current PR source remains uncommitted.",
+  "publication_state": {
+    "pull_request": "https://github.com/LuisGCanales/financial-implementations/pull/15",
+    "status": "OPEN_EXISTING_PR_PENDING_MERGE",
+    "repository_availability": "Selected evidence is committed on the PR branch; after merge it will be available at public repository-relative paths on main.",
+    "historical_stop_point_semantics": "Pre-PR curation stop instructions are historical and do not prohibit commits or pushes to the existing PR. Merge is a separate action; C04d remains pending.",
+    "formal_tagged_release": false,
+    "website_deployment": false
+  },
   "selection_authority": {
     "evidence_id": "C04a/artifact-selection.json",
     "sha256": "cb309c110ca9d452e39d4207b9e9a1f7ba1a81ff722778cfaa8b9ea2a26f6919",
@@ -2711,7 +2720,7 @@
     "Original outputs, execution receipts, scripts and hashes stay separate from authored C04c summaries.",
     "Metadata withholding is documented and safe subsets proceed; no original metadata file was sanitized or replaced.",
     "C01–C06 and all C04b artifacts remain unchanged; C06 is cross-referenced.",
-    "C04d remains pending; no staging, commit, push, PR, merge or website publication."
+    "Historical pre-PR curation stopped before staging, commit, push and PR creation. The package is now committed in the existing PR; editorial updates to that PR are permitted. This correction does not merge, create a formal release, deploy a website or begin C04d."
   ],
   "external_supporting_records": [
     {

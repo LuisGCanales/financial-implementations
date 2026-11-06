@@ -2,7 +2,7 @@
 
 [Evidence index](index.md) · [Risk evidence](risk.md) · [Claims C07–C14](claims-methodology-risk.md) · [Original identities and provenance](../../evidence/c03/methodology-risk-manifest.json)
 
-This C04c review package curates previously validated C03 results. Its classification is **`VALIDATED_RESEARCH_EVIDENCE`**. Original financial source commit: `bee31fd0883660f171ebe84817b98641239eae5b`. C04c starts from repository commit `39f24aff2e2c5e13d2eb53ab43d4fee53cc18dae`; that documentation commit is distinct from the financial execution. Original execution times and the separate C04c curation timestamp are recorded in the manifest. No financial results were generated during curation.
+This C04c review package curates previously validated C03 results. Its classification is **`VALIDATED_RESEARCH_EVIDENCE`**. Original financial source commit: `bee31fd0883660f171ebe84817b98641239eae5b`. Historical C04c curation began from repository commit `39f24aff2e2c5e13d2eb53ab43d4fee53cc18dae`; that documentation commit is distinct from the financial execution and subsequent PR commits. Original execution times and the separate C04c curation timestamp are recorded in the manifest. No financial results were generated during curation. The [current PR publication state](index.md#publication-state) is separate from those historical records.
 
 ## A. Financial question and scenario
 

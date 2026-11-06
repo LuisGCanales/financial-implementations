@@ -4,7 +4,7 @@
 
 This C04c package contains **validated research evidence from a synthetic single-curve model**. It measures curve-rate response to quote shocks. No monetary DV01, portfolio P&L, portfolio gamma or hedge effectiveness was demonstrated. The scenario is `FTIIE_KNOWN_TRUTH_V1`, trade date **2026-09-15**, reference date **2026-09-18**, 15 quotes from 1M to 30Y, with projected MXMC 2026–2057 calendar and same-curve projection/discounting. Original source commit is `bee31fd0883660f171ebe84817b98641239eae5b`; original workflow receipts and separate curation time appear in the manifest.
 
-**Presentation review complete:** Human-approved H03/H04 C04c-F01 derivatives resolve FIGURE-01 and are integrated byte for byte by C04c-F02. Their footers are outside the data, and both show the complete 30Y response row. Only the out-of-domain 30Y pillar marker is omitted. Financial matrices and historical originals remain unchanged; the manifest separates original and derivative provenance. Recommendation: `C04C_READY_FOR_PR_REVIEW`.
+**Presentation review complete:** Human-approved H03/H04 C04c-F01 derivatives resolve FIGURE-01 and are integrated byte for byte by C04c-F02. Their footers are outside the data, and both show the complete 30Y response row. Only the out-of-domain 30Y pillar marker is omitted. Financial matrices and historical originals remain unchanged; the manifest separates original and derivative provenance. Historical pre-PR recommendation: `C04C_READY_FOR_PR_REVIEW`; see the [current PR publication state](index.md#publication-state).
 
 ## A. Section 05: local sequential quote response
 
