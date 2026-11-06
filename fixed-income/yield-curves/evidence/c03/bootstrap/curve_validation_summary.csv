@@ -1,0 +1,2 @@
+reference_date,interpolation_method,curve_status,calibration_quote_count,curve_node_count,converged_step_count,passed_instrument_count,review_instrument_count,failed_instrument_count,max_abs_repricing_error_bp,mean_abs_repricing_error_bp,warning_count,critical_issue_count
+2026-09-18,LOG_LINEAR_DF,VALID,15,15,15,15,0,0,4.170969125638635e-09,2.994364015999433e-10,0,0

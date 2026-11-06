@@ -1,0 +1,871 @@
+{
+  "schema_version": "1.0",
+  "task": "C04b",
+  "collection_scope": "VALUATION_SUBSET_ONLY",
+  "recommendation": "C04B_READY_FOR_PR_REVIEW",
+  "distribution_state": "VERSIONED_PUBLIC_REPOSITORY_EVIDENCE_SUBSET",
+  "publication_scope": "Versioned evidence subset in a public repository; available on main after merge. Repository evidence publication is not a formal tagged release or website deployment. Complete snapshot publication remains BLOCKED_PENDING_REVIEW.",
+  "snapshot_publication_status": "BLOCKED_PENDING_REVIEW",
+  "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+  "curation_timestamp_utc": "2026-11-05T03:37:44.947198+00:00",
+  "public_path_base": "fixed-income/yield-curves",
+  "authorized_original_artifact_ids": [
+    "S01",
+    "S02",
+    "S03",
+    "S04",
+    "S05",
+    "S06",
+    "S07",
+    "I01",
+    "B01",
+    "B02",
+    "B03",
+    "B04",
+    "B05",
+    "B06",
+    "B07"
+  ],
+  "copied_count": 11,
+  "copied_original_bytes": 139043,
+  "blocked_count": 4,
+  "blocked_original_bytes": 118013,
+  "scenario": {
+    "identifier": "FTIIE_KNOWN_TRUTH_V1",
+    "classification": "SYNTHETIC_REFERENCE_DATA",
+    "trade_date": "2026-09-15",
+    "reference_date": "2026-09-18",
+    "calendar": "Projected MXMC; PROVIDED denotes supplied model content, not official status.",
+    "calendar_coverage": [
+      "2026-01-01",
+      "2057-12-31"
+    ],
+    "projection_discounting": "same_curve"
+  },
+  "reference_environment": {
+    "python": "3.11.15",
+    "packages": {
+      "python-dateutil": "2.9.0.post0",
+      "pyparsing": "3.3.3",
+      "kiwisolver": "1.5.1",
+      "scipy": "1.17.1",
+      "numpy": "2.4.6",
+      "packaging": "26.3",
+      "PyYAML": "6.0.3",
+      "six": "1.17.0",
+      "pluggy": "1.6.0",
+      "pip": "26.2.1",
+      "iniconfig": "2.3.0",
+      "pytest": "9.1.1",
+      "matplotlib": "3.11.2",
+      "contourpy": "1.3.3",
+      "cycler": "0.12.1",
+      "fonttools": "4.65.0",
+      "Pygments": "2.21.0",
+      "yield-curves": "0.1.0",
+      "pillow": "12.3.0",
+      "setuptools": "79.0.1"
+    },
+    "source_evidence_id": "C03c:environment.json",
+    "source_sha256": "e6a632dc9817d496035885435fbfc9240ed1f5a2f61b115fb501310dcc091401",
+    "source_availability": "EXTERNAL_AUDIT_NOT_DISTRIBUTED",
+    "comparison_boundary": "Recorded reference runs only; no fresh-install or cross-version/platform bitwise guarantee."
+  },
+  "artifacts": [
+    {
+      "artifact_id": "I01",
+      "public_relative_path": "evidence/c03/inputs/projected_mxmc_2026_2057.csv",
+      "sha256": "d8eb688b8d48a1de7492cc6ed150a94fe070a9424e8d2a4375e1b4e0d5406507",
+      "size_bytes": 4230,
+      "original_source_evidence_id": "C03b1:projected_mxmc_2026_2057.csv",
+      "source_checkpoint": "C03b1",
+      "original_workflow_id": "calendar",
+      "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "source_script": {
+        "evidence_id": "C03b1:audit.py",
+        "sha256": "a283cba97d763fda553953db80570c8c5433b5ed68159c4d60c6f7eaf69c9de9",
+        "availability": "EXTERNAL_AUDIT_SOURCE_NOT_DISTRIBUTED"
+      },
+      "classification": "VALIDATED_RESEARCH_EVIDENCE",
+      "methodology": "Materialized build_projected_mxmc_calendar(2026,2057).",
+      "units": "ISO holiday dates",
+      "limitations": "Original audit.py calendar-worker is external audit orchestration, not a stable public CLI; a portable input-distribution decision is required.",
+      "historical_comparison_scope": {
+        "status": "ORIGINAL_RUN_IDENTITY_ONLY",
+        "scope": "Current bytes verified; no historical figure/metadata equality or golden-reference designation claimed."
+      },
+      "original_execution_start_utc": "2026-11-04T18:56:53.588162+00:00",
+      "original_execution_end_utc": "2026-11-04T18:56:53.935477+00:00",
+      "execution_timestamp_verification": "SHA256_VERIFIED_ORIGINAL_COMMAND_RECEIPT",
+      "status": "COPIED_UNCHANGED_PUBLIC_REPOSITORY_EXHIBIT"
+    },
+    {
+      "artifact_id": "B01",
+      "public_relative_path": "evidence/c03/bootstrap/curve_validation_summary.csv",
+      "sha256": "384b6ca3c2f773be9494d79b700fdf2d6e5e9b662da39f41c149b3a0b37a7dac",
+      "size_bytes": 370,
+      "original_source_evidence_id": "C03b2b:curve_validation_summary.csv",
+      "source_checkpoint": "C03b2b",
+      "original_workflow_id": "validate_synthetic_bootstrap",
+      "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "source_script": {
+        "evidence_id": "scripts/experiments/bootstrap/validate_synthetic_bootstrap.py",
+        "sha256": "21c66ce8fb9c53380e4f63f12e75f11747bfae7bf457121febbd97e6b88f0ab8",
+        "availability": "REPOSITORY_SOURCE_AT_SOURCE_COMMIT"
+      },
+      "classification": "VALIDATED_RESEARCH_EVIDENCE",
+      "methodology": "Sequential bootstrap, LOG_LINEAR_DF; independent repricing separate from solver residuals.",
+      "units": "counts, Boolean/status, bp",
+      "limitations": "Synthetic FTIIE_KNOWN_TRUTH_V1 scenario; projected calendar; no observed-market or production-readiness conclusion.",
+      "historical_comparison_scope": {
+        "status": "SAVED_HISTORICAL_PAIR_BYTE_IDENTICAL",
+        "scope": "Same scenario, engine, keys/grid and installed reference environment; inherited C03 evidence, no comparison experiment rerun.",
+        "external_record": {
+          "evidence_id": "C03b2b:historical-numerical-comparisons.json",
+          "sha256": "8e1f44b05574f8a6f6a464c022b5d892bf1d1fd0185e033ecf9be33ce7a43b99",
+          "availability": "EXTERNAL_AUDIT_NOT_DISTRIBUTED"
+        }
+      },
+      "original_execution_start_utc": "2026-11-05T01:23:10.873743+00:00",
+      "original_execution_end_utc": "2026-11-05T01:23:18.670064+00:00",
+      "execution_timestamp_verification": "SHA256_VERIFIED_ORIGINAL_COMMAND_RECEIPT",
+      "status": "COPIED_UNCHANGED_PUBLIC_REPOSITORY_EXHIBIT"
+    },
+    {
+      "artifact_id": "B02",
+      "public_relative_path": "evidence/c03/bootstrap/independent_repricing.csv",
+      "sha256": "5ff09c794314b9f40e7bac256f14719e2e9f2304ecfa0f2712ee257c3f079e29",
+      "size_bytes": 1817,
+      "original_source_evidence_id": "C03b2b:independent_repricing.csv",
+      "source_checkpoint": "C03b2b",
+      "original_workflow_id": "validate_synthetic_bootstrap",
+      "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "source_script": {
+        "evidence_id": "scripts/experiments/bootstrap/validate_synthetic_bootstrap.py",
+        "sha256": "21c66ce8fb9c53380e4f63f12e75f11747bfae7bf457121febbd97e6b88f0ab8",
+        "availability": "REPOSITORY_SOURCE_AT_SOURCE_COMMIT"
+      },
+      "classification": "VALIDATED_RESEARCH_EVIDENCE",
+      "methodology": "Sequential bootstrap, LOG_LINEAR_DF; independent repricing separate from solver residuals.",
+      "units": "annual decimal quotes; bp errors",
+      "limitations": "Synthetic FTIIE_KNOWN_TRUTH_V1 scenario; projected calendar; no observed-market or production-readiness conclusion.",
+      "historical_comparison_scope": {
+        "status": "SAVED_HISTORICAL_PAIR_BYTE_IDENTICAL",
+        "scope": "Same scenario, engine, keys/grid and installed reference environment; inherited C03 evidence, no comparison experiment rerun.",
+        "external_record": {
+          "evidence_id": "C03b2b:historical-numerical-comparisons.json",
+          "sha256": "8e1f44b05574f8a6f6a464c022b5d892bf1d1fd0185e033ecf9be33ce7a43b99",
+          "availability": "EXTERNAL_AUDIT_NOT_DISTRIBUTED"
+        }
+      },
+      "original_execution_start_utc": "2026-11-05T01:23:10.873743+00:00",
+      "original_execution_end_utc": "2026-11-05T01:23:18.670064+00:00",
+      "execution_timestamp_verification": "SHA256_VERIFIED_ORIGINAL_COMMAND_RECEIPT",
+      "status": "COPIED_UNCHANGED_PUBLIC_REPOSITORY_EXHIBIT"
+    },
+    {
+      "artifact_id": "B03",
+      "public_relative_path": "evidence/c03/bootstrap/validation_issues.csv",
+      "sha256": "59d5d3f381cec8f000c30a4544b76ed13324504d9536f77896f8864d83bd132d",
+      "size_bytes": 59,
+      "original_source_evidence_id": "C03b2b:validation_issues.csv",
+      "source_checkpoint": "C03b2b",
+      "original_workflow_id": "validate_synthetic_bootstrap",
+      "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "source_script": {
+        "evidence_id": "scripts/experiments/bootstrap/validate_synthetic_bootstrap.py",
+        "sha256": "21c66ce8fb9c53380e4f63f12e75f11747bfae7bf457121febbd97e6b88f0ab8",
+        "availability": "REPOSITORY_SOURCE_AT_SOURCE_COMMIT"
+      },
+      "classification": "VALIDATED_RESEARCH_EVIDENCE",
+      "methodology": "Sequential bootstrap, LOG_LINEAR_DF; independent repricing separate from solver residuals.",
+      "units": "severity/code/message; zero issue rows",
+      "limitations": "Synthetic FTIIE_KNOWN_TRUTH_V1 scenario; projected calendar; no observed-market or production-readiness conclusion.",
+      "historical_comparison_scope": {
+        "status": "SAVED_HISTORICAL_PAIR_BYTE_IDENTICAL",
+        "scope": "Same scenario, engine, keys/grid and installed reference environment; inherited C03 evidence, no comparison experiment rerun.",
+        "external_record": {
+          "evidence_id": "C03b2b:historical-numerical-comparisons.json",
+          "sha256": "8e1f44b05574f8a6f6a464c022b5d892bf1d1fd0185e033ecf9be33ce7a43b99",
+          "availability": "EXTERNAL_AUDIT_NOT_DISTRIBUTED"
+        }
+      },
+      "original_execution_start_utc": "2026-11-05T01:23:10.873743+00:00",
+      "original_execution_end_utc": "2026-11-05T01:23:18.670064+00:00",
+      "execution_timestamp_verification": "SHA256_VERIFIED_ORIGINAL_COMMAND_RECEIPT",
+      "status": "COPIED_UNCHANGED_PUBLIC_REPOSITORY_EXHIBIT"
+    },
+    {
+      "artifact_id": "B04",
+      "public_relative_path": "evidence/c03/bootstrap/bootstrap_node_recovery.csv",
+      "sha256": "6018fd6b7ee525cd0400f7b472e52c3712a4407393e977ba6116c026b0761414",
+      "size_bytes": 2848,
+      "original_source_evidence_id": "C03b2b:bootstrap_node_recovery.csv",
+      "source_checkpoint": "C03b2b",
+      "original_workflow_id": "bootstrap_synthetic_reference_data",
+      "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "source_script": {
+        "evidence_id": "scripts/experiments/bootstrap/bootstrap_synthetic_reference_data.py",
+        "sha256": "17aad20a61c7de704e6b36d0fb175d8d0ca52ea75eefbb322dc6d7e624a5f9e2",
+        "availability": "REPOSITORY_SOURCE_AT_SOURCE_COMMIT"
+      },
+      "classification": "VALIDATED_RESEARCH_EVIDENCE",
+      "methodology": "Sequential LOG_LINEAR_DF; known truth introduced after calibration.",
+      "units": "DF absolute differences; relative ppm; rate errors bp",
+      "limitations": "Synthetic FTIIE_KNOWN_TRUTH_V1 scenario; projected calendar; no observed-market or production-readiness conclusion.",
+      "historical_comparison_scope": {
+        "status": "SAVED_HISTORICAL_PAIR_BYTE_IDENTICAL",
+        "scope": "Same scenario, engine, keys/grid and installed reference environment; inherited C03 evidence, no comparison experiment rerun.",
+        "external_record": {
+          "evidence_id": "C03b2b:historical-numerical-comparisons.json",
+          "sha256": "8e1f44b05574f8a6f6a464c022b5d892bf1d1fd0185e033ecf9be33ce7a43b99",
+          "availability": "EXTERNAL_AUDIT_NOT_DISTRIBUTED"
+        }
+      },
+      "original_execution_start_utc": "2026-11-05T01:22:35.973719+00:00",
+      "original_execution_end_utc": "2026-11-05T01:22:43.634787+00:00",
+      "execution_timestamp_verification": "SHA256_VERIFIED_ORIGINAL_COMMAND_RECEIPT",
+      "status": "COPIED_UNCHANGED_PUBLIC_REPOSITORY_EXHIBIT"
+    },
+    {
+      "artifact_id": "B05",
+      "public_relative_path": "evidence/c03/bootstrap/recovery_metrics_global.csv",
+      "sha256": "3a53c0b37b8eafb024c5c80328d43fc8c5a136746fa7359f52ee2e0b3f7bc70d",
+      "size_bytes": 1037,
+      "original_source_evidence_id": "C03b2b:recovery_metrics_global.csv",
+      "source_checkpoint": "C03b2b",
+      "original_workflow_id": "report_bootstrap_recovery_metrics",
+      "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "source_script": {
+        "evidence_id": "scripts/experiments/bootstrap/report_bootstrap_recovery_metrics.py",
+        "sha256": "a10c840d16c5cdf4982ba5815f35d95028646a9499a75d86be506071f1727fdb",
+        "availability": "REPOSITORY_SOURCE_AT_SOURCE_COMMIT"
+      },
+      "classification": "VALIDATED_RESEARCH_EVIDENCE",
+      "methodology": "Sequential LOG_LINEAR_DF; 7-day metrics grid, 28-day simple ACT/360 forwards.",
+      "units": "DF absolute; relative ppm; zero/28D forward errors bp; counts",
+      "limitations": "Repricing acceptance and recovery are different questions. Horizon buckets 0\u20131Y, 1\u20135Y, 5\u201310Y, 10Y\u2013curve-end; use saved observation counts. Plot/metrics endpoint differences must be disclosed.",
+      "historical_comparison_scope": {
+        "status": "SAVED_HISTORICAL_PAIR_BYTE_IDENTICAL",
+        "scope": "Same scenario, engine, keys/grid and installed reference environment; inherited C03 evidence, no comparison experiment rerun.",
+        "external_record": {
+          "evidence_id": "C03b2b:historical-numerical-comparisons.json",
+          "sha256": "8e1f44b05574f8a6f6a464c022b5d892bf1d1fd0185e033ecf9be33ce7a43b99",
+          "availability": "EXTERNAL_AUDIT_NOT_DISTRIBUTED"
+        }
+      },
+      "original_execution_start_utc": "2026-11-05T01:22:55.901036+00:00",
+      "original_execution_end_utc": "2026-11-05T01:23:03.653235+00:00",
+      "execution_timestamp_verification": "SHA256_VERIFIED_ORIGINAL_COMMAND_RECEIPT",
+      "status": "COPIED_UNCHANGED_PUBLIC_REPOSITORY_EXHIBIT"
+    },
+    {
+      "artifact_id": "B06",
+      "public_relative_path": "evidence/c03/bootstrap/recovery_metrics_by_horizon.csv",
+      "sha256": "40709f76ccf2726a1df710d87a29079a300836eca70bf31d6fb747c1efa49f83",
+      "size_bytes": 1825,
+      "original_source_evidence_id": "C03b2b:recovery_metrics_by_horizon.csv",
+      "source_checkpoint": "C03b2b",
+      "original_workflow_id": "report_bootstrap_recovery_metrics",
+      "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "source_script": {
+        "evidence_id": "scripts/experiments/bootstrap/report_bootstrap_recovery_metrics.py",
+        "sha256": "a10c840d16c5cdf4982ba5815f35d95028646a9499a75d86be506071f1727fdb",
+        "availability": "REPOSITORY_SOURCE_AT_SOURCE_COMMIT"
+      },
+      "classification": "VALIDATED_RESEARCH_EVIDENCE",
+      "methodology": "Sequential LOG_LINEAR_DF; 7-day metrics grid, 28-day simple ACT/360 forwards.",
+      "units": "DF absolute; relative ppm; zero/28D forward errors bp; counts",
+      "limitations": "Repricing acceptance and recovery are different questions. Horizon buckets 0\u20131Y, 1\u20135Y, 5\u201310Y, 10Y\u2013curve-end; use saved observation counts. Plot/metrics endpoint differences must be disclosed.",
+      "historical_comparison_scope": {
+        "status": "SAVED_HISTORICAL_PAIR_BYTE_IDENTICAL",
+        "scope": "Same scenario, engine, keys/grid and installed reference environment; inherited C03 evidence, no comparison experiment rerun.",
+        "external_record": {
+          "evidence_id": "C03b2b:historical-numerical-comparisons.json",
+          "sha256": "8e1f44b05574f8a6f6a464c022b5d892bf1d1fd0185e033ecf9be33ce7a43b99",
+          "availability": "EXTERNAL_AUDIT_NOT_DISTRIBUTED"
+        }
+      },
+      "original_execution_start_utc": "2026-11-05T01:22:55.901036+00:00",
+      "original_execution_end_utc": "2026-11-05T01:23:03.653235+00:00",
+      "execution_timestamp_verification": "SHA256_VERIFIED_ORIGINAL_COMMAND_RECEIPT",
+      "status": "COPIED_UNCHANGED_PUBLIC_REPOSITORY_EXHIBIT"
+    },
+    {
+      "artifact_id": "B07",
+      "public_relative_path": "evidence/c03/bootstrap/forward_28d_recovery.png",
+      "sha256": "8a2e04ee39263d1fe158c3f2bec01711463610808c318b6a96bebedcff2c881a",
+      "size_bytes": 124262,
+      "original_source_evidence_id": "C03b2b:forward_28d_recovery.png",
+      "source_checkpoint": "C03b2b",
+      "original_workflow_id": "plot_bootstrap_recovery",
+      "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "source_script": {
+        "evidence_id": "scripts/experiments/bootstrap/plot_bootstrap_recovery.py",
+        "sha256": "84e7452f43d46b750f66c5c8c80bc28c2df74cf2c7c30a8aa94e55f94b879d7c",
+        "availability": "REPOSITORY_SOURCE_AT_SOURCE_COMMIT"
+      },
+      "classification": "VALIDATED_RESEARCH_EVIDENCE",
+      "methodology": "Sequential LOG_LINEAR_DF recovery against synthetic known truth.",
+      "units": "y: annual simple 28D forward %; x: ACT/360 years",
+      "limitations": "Synthetic FTIIE_KNOWN_TRUTH_V1 scenario; projected calendar; no observed-market or production-readiness conclusion.",
+      "historical_comparison_scope": {
+        "status": "ORIGINAL_RUN_IDENTITY_ONLY",
+        "scope": "Current bytes verified; no historical figure/metadata equality or golden-reference designation claimed."
+      },
+      "original_execution_start_utc": "2026-11-05T01:22:43.637942+00:00",
+      "original_execution_end_utc": "2026-11-05T01:22:55.896132+00:00",
+      "execution_timestamp_verification": "SHA256_VERIFIED_ORIGINAL_COMMAND_RECEIPT",
+      "status": "COPIED_UNCHANGED_PUBLIC_REPOSITORY_EXHIBIT",
+      "required_caption": "Synthetic sequential LOG_LINEAR_DF; 28-day simple ACT/360 forward, weekly starts; curve recovery is separate from quote repricing. Dense source remains external."
+    },
+    {
+      "artifact_id": "S03",
+      "public_relative_path": "evidence/c03/valuation/input_quotes.csv",
+      "sha256": "bf0041e27bd82be352cadc3b9b02257368583fe5b28cdd0fa9bd74b2c11e13a4",
+      "size_bytes": 670,
+      "original_source_evidence_id": "C03b1:input_quotes.csv",
+      "source_checkpoint": "C03b1",
+      "original_workflow_id": "snapshot-build",
+      "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "source_script": {
+        "evidence_id": "scripts/operational/build_baseline_curve.py",
+        "sha256": "b34d4e702ad496fa11b2494322eb7eb5dc21b7297f3c71adb78a74708422834b",
+        "availability": "REPOSITORY_SOURCE_AT_SOURCE_COMMIT"
+      },
+      "classification": "ACCEPTED_SYNTHETIC_SNAPSHOT_EVIDENCE",
+      "methodology": "Simultaneous nodal calibration, CUBIC_CONTINUOUS_ZERO; FTIIE_STANDARD_BASELINE_ACCEPTANCE_V1.",
+      "units": "annual decimal par rates; ISO dates",
+      "limitations": "Standalone unchanged original payload exhibit; not a snapshot archive or snapshot-assurance input. Original acceptance metadata and execution bindings remain external. Independent repricing is within one codebase; synthetic quotes, projected calendar and same-curve projection/discounting provide no observed-market certification.",
+      "historical_comparison_scope": {
+        "status": "ACCEPTED_RUN_WITH_EXACT_DEMO_FINANCIAL_COMPARISON",
+        "scope": "Input/node/repricing rows equal between demo and explicit-input builds; provenance, IDs/timestamps and metadata differ. Not itself a new golden reference.",
+        "external_record": {
+          "evidence_id": "C03b1:numerical-comparison.json",
+          "sha256": "a69deb890383afd54fd9459683f63ea4113ccea7b1a06cecd05da8fa482ec6ff",
+          "availability": "EXTERNAL_AUDIT_NOT_DISTRIBUTED"
+        }
+      },
+      "original_execution_start_utc": "2026-11-04T18:56:59.625961+00:00",
+      "original_execution_end_utc": "2026-11-04T18:58:20.559097+00:00",
+      "execution_timestamp_verification": "SHA256_VERIFIED_ORIGINAL_COMMAND_RECEIPT",
+      "status": "COPIED_UNCHANGED_PUBLIC_REPOSITORY_EXHIBIT",
+      "original_run_id": "ab8b26ab993140dca7dcbd7491c3a8c0",
+      "distribution_role": "STANDALONE_ORIGINAL_PAYLOAD_EXHIBIT",
+      "original_source_relative_path": "C03b1/operational_snapshot/runs/ab8b26ab993140dca7dcbd7491c3a8c0/input_quotes.csv",
+      "original_source_limitations": "Complete seven-file snapshot group must remain intact with original relative paths. accepted_for_use is this project policy on synthetic inputs. PROVIDED calendar is projected, not official."
+    },
+    {
+      "artifact_id": "S05",
+      "public_relative_path": "evidence/c03/valuation/curve_nodes.csv",
+      "sha256": "53f4e23d682cce947d722030345a118736ca06db7d77611fa53c367b99f92972",
+      "size_bytes": 868,
+      "original_source_evidence_id": "C03b1:curve_nodes.csv",
+      "source_checkpoint": "C03b1",
+      "original_workflow_id": "snapshot-build",
+      "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "source_script": {
+        "evidence_id": "scripts/operational/build_baseline_curve.py",
+        "sha256": "b34d4e702ad496fa11b2494322eb7eb5dc21b7297f3c71adb78a74708422834b",
+        "availability": "REPOSITORY_SOURCE_AT_SOURCE_COMMIT"
+      },
+      "classification": "ACCEPTED_SYNTHETIC_SNAPSHOT_EVIDENCE",
+      "methodology": "Simultaneous nodal calibration, CUBIC_CONTINUOUS_ZERO; FTIIE_STANDARD_BASELINE_ACCEPTANCE_V1.",
+      "units": "dimensionless DF; annual continuous zero decimal",
+      "limitations": "Standalone unchanged original payload exhibit; not a snapshot archive or snapshot-assurance input. Original acceptance metadata and execution bindings remain external. Independent repricing is within one codebase; synthetic quotes, projected calendar and same-curve projection/discounting provide no observed-market certification.",
+      "historical_comparison_scope": {
+        "status": "ACCEPTED_RUN_WITH_EXACT_DEMO_FINANCIAL_COMPARISON",
+        "scope": "Input/node/repricing rows equal between demo and explicit-input builds; provenance, IDs/timestamps and metadata differ. Not itself a new golden reference.",
+        "external_record": {
+          "evidence_id": "C03b1:numerical-comparison.json",
+          "sha256": "a69deb890383afd54fd9459683f63ea4113ccea7b1a06cecd05da8fa482ec6ff",
+          "availability": "EXTERNAL_AUDIT_NOT_DISTRIBUTED"
+        }
+      },
+      "original_execution_start_utc": "2026-11-04T18:56:59.625961+00:00",
+      "original_execution_end_utc": "2026-11-04T18:58:20.559097+00:00",
+      "execution_timestamp_verification": "SHA256_VERIFIED_ORIGINAL_COMMAND_RECEIPT",
+      "status": "COPIED_UNCHANGED_PUBLIC_REPOSITORY_EXHIBIT",
+      "original_run_id": "ab8b26ab993140dca7dcbd7491c3a8c0",
+      "distribution_role": "STANDALONE_ORIGINAL_PAYLOAD_EXHIBIT",
+      "original_source_relative_path": "C03b1/operational_snapshot/runs/ab8b26ab993140dca7dcbd7491c3a8c0/curve_nodes.csv",
+      "original_source_limitations": "Complete seven-file snapshot group must remain intact with original relative paths. accepted_for_use is this project policy on synthetic inputs. PROVIDED calendar is projected, not official."
+    },
+    {
+      "artifact_id": "S06",
+      "public_relative_path": "evidence/c03/valuation/quote_repricing.csv",
+      "sha256": "b5419630d2d4513713fed2a173c6ad7910cdf0294e4ed742796d7fe8812a3f93",
+      "size_bytes": 1057,
+      "original_source_evidence_id": "C03b1:quote_repricing.csv",
+      "source_checkpoint": "C03b1",
+      "original_workflow_id": "snapshot-build",
+      "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "source_script": {
+        "evidence_id": "scripts/operational/build_baseline_curve.py",
+        "sha256": "b34d4e702ad496fa11b2494322eb7eb5dc21b7297f3c71adb78a74708422834b",
+        "availability": "REPOSITORY_SOURCE_AT_SOURCE_COMMIT"
+      },
+      "classification": "ACCEPTED_SYNTHETIC_SNAPSHOT_EVIDENCE",
+      "methodology": "Simultaneous nodal calibration, CUBIC_CONTINUOUS_ZERO; FTIIE_STANDARD_BASELINE_ACCEPTANCE_V1.",
+      "units": "annual decimal input/model rates; error bp",
+      "limitations": "Standalone unchanged original payload exhibit; not a snapshot archive or snapshot-assurance input. Original acceptance metadata and execution bindings remain external. Independent repricing is within one codebase; synthetic quotes, projected calendar and same-curve projection/discounting provide no observed-market certification.",
+      "historical_comparison_scope": {
+        "status": "ACCEPTED_RUN_WITH_EXACT_DEMO_FINANCIAL_COMPARISON",
+        "scope": "Input/node/repricing rows equal between demo and explicit-input builds; provenance, IDs/timestamps and metadata differ. Not itself a new golden reference.",
+        "external_record": {
+          "evidence_id": "C03b1:numerical-comparison.json",
+          "sha256": "a69deb890383afd54fd9459683f63ea4113ccea7b1a06cecd05da8fa482ec6ff",
+          "availability": "EXTERNAL_AUDIT_NOT_DISTRIBUTED"
+        }
+      },
+      "original_execution_start_utc": "2026-11-04T18:56:59.625961+00:00",
+      "original_execution_end_utc": "2026-11-04T18:58:20.559097+00:00",
+      "execution_timestamp_verification": "SHA256_VERIFIED_ORIGINAL_COMMAND_RECEIPT",
+      "status": "COPIED_UNCHANGED_PUBLIC_REPOSITORY_EXHIBIT",
+      "original_run_id": "ab8b26ab993140dca7dcbd7491c3a8c0",
+      "distribution_role": "STANDALONE_ORIGINAL_PAYLOAD_EXHIBIT",
+      "original_source_relative_path": "C03b1/operational_snapshot/runs/ab8b26ab993140dca7dcbd7491c3a8c0/quote_repricing.csv",
+      "original_source_limitations": "Complete seven-file snapshot group must remain intact with original relative paths. accepted_for_use is this project policy on synthetic inputs. PROVIDED calendar is projected, not official."
+    }
+  ],
+  "blocked_artifacts": [
+    {
+      "artifact_id": "S01",
+      "public_relative_path": null,
+      "sha256": "459430609efaeea7c8f83df606a5f567bb8f7e08bc0a60941d358d79a430ca3a",
+      "size_bytes": 329,
+      "original_source_evidence_id": "C03b1:current.json",
+      "source_checkpoint": "C03b1",
+      "original_workflow_id": "snapshot-build",
+      "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "source_script": {
+        "evidence_id": "scripts/operational/build_baseline_curve.py",
+        "sha256": "b34d4e702ad496fa11b2494322eb7eb5dc21b7297f3c71adb78a74708422834b",
+        "availability": "REPOSITORY_SOURCE_AT_SOURCE_COMMIT"
+      },
+      "classification": "ACCEPTED_SYNTHETIC_SNAPSHOT_EVIDENCE",
+      "methodology": "Simultaneous nodal calibration, CUBIC_CONTINUOUS_ZERO; FTIIE_STANDARD_BASELINE_ACCEPTANCE_V1.",
+      "units": "schema/run identity and SHA-256",
+      "limitations": "Complete seven-file snapshot group must remain intact with original relative paths. accepted_for_use is this project policy on synthetic inputs. PROVIDED calendar is projected, not official.",
+      "historical_comparison_scope": {
+        "status": "ACCEPTED_RUN_WITH_EXACT_DEMO_FINANCIAL_COMPARISON",
+        "scope": "Input/node/repricing rows equal between demo and explicit-input builds; provenance, IDs/timestamps and metadata differ. Not itself a new golden reference.",
+        "external_record": {
+          "evidence_id": "C03b1:numerical-comparison.json",
+          "sha256": "a69deb890383afd54fd9459683f63ea4113ccea7b1a06cecd05da8fa482ec6ff",
+          "availability": "EXTERNAL_AUDIT_NOT_DISTRIBUTED"
+        }
+      },
+      "original_execution_start_utc": "2026-11-04T18:56:59.625961+00:00",
+      "original_execution_end_utc": "2026-11-04T18:58:20.559097+00:00",
+      "execution_timestamp_verification": "SHA256_VERIFIED_ORIGINAL_COMMAND_RECEIPT",
+      "status": "BLOCKED_PENDING_REVIEW",
+      "withholding_reason": "Complete snapshot withheld: S07 contains two machine-specific absolute quote-source paths. Original bytes and hashes unchanged."
+    },
+    {
+      "artifact_id": "S02",
+      "public_relative_path": null,
+      "sha256": "10a512f1dc1db8e0b48353f443caf63c7fb67fdf06542bfb36a010f1fb7becd9",
+      "size_bytes": 749,
+      "original_source_evidence_id": "C03b1:manifest.json",
+      "source_checkpoint": "C03b1",
+      "original_workflow_id": "snapshot-build",
+      "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "source_script": {
+        "evidence_id": "scripts/operational/build_baseline_curve.py",
+        "sha256": "b34d4e702ad496fa11b2494322eb7eb5dc21b7297f3c71adb78a74708422834b",
+        "availability": "REPOSITORY_SOURCE_AT_SOURCE_COMMIT"
+      },
+      "classification": "ACCEPTED_SYNTHETIC_SNAPSHOT_EVIDENCE",
+      "methodology": "Simultaneous nodal calibration, CUBIC_CONTINUOUS_ZERO; FTIIE_STANDARD_BASELINE_ACCEPTANCE_V1.",
+      "units": "SHA-256 file bytes; Boolean acceptance",
+      "limitations": "Complete seven-file snapshot group must remain intact with original relative paths. accepted_for_use is this project policy on synthetic inputs. PROVIDED calendar is projected, not official.",
+      "historical_comparison_scope": {
+        "status": "ACCEPTED_RUN_WITH_EXACT_DEMO_FINANCIAL_COMPARISON",
+        "scope": "Input/node/repricing rows equal between demo and explicit-input builds; provenance, IDs/timestamps and metadata differ. Not itself a new golden reference.",
+        "external_record": {
+          "evidence_id": "C03b1:numerical-comparison.json",
+          "sha256": "a69deb890383afd54fd9459683f63ea4113ccea7b1a06cecd05da8fa482ec6ff",
+          "availability": "EXTERNAL_AUDIT_NOT_DISTRIBUTED"
+        }
+      },
+      "original_execution_start_utc": "2026-11-04T18:56:59.625961+00:00",
+      "original_execution_end_utc": "2026-11-04T18:58:20.559097+00:00",
+      "execution_timestamp_verification": "SHA256_VERIFIED_ORIGINAL_COMMAND_RECEIPT",
+      "status": "BLOCKED_PENDING_REVIEW",
+      "withholding_reason": "Complete snapshot withheld: S07 contains two machine-specific absolute quote-source paths. Original bytes and hashes unchanged."
+    },
+    {
+      "artifact_id": "S04",
+      "public_relative_path": null,
+      "sha256": "531159869288cb8f42a74b738795ac02e33ebee93dc03a6d8aa2c03449df8995",
+      "size_bytes": 6711,
+      "original_source_evidence_id": "C03b1:calendar.json",
+      "source_checkpoint": "C03b1",
+      "original_workflow_id": "snapshot-build",
+      "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "source_script": {
+        "evidence_id": "scripts/operational/build_baseline_curve.py",
+        "sha256": "b34d4e702ad496fa11b2494322eb7eb5dc21b7297f3c71adb78a74708422834b",
+        "availability": "REPOSITORY_SOURCE_AT_SOURCE_COMMIT"
+      },
+      "classification": "ACCEPTED_SYNTHETIC_SNAPSHOT_EVIDENCE",
+      "methodology": "Simultaneous nodal calibration, CUBIC_CONTINUOUS_ZERO; FTIIE_STANDARD_BASELINE_ACCEPTANCE_V1.",
+      "units": "ISO holidays, coverage, provenance",
+      "limitations": "Complete seven-file snapshot group must remain intact with original relative paths. accepted_for_use is this project policy on synthetic inputs. PROVIDED calendar is projected, not official.",
+      "historical_comparison_scope": {
+        "status": "ACCEPTED_RUN_WITH_EXACT_DEMO_FINANCIAL_COMPARISON",
+        "scope": "Input/node/repricing rows equal between demo and explicit-input builds; provenance, IDs/timestamps and metadata differ. Not itself a new golden reference.",
+        "external_record": {
+          "evidence_id": "C03b1:numerical-comparison.json",
+          "sha256": "a69deb890383afd54fd9459683f63ea4113ccea7b1a06cecd05da8fa482ec6ff",
+          "availability": "EXTERNAL_AUDIT_NOT_DISTRIBUTED"
+        }
+      },
+      "original_execution_start_utc": "2026-11-04T18:56:59.625961+00:00",
+      "original_execution_end_utc": "2026-11-04T18:58:20.559097+00:00",
+      "execution_timestamp_verification": "SHA256_VERIFIED_ORIGINAL_COMMAND_RECEIPT",
+      "status": "BLOCKED_PENDING_REVIEW",
+      "withholding_reason": "Complete snapshot withheld: S07 contains two machine-specific absolute quote-source paths. Original bytes and hashes unchanged."
+    },
+    {
+      "artifact_id": "S07",
+      "public_relative_path": null,
+      "sha256": "7c7a14588c276ec6156f5559f3451d2efb3cecac428e3e4aaa78868c4ab9b945",
+      "size_bytes": 110224,
+      "original_source_evidence_id": "C03b1:metadata.json",
+      "source_checkpoint": "C03b1",
+      "original_workflow_id": "snapshot-build",
+      "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "source_script": {
+        "evidence_id": "scripts/operational/build_baseline_curve.py",
+        "sha256": "b34d4e702ad496fa11b2494322eb7eb5dc21b7297f3c71adb78a74708422834b",
+        "availability": "REPOSITORY_SOURCE_AT_SOURCE_COMMIT"
+      },
+      "classification": "ACCEPTED_SYNTHETIC_SNAPSHOT_EVIDENCE",
+      "methodology": "Simultaneous nodal calibration, CUBIC_CONTINUOUS_ZERO; FTIIE_STANDARD_BASELINE_ACCEPTANCE_V1.",
+      "units": "rates/bp/Boolean policy, solver and provenance metadata",
+      "limitations": "Complete seven-file snapshot group must remain intact with original relative paths. accepted_for_use is this project policy on synthetic inputs. PROVIDED calendar is projected, not official.",
+      "historical_comparison_scope": {
+        "status": "ACCEPTED_RUN_WITH_EXACT_DEMO_FINANCIAL_COMPARISON",
+        "scope": "Input/node/repricing rows equal between demo and explicit-input builds; provenance, IDs/timestamps and metadata differ. Not itself a new golden reference.",
+        "external_record": {
+          "evidence_id": "C03b1:numerical-comparison.json",
+          "sha256": "a69deb890383afd54fd9459683f63ea4113ccea7b1a06cecd05da8fa482ec6ff",
+          "availability": "EXTERNAL_AUDIT_NOT_DISTRIBUTED"
+        }
+      },
+      "original_execution_start_utc": "2026-11-04T18:56:59.625961+00:00",
+      "original_execution_end_utc": "2026-11-04T18:58:20.559097+00:00",
+      "execution_timestamp_verification": "SHA256_VERIFIED_ORIGINAL_COMMAND_RECEIPT",
+      "status": "BLOCKED_PENDING_REVIEW",
+      "withholding_reason": "Complete snapshot withheld: S07 contains two machine-specific absolute quote-source paths. Original bytes and hashes unchanged."
+    }
+  ],
+  "original_workflows": [
+    {
+      "workflow_id": "snapshot-build",
+      "source_checkpoint": "C03b1",
+      "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "source_script": {
+        "evidence_id": "scripts/operational/build_baseline_curve.py",
+        "sha256": "b34d4e702ad496fa11b2494322eb7eb5dc21b7297f3c71adb78a74708422834b",
+        "availability": "REPOSITORY_SOURCE_AT_SOURCE_COMMIT"
+      },
+      "original_execution_start_utc": "2026-11-04T18:56:59.625961+00:00",
+      "original_execution_end_utc": "2026-11-04T18:58:20.559097+00:00",
+      "original_exit_code": 0,
+      "executed_in_C04b": false,
+      "original_command_receipt": {
+        "evidence_id": "C03b1:07-operational-build.json",
+        "sha256": "74a94f2fb9aab4628e21f8070b40250aee8911b41fb17da171a4435650c62e2e",
+        "availability": "EXTERNAL_AUDIT_NOT_DISTRIBUTED"
+      }
+    },
+    {
+      "workflow_id": "snapshot-assurance",
+      "source_checkpoint": "C03b1",
+      "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "source_script": {
+        "evidence_id": "scripts/assurance/validate_baseline_curve.py",
+        "sha256": "dcddd76c497ca84871872956bd3eaeec70924e5b78094812cddf66a91c89e71b",
+        "availability": "REPOSITORY_SOURCE_AT_SOURCE_COMMIT"
+      },
+      "original_execution_start_utc": "2026-11-04T19:01:27.935835+00:00",
+      "original_execution_end_utc": "2026-11-04T19:01:32.438169+00:00",
+      "original_exit_code": 0,
+      "executed_in_C04b": false,
+      "original_command_receipt": {
+        "evidence_id": "C03b1:09-operational-snapshot-assurance.json",
+        "sha256": "bfb3d452a930269fae0f0ce7cfb29c18bc5616046423bdc364d636357a36db8d",
+        "availability": "EXTERNAL_AUDIT_NOT_DISTRIBUTED"
+      }
+    },
+    {
+      "workflow_id": "rebuild-assurance",
+      "source_checkpoint": "C03b1",
+      "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "source_script": {
+        "evidence_id": "scripts/assurance/validate_baseline_curve.py",
+        "sha256": "dcddd76c497ca84871872956bd3eaeec70924e5b78094812cddf66a91c89e71b",
+        "availability": "REPOSITORY_SOURCE_AT_SOURCE_COMMIT"
+      },
+      "original_execution_start_utc": "2026-11-04T18:58:37.519685+00:00",
+      "original_execution_end_utc": "2026-11-04T18:59:58.201850+00:00",
+      "original_exit_code": 0,
+      "executed_in_C04b": false,
+      "original_command_receipt": {
+        "evidence_id": "C03b1:08-operational-rebuild-assurance.json",
+        "sha256": "42fa6a5a9edf6a0ee29e568614e05d5ba5770f3adc8ebd619122090d8ce2af37",
+        "availability": "EXTERNAL_AUDIT_NOT_DISTRIBUTED"
+      }
+    },
+    {
+      "workflow_id": "calendar",
+      "source_checkpoint": "C03b1",
+      "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "source_script": {
+        "evidence_id": "C03b1:audit.py",
+        "sha256": "a283cba97d763fda553953db80570c8c5433b5ed68159c4d60c6f7eaf69c9de9",
+        "availability": "EXTERNAL_AUDIT_SOURCE_NOT_DISTRIBUTED"
+      },
+      "original_execution_start_utc": "2026-11-04T18:56:53.588162+00:00",
+      "original_execution_end_utc": "2026-11-04T18:56:53.935477+00:00",
+      "original_exit_code": 0,
+      "executed_in_C04b": false,
+      "original_command_receipt": {
+        "evidence_id": "C03b1:06-calendar-generation.json",
+        "sha256": "63567247ecb1448931aa479df2586a6fea5584448d843c84218b0dd34ac1b11c",
+        "availability": "EXTERNAL_AUDIT_NOT_DISTRIBUTED"
+      }
+    },
+    {
+      "workflow_id": "bootstrap_synthetic_reference_data",
+      "source_checkpoint": "C03b2b",
+      "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "source_script": {
+        "evidence_id": "scripts/experiments/bootstrap/bootstrap_synthetic_reference_data.py",
+        "sha256": "17aad20a61c7de704e6b36d0fb175d8d0ca52ea75eefbb322dc6d7e624a5f9e2",
+        "availability": "REPOSITORY_SOURCE_AT_SOURCE_COMMIT"
+      },
+      "original_execution_start_utc": "2026-11-05T01:22:35.973719+00:00",
+      "original_execution_end_utc": "2026-11-05T01:22:43.634787+00:00",
+      "original_exit_code": 0,
+      "executed_in_C04b": false,
+      "original_command_receipt": {
+        "evidence_id": "C03b2b:B-bootstrap_synthetic_reference_data.json",
+        "sha256": "9567dd6578294e8c76cf9177770aabb7bc138fb4a58dfdd2c477585cd63cdc3e",
+        "availability": "EXTERNAL_AUDIT_NOT_DISTRIBUTED"
+      }
+    },
+    {
+      "workflow_id": "plot_bootstrap_recovery",
+      "source_checkpoint": "C03b2b",
+      "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "source_script": {
+        "evidence_id": "scripts/experiments/bootstrap/plot_bootstrap_recovery.py",
+        "sha256": "84e7452f43d46b750f66c5c8c80bc28c2df74cf2c7c30a8aa94e55f94b879d7c",
+        "availability": "REPOSITORY_SOURCE_AT_SOURCE_COMMIT"
+      },
+      "original_execution_start_utc": "2026-11-05T01:22:43.637942+00:00",
+      "original_execution_end_utc": "2026-11-05T01:22:55.896132+00:00",
+      "original_exit_code": 0,
+      "executed_in_C04b": false,
+      "original_command_receipt": {
+        "evidence_id": "C03b2b:B-plot_bootstrap_recovery.json",
+        "sha256": "1fd498c155071d4f9447557fbab272fccc9d0c0be93a3560ecaf4432f816acfe",
+        "availability": "EXTERNAL_AUDIT_NOT_DISTRIBUTED"
+      }
+    },
+    {
+      "workflow_id": "report_bootstrap_recovery_metrics",
+      "source_checkpoint": "C03b2b",
+      "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "source_script": {
+        "evidence_id": "scripts/experiments/bootstrap/report_bootstrap_recovery_metrics.py",
+        "sha256": "a10c840d16c5cdf4982ba5815f35d95028646a9499a75d86be506071f1727fdb",
+        "availability": "REPOSITORY_SOURCE_AT_SOURCE_COMMIT"
+      },
+      "original_execution_start_utc": "2026-11-05T01:22:55.901036+00:00",
+      "original_execution_end_utc": "2026-11-05T01:23:03.653235+00:00",
+      "original_exit_code": 0,
+      "executed_in_C04b": false,
+      "original_command_receipt": {
+        "evidence_id": "C03b2b:B-report_bootstrap_recovery_metrics.json",
+        "sha256": "50686c08679ba0f6bca793fba7bb34528ead10fbcf151d2a524b617046fe1aa5",
+        "availability": "EXTERNAL_AUDIT_NOT_DISTRIBUTED"
+      }
+    },
+    {
+      "workflow_id": "validate_synthetic_bootstrap",
+      "source_checkpoint": "C03b2b",
+      "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "source_script": {
+        "evidence_id": "scripts/experiments/bootstrap/validate_synthetic_bootstrap.py",
+        "sha256": "21c66ce8fb9c53380e4f63f12e75f11747bfae7bf457121febbd97e6b88f0ab8",
+        "availability": "REPOSITORY_SOURCE_AT_SOURCE_COMMIT"
+      },
+      "original_execution_start_utc": "2026-11-05T01:23:10.873743+00:00",
+      "original_execution_end_utc": "2026-11-05T01:23:18.670064+00:00",
+      "original_exit_code": 0,
+      "executed_in_C04b": false,
+      "original_command_receipt": {
+        "evidence_id": "C03b2b:B-validate_synthetic_bootstrap.json",
+        "sha256": "a4ed3c9ba49b3eddc1bd22c066ef5e904c1ea7d33180d18d9fed189fcedc8990",
+        "availability": "EXTERNAL_AUDIT_NOT_DISTRIBUTED"
+      }
+    }
+  ],
+  "external_claim_support": [
+    {
+      "evidence_id": "C03b1:08-operational-rebuild-assurance.stdout.log",
+      "source_checkpoint": "C03b1",
+      "sha256": "0624e8238425b0795d76a581382620836bb0b41a58a0fde9214672892ea06735",
+      "availability": "EXTERNAL_AUDIT_NOT_DISTRIBUTED"
+    },
+    {
+      "evidence_id": "C03b1:09-operational-snapshot-assurance.stdout.log",
+      "source_checkpoint": "C03b1",
+      "sha256": "24d78b35d1b2c59ae73987bfde778128bfcabb88447ab316fb53309fd95cc0bb",
+      "availability": "EXTERNAL_AUDIT_NOT_DISTRIBUTED"
+    },
+    {
+      "evidence_id": "C03b1:08-operational-rebuild-assurance-immutability.json",
+      "source_checkpoint": "C03b1",
+      "sha256": "7419a59b580424d8211a8090ddcb042a633e9f08274d56087992fd5d2f932593",
+      "availability": "EXTERNAL_AUDIT_NOT_DISTRIBUTED"
+    },
+    {
+      "evidence_id": "C03b1:09-operational-snapshot-assurance-immutability.json",
+      "source_checkpoint": "C03b1",
+      "sha256": "7419a59b580424d8211a8090ddcb042a633e9f08274d56087992fd5d2f932593",
+      "availability": "EXTERNAL_AUDIT_NOT_DISTRIBUTED"
+    },
+    {
+      "evidence_id": "C03b1:numerical-comparison.json",
+      "source_checkpoint": "C03b1",
+      "sha256": "a69deb890383afd54fd9459683f63ea4113ccea7b1a06cecd05da8fa482ec6ff",
+      "availability": "EXTERNAL_AUDIT_NOT_DISTRIBUTED"
+    },
+    {
+      "evidence_id": "C03b1:projected-calendar.json",
+      "source_checkpoint": "C03b1",
+      "sha256": "df3108b5ac89414297a4917b49e95f3c37567e23ec82ad3927a38de7237f1b21",
+      "availability": "EXTERNAL_AUDIT_NOT_DISTRIBUTED"
+    }
+  ],
+  "claims": [
+    {
+      "claim_id": "C01",
+      "claim_type": "observed result",
+      "supported_wording": "The explicit-input cubic build was accepted under FTIIE_STANDARD_BASELINE_ACCEPTANCE_V1, with 15 quotes, 15 nodes and 15 independent repricing PASS checks; max error 4.3853809472693683e-11 bp.",
+      "selected_artifact_ids": [
+        "S03",
+        "S05",
+        "S06",
+        "S07"
+      ],
+      "public_support": "PUBLIC_INPUT_NODE_REPRICING_EXHIBITS_ACCEPTANCE_METADATA_EXTERNAL"
+    },
+    {
+      "claim_id": "C02",
+      "claim_type": "observed result",
+      "supported_wording": "The accepted run has a schema-3.0 pointer, a matching manifest and all five hash-bound payloads.",
+      "selected_artifact_ids": [
+        "S01",
+        "S02",
+        "S03",
+        "S04",
+        "S05",
+        "S06",
+        "S07"
+      ],
+      "public_support": "COMPLETE_SNAPSHOT_CLOSURE_EXTERNAL_ONLY"
+    },
+    {
+      "claim_id": "C03",
+      "claim_type": "observed result",
+      "supported_wording": "Subsequent operational rebuild and snapshot assurance both exited 0, with exact saved before/after snapshot identity.",
+      "selected_artifact_ids": [
+        "S01",
+        "S07"
+      ],
+      "public_support": "ORIGINAL_ASSURANCE_EVIDENCE_EXTERNAL_ONLY"
+    },
+    {
+      "claim_id": "C04",
+      "claim_type": "observed result",
+      "supported_wording": "Demo and explicit-input builds have identical input/node/repricing rows; PROVIDED calendar provenance still denotes supplied projected-model content.",
+      "selected_artifact_ids": [
+        "I01",
+        "S03",
+        "S04"
+      ],
+      "public_support": "PUBLIC_CALENDAR_AND_NORMALIZED_QUOTES_DEMO_COMPARISON_EXTERNAL"
+    },
+    {
+      "claim_id": "C05",
+      "claim_type": "observed result",
+      "supported_wording": "Sequential LOG_LINEAR_DF bootstrap is VALID: 15 quotes/nodes/converged steps, 15 independent PASS checks, zero critical issues; max repricing error 4.170969125638635e-09 bp.",
+      "selected_artifact_ids": [
+        "B01",
+        "B02",
+        "B03"
+      ],
+      "public_support": "COPIED_EXHIBITS_AVAILABLE"
+    },
+    {
+      "claim_id": "C06",
+      "claim_type": "interpretation",
+      "supported_wording": "Excellent quote fit can coexist with nonzero known-truth recovery errors between nodes.",
+      "selected_artifact_ids": [
+        "B01",
+        "B04",
+        "B05",
+        "B06",
+        "B07"
+      ],
+      "public_support": "COPIED_EXHIBITS_AVAILABLE"
+    }
+  ],
+  "boundaries": [
+    "Curation uses static file/hash/link inspection only; no new numerical data or acceptance decisions.",
+    "Complete original seven-file snapshot archive remains external and withheld; S03/S05/S06 are standalone original payload exhibits, not a partial snapshot archive or snapshot-assurance input. No public snapshot closure is asserted.",
+    "Original financial computation, repricing, assurance and known-truth comparison remain separate workflows.",
+    "Compact provenance is not a replacement for original C03 audits; original transcripts and dense dependencies remain external.",
+    "Repository evidence publication does not imply a new immutable reference, formal tagged release, website deployment or complete research replay claim."
+  ],
+  "repair_task": "C04b-F01",
+  "repair_curation_timestamp_utc": "2026-11-05T18:48:53.195862+00:00",
+  "standalone_original_payload_availability": {
+    "status": "AVAILABLE_UNCHANGED_PUBLIC_REPOSITORY_EXHIBITS",
+    "artifact_ids": [
+      "S03",
+      "S05",
+      "S06"
+    ],
+    "distribution_role": "STANDALONE_ORIGINAL_PAYLOAD_EXHIBIT",
+    "not_a_snapshot_archive": true,
+    "snapshot_assurance_input": false
+  },
+  "complete_snapshot_archive": {
+    "status": "BLOCKED_PENDING_REVIEW",
+    "availability": "EXTERNAL_ONLY_NOT_DISTRIBUTED",
+    "source_checkpoint": "C03b1",
+    "original_run_id": "ab8b26ab993140dca7dcbd7491c3a8c0",
+    "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+    "original_artifact_ids": [
+      "S01",
+      "S02",
+      "S03",
+      "S04",
+      "S05",
+      "S06",
+      "S07"
+    ],
+    "complete_file_count": 7,
+    "reason": "S07 contains machine-specific absolute source paths. The accepted original archive remains complete, unchanged and externally archived; standalone exhibits do not constitute a partial snapshot archive.",
+    "public_acceptance_and_execution_bindings": "NOT_FULLY_INDEPENDENTLY_INSPECTABLE",
+    "original_assurance_logs": "EXTERNAL_ONLY_NOT_DISTRIBUTED"
+  }
+}
