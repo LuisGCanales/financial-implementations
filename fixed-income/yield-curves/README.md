@@ -150,6 +150,8 @@ They are never used as a current fallback.
 
 ## Analytical evidence
 
+See the [curated evidence index](docs/evidence/index.md), [unified claims](docs/evidence/claims.md) and [verified saved-data reproduction contract](docs/evidence/reproduce.md).
+
 `outputs/research/` contains historical analytical, diagnostic, and experimental evidence generated during development. It is not the operational delivery mechanism.
 
 - `01_synthetic_reference`: synthetic known-truth reference evidence.
