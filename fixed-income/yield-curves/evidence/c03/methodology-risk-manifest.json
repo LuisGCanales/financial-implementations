@@ -1,0 +1,2866 @@
+{
+  "schema_version": "1.1",
+  "task": "C04c",
+  "recommendation": "C04C_READY_FOR_PR_REVIEW",
+  "review_state": "LOCAL_IMPLEMENTATION_READY_FOR_PR_REVIEW",
+  "repository": "LuisGCanales/financial-implementations",
+  "project": "fixed-income/yield-curves",
+  "original_financial_source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+  "curation_base_commit": "39f24aff2e2c5e13d2eb53ab43d4fee53cc18dae",
+  "curation_branch": "c04c-methodology-risk-evidence",
+  "curation_timestamp_utc": "2026-11-06T01:33:42.310841+00:00",
+  "current_repository_commit_semantics": "C04c work is uncommitted; base commit is not the historical financial execution identity.",
+  "selection_authority": {
+    "evidence_id": "C04a/artifact-selection.json",
+    "sha256": "cb309c110ca9d452e39d4207b9e9a1f7ba1a81ff722778cfaa8b9ea2a26f6919",
+    "size_bytes": 304794,
+    "availability": "EXTERNAL_ARCHIVE_NOT_DISTRIBUTED_NO_PUBLIC_DOWNLOAD"
+  },
+  "original_artifact_identity_authority": {
+    "evidence_id": "C03c/evidence-register.json",
+    "sha256": "9e6284000971486aac0f6a0ef469edd6d884718b07038381e3ccf0c79fb7b886",
+    "size_bytes": 1259619,
+    "availability": "EXTERNAL_ARCHIVE_NOT_DISTRIBUTED_NO_PUBLIC_DOWNLOAD"
+  },
+  "selected_count": 23,
+  "selected_original_bytes": 700982,
+  "copied_count": 17,
+  "copied_bytes": 393888,
+  "withheld_count": 4,
+  "withheld_bytes": 13777,
+  "classification": "VALIDATED_RESEARCH_EVIDENCE",
+  "section05_historical_baseline": "NO_TRACKED_HISTORICAL_BASELINE; no historical identity or frozen golden reference designation.",
+  "artifacts": [
+    {
+      "artifact_id": "M01",
+      "source_checkpoint": "C03b2b",
+      "original_source_evidence_id": "C03b2b/reports/C/compare_three_interpolation_methods/tables/06_interpolation_comparison/simultaneous_calibration_diagnostics.csv",
+      "original_sha256": "ea8873afc30ec0412eb09c8865d22d9e499407372472ad8fd833754796a03a62",
+      "size_bytes": 742,
+      "approved_destination": "evidence/c03/methodology/simultaneous_calibration_diagnostics.csv",
+      "public_relative_path": "evidence/c03/methodology/simultaneous_calibration_diagnostics.csv",
+      "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "original_workflow_id": "compare_three_interpolation_methods",
+      "original_script": {
+        "project_relative_path": "scripts/experiments/interpolation/compare_three_interpolation_methods.py",
+        "sha256": "04544e59a71fcafceecd62b470fc93ea419124c790ac32ef60d4edd5c606423b",
+        "size_bytes": 18828,
+        "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+      },
+      "original_execution_start_utc": "2026-11-05T01:28:32.061446+00:00",
+      "original_execution_end_utc": "2026-11-05T01:31:01.937738+00:00",
+      "classification": "VALIDATED_RESEARCH_EVIDENCE",
+      "methodology": "Simultaneous nodal least squares for LOG_LINEAR_DF, LINEAR_CONTINUOUS_ZERO, CUBIC_CONTINUOUS_ZERO.",
+      "units": "repricing/zero/forward bp; DF absolute; relative ppm in horizon metrics; solver counts/cost",
+      "limitations": "One smooth synthetic scenario; cubic is not universally best. Optimizer success/cost is separate from financial acceptance. Zero-plot grid starts reference+1 day; metrics use a distinct grid.",
+      "format_and_dimensions": {
+        "data_rows": 3,
+        "columns": 11,
+        "header": [
+          "scenario",
+          "reference_date",
+          "method",
+          "success",
+          "function_evaluations",
+          "jacobian_evaluations",
+          "cost",
+          "optimality",
+          "repricing_rmse_bp",
+          "max_abs_repricing_error_bp",
+          "optimizer_message"
+        ]
+      },
+      "status": "COPIED_UNCHANGED_FOR_REVIEW",
+      "figure_review_status": null,
+      "historical_comparison_scope": {
+        "status": "SAVED_HISTORICAL_PAIR_BYTE_IDENTICAL",
+        "historical_path": {
+          "project_relative_path": "outputs/research/tables/06_interpolation_comparison/simultaneous_calibration_diagnostics.csv",
+          "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+          "role": "TRACKED_HISTORICAL_COMPARISON_SOURCE_NOT_A_C04C_COPY"
+        },
+        "comparison_record": {
+          "evidence_id": "C03b2b/metadata/historical-numerical-comparisons.json",
+          "sha256": "8e1f44b05574f8a6f6a464c022b5d892bf1d1fd0185e033ecf9be33ce7a43b99",
+          "size_bytes": 65800,
+          "availability": "EXTERNAL_ARCHIVE_NOT_DISTRIBUTED_NO_PUBLIC_DOWNLOAD"
+        },
+        "scope": "Same scenario, engine, keys/grid and installed reference environment; inherited C03 evidence, no comparison experiment rerun."
+      }
+    },
+    {
+      "artifact_id": "M02",
+      "source_checkpoint": "C03b2b",
+      "original_source_evidence_id": "C03b2b/reports/C/compare_three_interpolation_methods/tables/06_interpolation_comparison/three_method_global_recovery.csv",
+      "original_sha256": "5a948bca410d6653dac8ef4fd7d54673ecf2f756b61b85d385e5bc6e9ab1e8cb",
+      "size_bytes": 1163,
+      "approved_destination": "evidence/c03/methodology/three_method_global_recovery.csv",
+      "public_relative_path": "evidence/c03/methodology/three_method_global_recovery.csv",
+      "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "original_workflow_id": "compare_three_interpolation_methods",
+      "original_script": {
+        "project_relative_path": "scripts/experiments/interpolation/compare_three_interpolation_methods.py",
+        "sha256": "04544e59a71fcafceecd62b470fc93ea419124c790ac32ef60d4edd5c606423b",
+        "size_bytes": 18828,
+        "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+      },
+      "original_execution_start_utc": "2026-11-05T01:28:32.061446+00:00",
+      "original_execution_end_utc": "2026-11-05T01:31:01.937738+00:00",
+      "classification": "VALIDATED_RESEARCH_EVIDENCE",
+      "methodology": "Simultaneous nodal least squares for LOG_LINEAR_DF, LINEAR_CONTINUOUS_ZERO, CUBIC_CONTINUOUS_ZERO.",
+      "units": "repricing/zero/forward bp; DF absolute; relative ppm in horizon metrics; solver counts/cost",
+      "limitations": "One smooth synthetic scenario; cubic is not universally best. Optimizer success/cost is separate from financial acceptance. Zero-plot grid starts reference+1 day; metrics use a distinct grid.",
+      "format_and_dimensions": {
+        "data_rows": 3,
+        "columns": 17,
+        "header": [
+          "scenario",
+          "reference_date",
+          "method",
+          "calibration_success",
+          "max_repricing_error_bp",
+          "repricing_rmse_bp",
+          "dense_df_rmse",
+          "dense_df_mae",
+          "dense_df_max_abs_error",
+          "zero_rmse_bp",
+          "zero_mae_bp",
+          "zero_max_abs_error_bp",
+          "forward_28d_rmse_bp",
+          "forward_28d_mae_bp",
+          "forward_28d_max_abs_error_bp",
+          "dense_grid_step_days",
+          "forward_period_days"
+        ]
+      },
+      "status": "COPIED_UNCHANGED_FOR_REVIEW",
+      "figure_review_status": null,
+      "historical_comparison_scope": {
+        "status": "SAVED_HISTORICAL_PAIR_BYTE_IDENTICAL",
+        "historical_path": {
+          "project_relative_path": "outputs/research/tables/06_interpolation_comparison/three_method_global_recovery.csv",
+          "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+          "role": "TRACKED_HISTORICAL_COMPARISON_SOURCE_NOT_A_C04C_COPY"
+        },
+        "comparison_record": {
+          "evidence_id": "C03b2b/metadata/historical-numerical-comparisons.json",
+          "sha256": "8e1f44b05574f8a6f6a464c022b5d892bf1d1fd0185e033ecf9be33ce7a43b99",
+          "size_bytes": 65800,
+          "availability": "EXTERNAL_ARCHIVE_NOT_DISTRIBUTED_NO_PUBLIC_DOWNLOAD"
+        },
+        "scope": "Same scenario, engine, keys/grid and installed reference environment; inherited C03 evidence, no comparison experiment rerun."
+      }
+    },
+    {
+      "artifact_id": "M03",
+      "source_checkpoint": "C03b2b",
+      "original_source_evidence_id": "C03b2b/reports/C/compare_three_interpolation_methods/tables/06_interpolation_comparison/three_method_recovery_by_horizon.csv",
+      "original_sha256": "420e1afa2bd0202d5a2353e833d73465cf8abd3995c2d763659e7c9990329a58",
+      "size_bytes": 5087,
+      "approved_destination": "evidence/c03/methodology/three_method_recovery_by_horizon.csv",
+      "public_relative_path": "evidence/c03/methodology/three_method_recovery_by_horizon.csv",
+      "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "original_workflow_id": "compare_three_interpolation_methods",
+      "original_script": {
+        "project_relative_path": "scripts/experiments/interpolation/compare_three_interpolation_methods.py",
+        "sha256": "04544e59a71fcafceecd62b470fc93ea419124c790ac32ef60d4edd5c606423b",
+        "size_bytes": 18828,
+        "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+      },
+      "original_execution_start_utc": "2026-11-05T01:28:32.061446+00:00",
+      "original_execution_end_utc": "2026-11-05T01:31:01.937738+00:00",
+      "classification": "VALIDATED_RESEARCH_EVIDENCE",
+      "methodology": "Simultaneous nodal least squares for LOG_LINEAR_DF, LINEAR_CONTINUOUS_ZERO, CUBIC_CONTINUOUS_ZERO.",
+      "units": "repricing/zero/forward bp; DF absolute; relative ppm in horizon metrics; solver counts/cost",
+      "limitations": "One smooth synthetic scenario; cubic is not universally best. Optimizer success/cost is separate from financial acceptance. Zero-plot grid starts reference+1 day; metrics use a distinct grid.",
+      "format_and_dimensions": {
+        "data_rows": 12,
+        "columns": 23,
+        "header": [
+          "scenario",
+          "reference_date",
+          "method",
+          "horizon",
+          "df_abs_observation_count",
+          "df_abs_bias",
+          "df_abs_mae",
+          "df_abs_rmse",
+          "df_abs_max_error",
+          "df_relative_bias_ppm",
+          "df_relative_mae_ppm",
+          "df_relative_rmse_ppm",
+          "df_relative_max_error_ppm",
+          "zero_observation_count",
+          "zero_bias_bp",
+          "zero_mae_bp",
+          "zero_rmse_bp",
+          "zero_max_error_bp",
+          "forward_observation_count",
+          "forward_bias_bp",
+          "forward_mae_bp",
+          "forward_rmse_bp",
+          "forward_max_error_bp"
+        ]
+      },
+      "status": "COPIED_UNCHANGED_FOR_REVIEW",
+      "figure_review_status": null,
+      "historical_comparison_scope": {
+        "status": "SAVED_HISTORICAL_PAIR_BYTE_IDENTICAL",
+        "historical_path": {
+          "project_relative_path": "outputs/research/tables/06_interpolation_comparison/three_method_recovery_by_horizon.csv",
+          "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+          "role": "TRACKED_HISTORICAL_COMPARISON_SOURCE_NOT_A_C04C_COPY"
+        },
+        "comparison_record": {
+          "evidence_id": "C03b2b/metadata/historical-numerical-comparisons.json",
+          "sha256": "8e1f44b05574f8a6f6a464c022b5d892bf1d1fd0185e033ecf9be33ce7a43b99",
+          "size_bytes": 65800,
+          "availability": "EXTERNAL_ARCHIVE_NOT_DISTRIBUTED_NO_PUBLIC_DOWNLOAD"
+        },
+        "scope": "Same scenario, engine, keys/grid and installed reference environment; inherited C03 evidence, no comparison experiment rerun."
+      }
+    },
+    {
+      "artifact_id": "M05",
+      "source_checkpoint": "C03b2b",
+      "original_source_evidence_id": "C03b2b/reports/C/plot_three_interpolation_methods/figures/06_interpolation_comparison/forward_28d_recovery_three_methods.png",
+      "original_sha256": "50b2b01fa4e45832d731a9f0eba120cdd22a7a2627cbdf9e495fe1652a13b195",
+      "size_bytes": 168893,
+      "approved_destination": "evidence/c03/methodology/forward_28d_recovery_three_methods.png",
+      "public_relative_path": "evidence/c03/methodology/forward_28d_recovery_three_methods.png",
+      "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "original_workflow_id": "plot_three_interpolation_methods",
+      "original_script": {
+        "project_relative_path": "scripts/experiments/interpolation/plot_three_interpolation_methods.py",
+        "sha256": "ac6d99ef642688756f972fc6f66792176d3e6ced76275f96b41c8dfb32425683",
+        "size_bytes": 27690,
+        "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+      },
+      "original_execution_start_utc": "2026-11-05T01:31:38.728110+00:00",
+      "original_execution_end_utc": "2026-11-05T01:33:55.682682+00:00",
+      "classification": "VALIDATED_RESEARCH_EVIDENCE",
+      "methodology": "All three methods calibrated simultaneously.",
+      "units": "y: annual simple forward %; x: ACT/360 years",
+      "limitations": "Synthetic FTIIE_KNOWN_TRUTH_V1 scenario; projected calendar; no observed-market or production-readiness conclusion.",
+      "format_and_dimensions": {
+        "width": 1980,
+        "height": 1078,
+        "mode": "RGBA"
+      },
+      "status": "COPIED_UNCHANGED_FOR_REVIEW",
+      "figure_review_status": "CAPTIONED",
+      "historical_comparison_scope": {
+        "status": "ORIGINAL_RUN_IDENTITY_ONLY",
+        "scope": "Current bytes verified; no historical figure/metadata equality or golden-reference designation claimed."
+      }
+    },
+    {
+      "artifact_id": "Q01",
+      "source_checkpoint": "C03b2b",
+      "original_source_evidence_id": "C03b2b/reports/B/report_quote_sensitivity/tables/05_quote_sensitivity/one_sided_quote_sensitivity_summary.csv",
+      "original_sha256": "57f1a55ecd7d62c83d428338e8a59b79b1efd4d6a1b1f0b802a1ef550565f7bd",
+      "size_bytes": 2104,
+      "approved_destination": "evidence/c03/section05/one_sided_quote_sensitivity_summary.csv",
+      "public_relative_path": "evidence/c03/section05/one_sided_quote_sensitivity_summary.csv",
+      "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "original_workflow_id": "report_quote_sensitivity",
+      "original_script": {
+        "project_relative_path": "scripts/experiments/bootstrap/report_quote_sensitivity.py",
+        "sha256": "8535699fc12dc5a7e9d55edcf9e17e381173eb0561933fdcc7521b48a409533b",
+        "size_bytes": 9720,
+        "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+      },
+      "original_execution_start_utc": "2026-11-05T01:23:18.674054+00:00",
+      "original_execution_end_utc": "2026-11-05T01:25:10.116619+00:00",
+      "classification": "VALIDATED_RESEARCH_EVIDENCE",
+      "methodology": "Sequential LOG_LINEAR_DF; one-sided +1 bp bump; 28D forwards, 7-day grid.",
+      "units": "DF change absolute; own-node zero change bp; forward response RMSE/max bp",
+      "limitations": "No tracked historical section 05 baseline; structural/internal financial tests passed in C03. Matrix rows=shocked quotes, columns=responding calibrated nodes. Local finite differences, not portfolio DV01/gamma. Forward summaries only; no saved full shocked forward series or node curvature matrix in this section.",
+      "format_and_dimensions": {
+        "data_rows": 15,
+        "columns": 12,
+        "header": [
+          "reference_date",
+          "shock_tenor",
+          "quote_bump_bp",
+          "own_node_delta_df",
+          "own_node_zero_change_bp",
+          "maximum_upstream_abs_df_change",
+          "upstream_invariance_pass",
+          "forward_period_days",
+          "grid_step_days",
+          "forward_rmse_bp",
+          "forward_max_abs_change_bp",
+          "forward_max_abs_change_date"
+        ]
+      },
+      "status": "COPIED_UNCHANGED_FOR_REVIEW",
+      "figure_review_status": null,
+      "historical_comparison_scope": {
+        "status": "NO_TRACKED_HISTORICAL_BASELINE",
+        "comparison_record": {
+          "evidence_id": "C03b2b/metadata/quote-sensitivity-validation.json",
+          "sha256": "33cced8cbf12d98bfd7bfa149ba3a15579697ac3b4201d143571c451ddb60596",
+          "size_bytes": 8054,
+          "availability": "EXTERNAL_ARCHIVE_NOT_DISTRIBUTED_NO_PUBLIC_DOWNLOAD"
+        },
+        "scope": "Structural and internal financial tests passed in C03. No historical equality claimed."
+      }
+    },
+    {
+      "artifact_id": "Q02",
+      "source_checkpoint": "C03b2b",
+      "original_source_evidence_id": "C03b2b/reports/B/report_quote_sensitivity/tables/05_quote_sensitivity/one_sided_zero_sensitivity_matrix.csv",
+      "original_sha256": "574a8c6cba4851c53437a3c1af16b661be5865f5909cdfba33521dd9c470f2b4",
+      "size_bytes": 3167,
+      "approved_destination": "evidence/c03/section05/one_sided_zero_sensitivity_matrix.csv",
+      "public_relative_path": "evidence/c03/section05/one_sided_zero_sensitivity_matrix.csv",
+      "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "original_workflow_id": "report_quote_sensitivity",
+      "original_script": {
+        "project_relative_path": "scripts/experiments/bootstrap/report_quote_sensitivity.py",
+        "sha256": "8535699fc12dc5a7e9d55edcf9e17e381173eb0561933fdcc7521b48a409533b",
+        "size_bytes": 9720,
+        "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+      },
+      "original_execution_start_utc": "2026-11-05T01:23:18.674054+00:00",
+      "original_execution_end_utc": "2026-11-05T01:25:10.116619+00:00",
+      "classification": "VALIDATED_RESEARCH_EVIDENCE",
+      "methodology": "Sequential LOG_LINEAR_DF; one-sided +1 bp bump; 28D forwards, 7-day grid.",
+      "units": "node zero bp / quote bp",
+      "limitations": "No tracked historical section 05 baseline; structural/internal financial tests passed in C03. Matrix rows=shocked quotes, columns=responding calibrated nodes. Local finite differences, not portfolio DV01/gamma. Forward summaries only; no saved full shocked forward series or node curvature matrix in this section.",
+      "format_and_dimensions": {
+        "data_rows": 15,
+        "columns": 16,
+        "header": [
+          "shock_tenor",
+          "1M",
+          "2M",
+          "3M",
+          "6M",
+          "9M",
+          "1Y",
+          "2Y",
+          "3Y",
+          "4Y",
+          "5Y",
+          "7Y",
+          "10Y",
+          "15Y",
+          "20Y",
+          "30Y"
+        ]
+      },
+      "status": "COPIED_UNCHANGED_FOR_REVIEW",
+      "figure_review_status": null,
+      "historical_comparison_scope": {
+        "status": "NO_TRACKED_HISTORICAL_BASELINE",
+        "comparison_record": {
+          "evidence_id": "C03b2b/metadata/quote-sensitivity-validation.json",
+          "sha256": "33cced8cbf12d98bfd7bfa149ba3a15579697ac3b4201d143571c451ddb60596",
+          "size_bytes": 8054,
+          "availability": "EXTERNAL_ARCHIVE_NOT_DISTRIBUTED_NO_PUBLIC_DOWNLOAD"
+        },
+        "scope": "Structural and internal financial tests passed in C03. No historical equality claimed."
+      }
+    },
+    {
+      "artifact_id": "Q03",
+      "source_checkpoint": "C03b2b",
+      "original_source_evidence_id": "C03b2b/reports/B/report_central_quote_sensitivity/tables/05_quote_sensitivity/central_quote_sensitivity_summary.csv",
+      "original_sha256": "ff2ad6dfe8424896d1fc5ef9c4e78ce98c1a04f9d9170e3326d9c1439c5bb390",
+      "size_bytes": 2636,
+      "approved_destination": "evidence/c03/section05/central_quote_sensitivity_summary.csv",
+      "public_relative_path": "evidence/c03/section05/central_quote_sensitivity_summary.csv",
+      "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "original_workflow_id": "report_central_quote_sensitivity",
+      "original_script": {
+        "project_relative_path": "scripts/experiments/bootstrap/report_central_quote_sensitivity.py",
+        "sha256": "630afb2aafbe4090d637b92dfd1895acd0e6c594d3350c44ae9588cfe3077aff",
+        "size_bytes": 11648,
+        "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+      },
+      "original_execution_start_utc": "2026-11-05T01:25:10.120345+00:00",
+      "original_execution_end_utc": "2026-11-05T01:28:32.001072+00:00",
+      "classification": "VALIDATED_RESEARCH_EVIDENCE",
+      "methodology": "Sequential LOG_LINEAR_DF; central ±1 bp bumps; 28D forwards, 7-day grid.",
+      "units": "sensitivity bp/bp; curvature bp/bp²; dates/days",
+      "limitations": "No tracked historical section 05 baseline; structural/internal financial tests passed in C03. Matrix rows=shocked quotes, columns=responding calibrated nodes. Local finite differences, not portfolio DV01/gamma. Forward summaries only; no saved full shocked forward series or node curvature matrix in this section.",
+      "format_and_dimensions": {
+        "data_rows": 15,
+        "columns": 12,
+        "header": [
+          "reference_date",
+          "shock_tenor",
+          "symmetric_bump_bp",
+          "own_node_sensitivity_bp_per_bp",
+          "own_node_curvature_bp_per_bp2",
+          "forward_period_days",
+          "grid_step_days",
+          "forward_sensitivity_rmse",
+          "forward_max_abs_sensitivity",
+          "forward_max_abs_sensitivity_date",
+          "forward_curvature_rmse",
+          "forward_max_abs_curvature"
+        ]
+      },
+      "status": "COPIED_UNCHANGED_FOR_REVIEW",
+      "figure_review_status": null,
+      "historical_comparison_scope": {
+        "status": "NO_TRACKED_HISTORICAL_BASELINE",
+        "comparison_record": {
+          "evidence_id": "C03b2b/metadata/quote-sensitivity-validation.json",
+          "sha256": "33cced8cbf12d98bfd7bfa149ba3a15579697ac3b4201d143571c451ddb60596",
+          "size_bytes": 8054,
+          "availability": "EXTERNAL_ARCHIVE_NOT_DISTRIBUTED_NO_PUBLIC_DOWNLOAD"
+        },
+        "scope": "Structural and internal financial tests passed in C03. No historical equality claimed."
+      }
+    },
+    {
+      "artifact_id": "Q04",
+      "source_checkpoint": "C03b2b",
+      "original_source_evidence_id": "C03b2b/reports/B/report_central_quote_sensitivity/tables/05_quote_sensitivity/central_zero_sensitivity_matrix.csv",
+      "original_sha256": "d4d7a732e21a4a06e70a254ba6b096a356edf92b5a4f67cd0e819c5e0112da1e",
+      "size_bytes": 3158,
+      "approved_destination": "evidence/c03/section05/central_zero_sensitivity_matrix.csv",
+      "public_relative_path": "evidence/c03/section05/central_zero_sensitivity_matrix.csv",
+      "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "original_workflow_id": "report_central_quote_sensitivity",
+      "original_script": {
+        "project_relative_path": "scripts/experiments/bootstrap/report_central_quote_sensitivity.py",
+        "sha256": "630afb2aafbe4090d637b92dfd1895acd0e6c594d3350c44ae9588cfe3077aff",
+        "size_bytes": 11648,
+        "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+      },
+      "original_execution_start_utc": "2026-11-05T01:25:10.120345+00:00",
+      "original_execution_end_utc": "2026-11-05T01:28:32.001072+00:00",
+      "classification": "VALIDATED_RESEARCH_EVIDENCE",
+      "methodology": "Sequential LOG_LINEAR_DF; central ±1 bp bumps; 28D forwards, 7-day grid.",
+      "units": "node zero bp / quote bp",
+      "limitations": "No tracked historical section 05 baseline; structural/internal financial tests passed in C03. Matrix rows=shocked quotes, columns=responding calibrated nodes. Local finite differences, not portfolio DV01/gamma. Forward summaries only; no saved full shocked forward series or node curvature matrix in this section.",
+      "format_and_dimensions": {
+        "data_rows": 15,
+        "columns": 16,
+        "header": [
+          "shock_tenor",
+          "1M",
+          "2M",
+          "3M",
+          "6M",
+          "9M",
+          "1Y",
+          "2Y",
+          "3Y",
+          "4Y",
+          "5Y",
+          "7Y",
+          "10Y",
+          "15Y",
+          "20Y",
+          "30Y"
+        ]
+      },
+      "status": "COPIED_UNCHANGED_FOR_REVIEW",
+      "figure_review_status": null,
+      "historical_comparison_scope": {
+        "status": "NO_TRACKED_HISTORICAL_BASELINE",
+        "comparison_record": {
+          "evidence_id": "C03b2b/metadata/quote-sensitivity-validation.json",
+          "sha256": "33cced8cbf12d98bfd7bfa149ba3a15579697ac3b4201d143571c451ddb60596",
+          "size_bytes": 8054,
+          "availability": "EXTERNAL_ARCHIVE_NOT_DISTRIBUTED_NO_PUBLIC_DOWNLOAD"
+        },
+        "scope": "Structural and internal financial tests passed in C03. No historical equality claimed."
+      }
+    },
+    {
+      "artifact_id": "Q05",
+      "source_checkpoint": "C03b2b",
+      "original_source_evidence_id": "C03b2b/reports/B/report_central_quote_sensitivity/tables/05_quote_sensitivity/own_node_local_curvature.csv",
+      "original_sha256": "6accab217ab1c2215cd48fdf6b1b25f55c89adb4e4ee9694c1976afed79d0ca5",
+      "size_bytes": 1008,
+      "approved_destination": "evidence/c03/section05/own_node_local_curvature.csv",
+      "public_relative_path": "evidence/c03/section05/own_node_local_curvature.csv",
+      "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "original_workflow_id": "report_central_quote_sensitivity",
+      "original_script": {
+        "project_relative_path": "scripts/experiments/bootstrap/report_central_quote_sensitivity.py",
+        "sha256": "630afb2aafbe4090d637b92dfd1895acd0e6c594d3350c44ae9588cfe3077aff",
+        "size_bytes": 11648,
+        "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+      },
+      "original_execution_start_utc": "2026-11-05T01:25:10.120345+00:00",
+      "original_execution_end_utc": "2026-11-05T01:28:32.001072+00:00",
+      "classification": "VALIDATED_RESEARCH_EVIDENCE",
+      "methodology": "Sequential LOG_LINEAR_DF; central ±1 bp bumps; 28D forwards, 7-day grid.",
+      "units": "sensitivity bp/bp; own-node zero curvature bp/bp²",
+      "limitations": "No tracked historical section 05 baseline; structural/internal financial tests passed in C03. Matrix rows=shocked quotes, columns=responding calibrated nodes. Local finite differences, not portfolio DV01/gamma. Forward summaries only; no saved full shocked forward series or node curvature matrix in this section.",
+      "format_and_dimensions": {
+        "data_rows": 15,
+        "columns": 5,
+        "header": [
+          "reference_date",
+          "shock_tenor",
+          "symmetric_bump_bp",
+          "own_node_sensitivity_bp_per_bp",
+          "own_node_curvature_bp_per_bp2"
+        ]
+      },
+      "status": "COPIED_UNCHANGED_FOR_REVIEW",
+      "figure_review_status": null,
+      "historical_comparison_scope": {
+        "status": "NO_TRACKED_HISTORICAL_BASELINE",
+        "comparison_record": {
+          "evidence_id": "C03b2b/metadata/quote-sensitivity-validation.json",
+          "sha256": "33cced8cbf12d98bfd7bfa149ba3a15579697ac3b4201d143571c451ddb60596",
+          "size_bytes": 8054,
+          "availability": "EXTERNAL_ARCHIVE_NOT_DISTRIBUTED_NO_PUBLIC_DOWNLOAD"
+        },
+        "scope": "Structural and internal financial tests passed in C03. No historical equality claimed."
+      }
+    },
+    {
+      "artifact_id": "G01",
+      "source_checkpoint": "C03b2a",
+      "original_source_evidence_id": "C03b2a/full-global-root/tables/07_global_sensitivity/global_sensitivity_summary.csv",
+      "original_sha256": "42e571ff3c58cf3a87cbeac3573818dab1329136722d38bc88ea53b899416bb9",
+      "size_bytes": 19909,
+      "approved_destination": "evidence/c03/global/global_sensitivity_summary.csv",
+      "public_relative_path": "evidence/c03/global/global_sensitivity_summary.csv",
+      "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "original_workflow_id": "global",
+      "original_script": {
+        "project_relative_path": "scripts/experiments/sensitivity/report_global_sensitivity.py",
+        "sha256": "c14a7222a61082783edc7585e04ee071088fe777ef27e53f221086e8e7f984fe",
+        "size_bytes": 45543,
+        "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+      },
+      "original_execution_start_utc": "2026-11-04T20:48:51.505918+00:00",
+      "original_execution_end_utc": "2026-11-04T22:08:53.993316+00:00",
+      "classification": "VALIDATED_RESEARCH_EVIDENCE",
+      "methodology": "Simultaneous calibration; ±1 bp one-factor shocks for each of 15 quotes across three methods.",
+      "units": "node/forward sensitivity bp/bp; curvature bp/bp²; off-diagonal share fraction",
+      "limitations": "45 shock summary rows; rows=shocked quote, columns=responding nodes in matrices. Do not extend sequential upstream-zero identity to simultaneous solvers; tiny numerical responses are not exact zeros. No portfolio monetary sensitivity is measured.",
+      "format_and_dimensions": {
+        "data_rows": 45,
+        "columns": 29,
+        "header": [
+          "scenario",
+          "reference_date",
+          "method",
+          "calibration_engine",
+          "bump_bp",
+          "shock_index",
+          "shock_tenor",
+          "own_node_sensitivity_bp_per_bp",
+          "own_node_curvature_bp_per_bp2",
+          "maximum_abs_node_sensitivity_bp_per_bp",
+          "maximum_abs_node_sensitivity_tenor",
+          "total_abs_node_sensitivity_bp_per_bp",
+          "off_diagonal_abs_sensitivity_bp_per_bp",
+          "off_diagonal_share",
+          "plus_calibration_success",
+          "minus_calibration_success",
+          "plus_max_abs_repricing_error_bp",
+          "minus_max_abs_repricing_error_bp",
+          "forward_observation_count",
+          "forward_sensitivity_bias_bp_per_bp",
+          "forward_sensitivity_mae_bp_per_bp",
+          "forward_sensitivity_rmse_bp_per_bp",
+          "forward_max_abs_sensitivity_bp_per_bp",
+          "forward_max_abs_sensitivity_date",
+          "forward_curvature_rmse_bp_per_bp2",
+          "forward_max_abs_curvature_bp_per_bp2",
+          "forward_max_abs_curvature_date",
+          "grid_step_days",
+          "forward_period_days"
+        ]
+      },
+      "status": "COPIED_UNCHANGED_FOR_REVIEW",
+      "figure_review_status": null,
+      "historical_comparison_scope": {
+        "status": "SAVED_GLOBAL_FINANCIAL_VALUES_EXACT",
+        "comparison_record": {
+          "evidence_id": "C03b2a/metadata/full-historical-numerical-comparison.json",
+          "sha256": "b3a482a6bf4295cdbd029ebd35aa2807d0cbe976285979f065e010cedb56ed86",
+          "size_bytes": 61401,
+          "availability": "EXTERNAL_ARCHIVE_NOT_DISTRIBUTED_NO_PUBLIC_DOWNLOAD"
+        },
+        "scope": "Only global_calibration_diagnostics elapsed seconds differ (three method cells); runtime is not a financial result. Figures excluded from numerical identity."
+      }
+    },
+    {
+      "artifact_id": "G02",
+      "source_checkpoint": "C03b2a",
+      "original_source_evidence_id": "C03b2a/full-global-root/tables/07_global_sensitivity/global_calibration_diagnostics.csv",
+      "original_sha256": "a30987b133c522a13eb73dfaf04851db4fc8d4f0b722816381cd824d00fc7f01",
+      "size_bytes": 833,
+      "approved_destination": "evidence/c03/global/global_calibration_diagnostics.csv",
+      "public_relative_path": "evidence/c03/global/global_calibration_diagnostics.csv",
+      "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "original_workflow_id": "global",
+      "original_script": {
+        "project_relative_path": "scripts/experiments/sensitivity/report_global_sensitivity.py",
+        "sha256": "c14a7222a61082783edc7585e04ee071088fe777ef27e53f221086e8e7f984fe",
+        "size_bytes": 45543,
+        "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+      },
+      "original_execution_start_utc": "2026-11-04T20:48:51.505918+00:00",
+      "original_execution_end_utc": "2026-11-04T22:08:53.993316+00:00",
+      "classification": "VALIDATED_RESEARCH_EVIDENCE",
+      "methodology": "Simultaneous calibration; ±1 bp one-factor shocks for each of 15 quotes across three methods.",
+      "units": "repricing bp; optimizer diagnostics; observed runtime seconds",
+      "limitations": "45 shock summary rows; rows=shocked quote, columns=responding nodes in matrices. Do not extend sequential upstream-zero identity to simultaneous solvers; tiny numerical responses are not exact zeros. No portfolio monetary sensitivity is measured.",
+      "format_and_dimensions": {
+        "data_rows": 3,
+        "columns": 12,
+        "header": [
+          "scenario",
+          "reference_date",
+          "method",
+          "success",
+          "function_evaluations",
+          "jacobian_evaluations",
+          "cost",
+          "optimality",
+          "repricing_rmse_bp",
+          "max_abs_repricing_error_bp",
+          "optimizer_message",
+          "global_sensitivity_elapsed_seconds"
+        ]
+      },
+      "status": "COPIED_UNCHANGED_FOR_REVIEW",
+      "figure_review_status": null,
+      "historical_comparison_scope": {
+        "status": "SAVED_GLOBAL_FINANCIAL_VALUES_EXACT",
+        "comparison_record": {
+          "evidence_id": "C03b2a/metadata/full-historical-numerical-comparison.json",
+          "sha256": "b3a482a6bf4295cdbd029ebd35aa2807d0cbe976285979f065e010cedb56ed86",
+          "size_bytes": 61401,
+          "availability": "EXTERNAL_ARCHIVE_NOT_DISTRIBUTED_NO_PUBLIC_DOWNLOAD"
+        },
+        "scope": "Only global_calibration_diagnostics elapsed seconds differ (three method cells); runtime is not a financial result. Figures excluded from numerical identity."
+      }
+    },
+    {
+      "artifact_id": "G03",
+      "source_checkpoint": "C03b2a",
+      "original_source_evidence_id": "C03b2a/full-global-root/tables/07_global_sensitivity/node_zero_sensitivity_matrix_log_linear_df.csv",
+      "original_sha256": "bef56ddcb4695f551c22a8018e51e377df868e827422ea1f9f160570000bfb64",
+      "size_bytes": 4965,
+      "approved_destination": "evidence/c03/global/node_zero_sensitivity_matrix_log_linear_df.csv",
+      "public_relative_path": "evidence/c03/global/node_zero_sensitivity_matrix_log_linear_df.csv",
+      "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "original_workflow_id": "global",
+      "original_script": {
+        "project_relative_path": "scripts/experiments/sensitivity/report_global_sensitivity.py",
+        "sha256": "c14a7222a61082783edc7585e04ee071088fe777ef27e53f221086e8e7f984fe",
+        "size_bytes": 45543,
+        "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+      },
+      "original_execution_start_utc": "2026-11-04T20:48:51.505918+00:00",
+      "original_execution_end_utc": "2026-11-04T22:08:53.993316+00:00",
+      "classification": "VALIDATED_RESEARCH_EVIDENCE",
+      "methodology": "Simultaneous calibration; ±1 bp one-factor shocks for each of 15 quotes across three methods.",
+      "units": "node zero bp / quote bp",
+      "limitations": "45 shock summary rows; rows=shocked quote, columns=responding nodes in matrices. Do not extend sequential upstream-zero identity to simultaneous solvers; tiny numerical responses are not exact zeros. No portfolio monetary sensitivity is measured.",
+      "format_and_dimensions": {
+        "data_rows": 15,
+        "columns": 16,
+        "header": [
+          "shock_tenor",
+          "1M",
+          "2M",
+          "3M",
+          "6M",
+          "9M",
+          "1Y",
+          "2Y",
+          "3Y",
+          "4Y",
+          "5Y",
+          "7Y",
+          "10Y",
+          "15Y",
+          "20Y",
+          "30Y"
+        ]
+      },
+      "status": "COPIED_UNCHANGED_FOR_REVIEW",
+      "figure_review_status": null,
+      "historical_comparison_scope": {
+        "status": "SAVED_GLOBAL_FINANCIAL_VALUES_EXACT",
+        "comparison_record": {
+          "evidence_id": "C03b2a/metadata/full-historical-numerical-comparison.json",
+          "sha256": "b3a482a6bf4295cdbd029ebd35aa2807d0cbe976285979f065e010cedb56ed86",
+          "size_bytes": 61401,
+          "availability": "EXTERNAL_ARCHIVE_NOT_DISTRIBUTED_NO_PUBLIC_DOWNLOAD"
+        },
+        "scope": "Only global_calibration_diagnostics elapsed seconds differ (three method cells); runtime is not a financial result. Figures excluded from numerical identity."
+      }
+    },
+    {
+      "artifact_id": "G04",
+      "source_checkpoint": "C03b2a",
+      "original_source_evidence_id": "C03b2a/full-global-root/tables/07_global_sensitivity/node_zero_sensitivity_matrix_linear_continuous_zero.csv",
+      "original_sha256": "6071b4c13b315f30850c2fe295640cd7fad927a68c262c87891608096212d28b",
+      "size_bytes": 5051,
+      "approved_destination": "evidence/c03/global/node_zero_sensitivity_matrix_linear_continuous_zero.csv",
+      "public_relative_path": "evidence/c03/global/node_zero_sensitivity_matrix_linear_continuous_zero.csv",
+      "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "original_workflow_id": "global",
+      "original_script": {
+        "project_relative_path": "scripts/experiments/sensitivity/report_global_sensitivity.py",
+        "sha256": "c14a7222a61082783edc7585e04ee071088fe777ef27e53f221086e8e7f984fe",
+        "size_bytes": 45543,
+        "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+      },
+      "original_execution_start_utc": "2026-11-04T20:48:51.505918+00:00",
+      "original_execution_end_utc": "2026-11-04T22:08:53.993316+00:00",
+      "classification": "VALIDATED_RESEARCH_EVIDENCE",
+      "methodology": "Simultaneous calibration; ±1 bp one-factor shocks for each of 15 quotes across three methods.",
+      "units": "node zero bp / quote bp",
+      "limitations": "45 shock summary rows; rows=shocked quote, columns=responding nodes in matrices. Do not extend sequential upstream-zero identity to simultaneous solvers; tiny numerical responses are not exact zeros. No portfolio monetary sensitivity is measured.",
+      "format_and_dimensions": {
+        "data_rows": 15,
+        "columns": 16,
+        "header": [
+          "shock_tenor",
+          "1M",
+          "2M",
+          "3M",
+          "6M",
+          "9M",
+          "1Y",
+          "2Y",
+          "3Y",
+          "4Y",
+          "5Y",
+          "7Y",
+          "10Y",
+          "15Y",
+          "20Y",
+          "30Y"
+        ]
+      },
+      "status": "COPIED_UNCHANGED_FOR_REVIEW",
+      "figure_review_status": null,
+      "historical_comparison_scope": {
+        "status": "SAVED_GLOBAL_FINANCIAL_VALUES_EXACT",
+        "comparison_record": {
+          "evidence_id": "C03b2a/metadata/full-historical-numerical-comparison.json",
+          "sha256": "b3a482a6bf4295cdbd029ebd35aa2807d0cbe976285979f065e010cedb56ed86",
+          "size_bytes": 61401,
+          "availability": "EXTERNAL_ARCHIVE_NOT_DISTRIBUTED_NO_PUBLIC_DOWNLOAD"
+        },
+        "scope": "Only global_calibration_diagnostics elapsed seconds differ (three method cells); runtime is not a financial result. Figures excluded from numerical identity."
+      }
+    },
+    {
+      "artifact_id": "G05",
+      "source_checkpoint": "C03b2a",
+      "original_source_evidence_id": "C03b2a/full-global-root/tables/07_global_sensitivity/node_zero_sensitivity_matrix_cubic_continuous_zero.csv",
+      "original_sha256": "a8dc5e5da4aa9db2913ddbd70874431c2750831d3d33ad0be7c34d45b81606fb",
+      "size_bytes": 5034,
+      "approved_destination": "evidence/c03/global/node_zero_sensitivity_matrix_cubic_continuous_zero.csv",
+      "public_relative_path": "evidence/c03/global/node_zero_sensitivity_matrix_cubic_continuous_zero.csv",
+      "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "original_workflow_id": "global",
+      "original_script": {
+        "project_relative_path": "scripts/experiments/sensitivity/report_global_sensitivity.py",
+        "sha256": "c14a7222a61082783edc7585e04ee071088fe777ef27e53f221086e8e7f984fe",
+        "size_bytes": 45543,
+        "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+      },
+      "original_execution_start_utc": "2026-11-04T20:48:51.505918+00:00",
+      "original_execution_end_utc": "2026-11-04T22:08:53.993316+00:00",
+      "classification": "VALIDATED_RESEARCH_EVIDENCE",
+      "methodology": "Simultaneous calibration; ±1 bp one-factor shocks for each of 15 quotes across three methods.",
+      "units": "node zero bp / quote bp",
+      "limitations": "45 shock summary rows; rows=shocked quote, columns=responding nodes in matrices. Do not extend sequential upstream-zero identity to simultaneous solvers; tiny numerical responses are not exact zeros. No portfolio monetary sensitivity is measured.",
+      "format_and_dimensions": {
+        "data_rows": 15,
+        "columns": 16,
+        "header": [
+          "shock_tenor",
+          "1M",
+          "2M",
+          "3M",
+          "6M",
+          "9M",
+          "1Y",
+          "2Y",
+          "3Y",
+          "4Y",
+          "5Y",
+          "7Y",
+          "10Y",
+          "15Y",
+          "20Y",
+          "30Y"
+        ]
+      },
+      "status": "COPIED_UNCHANGED_FOR_REVIEW",
+      "figure_review_status": null,
+      "historical_comparison_scope": {
+        "status": "SAVED_GLOBAL_FINANCIAL_VALUES_EXACT",
+        "comparison_record": {
+          "evidence_id": "C03b2a/metadata/full-historical-numerical-comparison.json",
+          "sha256": "b3a482a6bf4295cdbd029ebd35aa2807d0cbe976285979f065e010cedb56ed86",
+          "size_bytes": 61401,
+          "availability": "EXTERNAL_ARCHIVE_NOT_DISTRIBUTED_NO_PUBLIC_DOWNLOAD"
+        },
+        "scope": "Only global_calibration_diagnostics elapsed seconds differ (three method cells); runtime is not a financial result. Figures excluded from numerical identity."
+      }
+    },
+    {
+      "artifact_id": "H01",
+      "source_checkpoint": "C03b2a",
+      "original_source_evidence_id": "C03b2a/full-global-root/tables/07_global_sensitivity/forward_sensitivity_heatmap_scale_diagnostics.csv",
+      "original_sha256": "39315d80286b50ced878b07f24b44c97213a285c4b2f72d7a3d94424dbc2a307",
+      "size_bytes": 893,
+      "approved_destination": "evidence/c03/heatmaps/forward_sensitivity_heatmap_scale_diagnostics.csv",
+      "public_relative_path": "evidence/c03/heatmaps/forward_sensitivity_heatmap_scale_diagnostics.csv",
+      "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "original_workflow_id": "heatmaps",
+      "original_script": {
+        "project_relative_path": "scripts/experiments/sensitivity/plot_global_forward_sensitivity_heatmaps.py",
+        "sha256": "c5b62462070a2cd1ac7ba1d51553d6352bbc55b75869fa21d4201d2cc67ce754",
+        "size_bytes": 27630,
+        "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+      },
+      "original_execution_start_utc": "2026-11-04T22:10:22.202233+00:00",
+      "original_execution_end_utc": "2026-11-04T22:10:38.372494+00:00",
+      "classification": "VALIDATED_RESEARCH_EVIDENCE",
+      "methodology": "Pooled absolute 99.5th percentile robust cap; full pooled absolute maximum.",
+      "units": "absolute sensitivity bp/bp; clipped fractions 0–1",
+      "limitations": "Synthetic FTIIE_KNOWN_TRUTH_V1 scenario; projected calendar; no observed-market or production-readiness conclusion.",
+      "format_and_dimensions": {
+        "data_rows": 4,
+        "columns": 11,
+        "header": [
+          "scope",
+          "method",
+          "observation_count",
+          "abs_max_bp_per_bp",
+          "abs_q95_bp_per_bp",
+          "abs_q99_bp_per_bp",
+          "abs_q995_bp_per_bp",
+          "abs_q999_bp_per_bp",
+          "common_robust_cap_bp_per_bp",
+          "common_full_cap_bp_per_bp",
+          "fraction_clipped_at_robust_cap"
+        ]
+      },
+      "status": "COPIED_UNCHANGED_FOR_REVIEW",
+      "figure_review_status": null,
+      "historical_comparison_scope": {
+        "status": "SAVED_GLOBAL_FINANCIAL_VALUES_EXACT",
+        "comparison_record": {
+          "evidence_id": "C03b2a/metadata/full-historical-numerical-comparison.json",
+          "sha256": "b3a482a6bf4295cdbd029ebd35aa2807d0cbe976285979f065e010cedb56ed86",
+          "size_bytes": 61401,
+          "availability": "EXTERNAL_ARCHIVE_NOT_DISTRIBUTED_NO_PUBLIC_DOWNLOAD"
+        },
+        "scope": "Only global_calibration_diagnostics elapsed seconds differ (three method cells); runtime is not a financial result. Figures excluded from numerical identity."
+      }
+    },
+    {
+      "artifact_id": "H03",
+      "source_checkpoint": "C03b2a",
+      "original_source_evidence_id": "C03b2a/full-global-root/figures/07_global_sensitivity/forward_sensitivity_heatmap_cubic_continuous_zero_robust_common_scale.png",
+      "original_sha256": "8d406ed6f7390f7f09d00bc8448afaecafd54b2ee71c5361672f2f8c0874adc4",
+      "size_bytes": 151971,
+      "approved_destination": "evidence/c03/heatmaps/forward_sensitivity_heatmap_cubic_continuous_zero_robust_common_scale.png",
+      "public_relative_path": "evidence/c03/heatmaps/forward_sensitivity_heatmap_cubic_continuous_zero_robust_common_scale.png",
+      "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "original_workflow_id": "heatmaps",
+      "original_script": {
+        "project_relative_path": "scripts/experiments/sensitivity/plot_global_forward_sensitivity_heatmaps.py",
+        "sha256": "c5b62462070a2cd1ac7ba1d51553d6352bbc55b75869fa21d4201d2cc67ce754",
+        "size_bytes": 27630,
+        "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+      },
+      "original_execution_start_utc": "2026-11-04T22:10:22.202233+00:00",
+      "original_execution_end_utc": "2026-11-04T22:10:38.372494+00:00",
+      "classification": "PRESENTATION_DERIVATIVE_FROM_VALIDATED_DATA",
+      "methodology": "28D simple forwards, 7-day starts; central ±1 bp quotes; common cross-method color caps.",
+      "units": "forward bp / quote bp; x: ACT/360 years",
+      "limitations": "Synthetic FTIIE_KNOWN_TRUTH_V1 scenario; projected calendar; no observed-market or production-readiness conclusion.",
+      "format_and_dimensions": {
+        "width": 2384,
+        "height": 1471,
+        "mode": "RGBA"
+      },
+      "status": "APPROVED_PRESENTATION_DERIVATIVE_FOR_PR_REVIEW",
+      "figure_review_status": "HUMAN_APPROVED_C04c_F02",
+      "historical_comparison_scope": {
+        "status": "ORIGINAL_RUN_IDENTITY_ONLY",
+        "scope": "Current bytes verified; no historical figure/metadata equality or golden-reference designation claimed."
+      },
+      "original_historical_exhibit": {
+        "evidence_id": "C03b2a/full-global-root/figures/07_global_sensitivity/forward_sensitivity_heatmap_cubic_continuous_zero_robust_common_scale.png",
+        "sha256": "8d406ed6f7390f7f09d00bc8448afaecafd54b2ee71c5361672f2f8c0874adc4",
+        "size_bytes": 148171,
+        "format_and_dimensions": {
+          "width": 2394,
+          "height": 1477,
+          "mode": "RGBA"
+        },
+        "financial_source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+        "workflow_id": "heatmaps",
+        "script": {
+          "project_relative_path": "scripts/experiments/sensitivity/plot_global_forward_sensitivity_heatmaps.py",
+          "sha256": "c5b62462070a2cd1ac7ba1d51553d6352bbc55b75869fa21d4201d2cc67ce754",
+          "size_bytes": 27630,
+          "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+        },
+        "execution_start_utc": "2026-11-04T22:10:22.202233+00:00",
+        "execution_end_utc": "2026-11-04T22:10:38.372494+00:00",
+        "classification": "VALIDATED_RESEARCH_EVIDENCE",
+        "availability": "EXTERNAL_ARCHIVE_NOT_DISTRIBUTED_NO_PUBLIC_DOWNLOAD"
+      },
+      "published_derivative": {
+        "classification": "PRESENTATION_DERIVATIVE_FROM_VALIDATED_DATA",
+        "sha256": "30c92c26b5ddc2774c0d8c700f3204636f09461f471be7c9f004d6fef875ed3a",
+        "public_relative_path": "evidence/c03/heatmaps/forward_sensitivity_heatmap_cubic_continuous_zero_robust_common_scale.png",
+        "size_bytes": 151971,
+        "format_and_dimensions": {
+          "width": 2384,
+          "height": 1471,
+          "mode": "RGBA"
+        },
+        "rendering_script": "scripts/experiments/sensitivity/plot_global_forward_sensitivity_heatmaps.py",
+        "rendering_source_revision": {
+          "status": "UNCOMMITTED_WORKTREE_SOURCE",
+          "parent_commit": "39f24aff2e2c5e13d2eb53ab43d4fee53cc18dae",
+          "script_sha256": "3c3844dd9f133f88199fd4de1c2d48ede9de499ee1d0dabbcbc612b496a6c4e8",
+          "scope": "C04c-F01 presentation-only save_forward_heatmap layout and in-domain markers; not a new financial execution commit."
+        },
+        "rendering_environment": {
+          "python": "3.11.15 (main, Mar  3 2026, 09:26:23) [GCC 11.4.0]",
+          "interpreter": "project .venv Python 3.11",
+          "platform": "Linux-5.15.90.3-microsoft-standard-WSL2+-x86_64-with-glibc2.35",
+          "packages": {
+            "matplotlib": "3.11.2",
+            "numpy": "2.4.6",
+            "pillow": "12.3.0",
+            "scipy": "1.17.1"
+          },
+          "matplotlib_backend": "Agg"
+        },
+        "rendering_start_utc": "2026-11-06T02:38:39.785383+00:00",
+        "rendering_end_utc": "2026-11-06T02:39:24.253075+00:00",
+        "curation_timestamp_utc": "2026-11-06T02:54:41.776304+00:00",
+        "source_numerical_data": [
+          {
+            "evidence_id": "C03b2a/full-global-root/tables/07_global_sensitivity/global_forward_sensitivity_dense.csv",
+            "sha256": "25cc79642af8acc9c6f8ddabdaaa0d10c6c7282274b36c2695032abdbeab6a40",
+            "size_bytes": 13313113,
+            "availability": "EXTERNAL_ARCHIVE_NOT_DISTRIBUTED_NO_PUBLIC_DOWNLOAD"
+          },
+          {
+            "evidence_id": "C03b2a/full-global-root/tables/07_global_sensitivity/global_node_sensitivity_long.csv",
+            "sha256": "8ab114ac102b6ff382d96d69a2b32101515f5da6f12f41a2c6db563984f63e1c",
+            "size_bytes": 84886,
+            "availability": "EXTERNAL_ARCHIVE_NOT_DISTRIBUTED_NO_PUBLIC_DOWNLOAD"
+          }
+        ],
+        "matrix_shape": [
+          15,
+          1562
+        ],
+        "matrix_float64_sha256": "99789904c338cf30c0d3e21b014249a7b464380737835ae9bdd80f094166d103",
+        "financial_matrix_unchanged": true,
+        "scale": "robust_common",
+        "common_cap_bp_per_bp": 11.33194135019177,
+        "clipped_fraction": 0.015023474178403756,
+        "marker_domain": {
+          "clamping_performed": false,
+          "displayed_markers": 14,
+          "domain_act_360_years": [
+            0.0,
+            30.352777777777778
+          ],
+          "first_forward_start": "2026-09-18",
+          "last_forward_start": "2056-08-18",
+          "omitted_labels": [
+            "30Y"
+          ],
+          "pillar_30Y_date": "2056-09-20",
+          "pillar_30Y_days_beyond_last_forward_start": 33
+        },
+        "complete_30Y_response_row": true,
+        "footer_outside_data_area": true,
+        "checkpoint": "C04c-F01",
+        "candidate_evidence_id": "C04c-F01/preview/H03_presentation_v1.png",
+        "validation_record": {
+          "evidence_id": "C04c-F01/metadata/render-validation.json",
+          "sha256": "e2ef227fe0bb30cf2746ebb377e36cf9525332383f19dd8939644cd6150cc56f",
+          "availability": "EXTERNAL_ARCHIVE_NOT_DISTRIBUTED_NO_PUBLIC_DOWNLOAD"
+        },
+        "human_approval": {
+          "authority": "Human visual review explicitly approved in C04c-F02 task",
+          "candidate": "H03_presentation_v1.png",
+          "recorded_utc": "2026-11-06T02:54:41.776304+00:00"
+        },
+        "reproduction_limit": "Observable public figure; full research replay requires both external numerical inputs and recorded rendering source/environment. No complete public replay archive is claimed."
+      }
+    },
+    {
+      "artifact_id": "H04",
+      "source_checkpoint": "C03b2a",
+      "original_source_evidence_id": "C03b2a/full-global-root/figures/07_global_sensitivity/forward_sensitivity_heatmap_cubic_continuous_zero_full_common_scale.png",
+      "original_sha256": "4f202724ca1bcf9615cadaa22373604cc5e7a761fcfbb89f38f4be23f1038428",
+      "size_bytes": 145752,
+      "approved_destination": "evidence/c03/heatmaps/forward_sensitivity_heatmap_cubic_continuous_zero_full_common_scale.png",
+      "public_relative_path": "evidence/c03/heatmaps/forward_sensitivity_heatmap_cubic_continuous_zero_full_common_scale.png",
+      "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "original_workflow_id": "heatmaps",
+      "original_script": {
+        "project_relative_path": "scripts/experiments/sensitivity/plot_global_forward_sensitivity_heatmaps.py",
+        "sha256": "c5b62462070a2cd1ac7ba1d51553d6352bbc55b75869fa21d4201d2cc67ce754",
+        "size_bytes": 27630,
+        "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+      },
+      "original_execution_start_utc": "2026-11-04T22:10:22.202233+00:00",
+      "original_execution_end_utc": "2026-11-04T22:10:38.372494+00:00",
+      "classification": "PRESENTATION_DERIVATIVE_FROM_VALIDATED_DATA",
+      "methodology": "28D simple forwards, 7-day starts; central ±1 bp quotes; common cross-method color caps.",
+      "units": "forward bp / quote bp; x: ACT/360 years",
+      "limitations": "Synthetic FTIIE_KNOWN_TRUTH_V1 scenario; projected calendar; no observed-market or production-readiness conclusion.",
+      "format_and_dimensions": {
+        "width": 2384,
+        "height": 1471,
+        "mode": "RGBA"
+      },
+      "status": "APPROVED_PRESENTATION_DERIVATIVE_FOR_PR_REVIEW",
+      "figure_review_status": "HUMAN_APPROVED_C04c_F02",
+      "historical_comparison_scope": {
+        "status": "ORIGINAL_RUN_IDENTITY_ONLY",
+        "scope": "Current bytes verified; no historical figure/metadata equality or golden-reference designation claimed."
+      },
+      "original_historical_exhibit": {
+        "evidence_id": "C03b2a/full-global-root/figures/07_global_sensitivity/forward_sensitivity_heatmap_cubic_continuous_zero_full_common_scale.png",
+        "sha256": "4f202724ca1bcf9615cadaa22373604cc5e7a761fcfbb89f38f4be23f1038428",
+        "size_bytes": 145146,
+        "format_and_dimensions": {
+          "width": 2394,
+          "height": 1477,
+          "mode": "RGBA"
+        },
+        "financial_source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+        "workflow_id": "heatmaps",
+        "script": {
+          "project_relative_path": "scripts/experiments/sensitivity/plot_global_forward_sensitivity_heatmaps.py",
+          "sha256": "c5b62462070a2cd1ac7ba1d51553d6352bbc55b75869fa21d4201d2cc67ce754",
+          "size_bytes": 27630,
+          "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+        },
+        "execution_start_utc": "2026-11-04T22:10:22.202233+00:00",
+        "execution_end_utc": "2026-11-04T22:10:38.372494+00:00",
+        "classification": "VALIDATED_RESEARCH_EVIDENCE",
+        "availability": "EXTERNAL_ARCHIVE_NOT_DISTRIBUTED_NO_PUBLIC_DOWNLOAD"
+      },
+      "published_derivative": {
+        "classification": "PRESENTATION_DERIVATIVE_FROM_VALIDATED_DATA",
+        "sha256": "d83abfd9abb197eba45c5dad8d102a2c14ff4fed063ea3464da3abab850c1a04",
+        "public_relative_path": "evidence/c03/heatmaps/forward_sensitivity_heatmap_cubic_continuous_zero_full_common_scale.png",
+        "size_bytes": 145752,
+        "format_and_dimensions": {
+          "width": 2384,
+          "height": 1471,
+          "mode": "RGBA"
+        },
+        "rendering_script": "scripts/experiments/sensitivity/plot_global_forward_sensitivity_heatmaps.py",
+        "rendering_source_revision": {
+          "status": "UNCOMMITTED_WORKTREE_SOURCE",
+          "parent_commit": "39f24aff2e2c5e13d2eb53ab43d4fee53cc18dae",
+          "script_sha256": "3c3844dd9f133f88199fd4de1c2d48ede9de499ee1d0dabbcbc612b496a6c4e8",
+          "scope": "C04c-F01 presentation-only save_forward_heatmap layout and in-domain markers; not a new financial execution commit."
+        },
+        "rendering_environment": {
+          "python": "3.11.15 (main, Mar  3 2026, 09:26:23) [GCC 11.4.0]",
+          "interpreter": "project .venv Python 3.11",
+          "platform": "Linux-5.15.90.3-microsoft-standard-WSL2+-x86_64-with-glibc2.35",
+          "packages": {
+            "matplotlib": "3.11.2",
+            "numpy": "2.4.6",
+            "pillow": "12.3.0",
+            "scipy": "1.17.1"
+          },
+          "matplotlib_backend": "Agg"
+        },
+        "rendering_start_utc": "2026-11-06T02:38:39.785383+00:00",
+        "rendering_end_utc": "2026-11-06T02:39:24.253075+00:00",
+        "curation_timestamp_utc": "2026-11-06T02:54:41.776304+00:00",
+        "source_numerical_data": [
+          {
+            "evidence_id": "C03b2a/full-global-root/tables/07_global_sensitivity/global_forward_sensitivity_dense.csv",
+            "sha256": "25cc79642af8acc9c6f8ddabdaaa0d10c6c7282274b36c2695032abdbeab6a40",
+            "size_bytes": 13313113,
+            "availability": "EXTERNAL_ARCHIVE_NOT_DISTRIBUTED_NO_PUBLIC_DOWNLOAD"
+          },
+          {
+            "evidence_id": "C03b2a/full-global-root/tables/07_global_sensitivity/global_node_sensitivity_long.csv",
+            "sha256": "8ab114ac102b6ff382d96d69a2b32101515f5da6f12f41a2c6db563984f63e1c",
+            "size_bytes": 84886,
+            "availability": "EXTERNAL_ARCHIVE_NOT_DISTRIBUTED_NO_PUBLIC_DOWNLOAD"
+          }
+        ],
+        "matrix_shape": [
+          15,
+          1562
+        ],
+        "matrix_float64_sha256": "99789904c338cf30c0d3e21b014249a7b464380737835ae9bdd80f094166d103",
+        "financial_matrix_unchanged": true,
+        "scale": "full_common",
+        "common_cap_bp_per_bp": 20.04398642012309,
+        "clipped_fraction": 0.0,
+        "marker_domain": {
+          "clamping_performed": false,
+          "displayed_markers": 14,
+          "domain_act_360_years": [
+            0.0,
+            30.352777777777778
+          ],
+          "first_forward_start": "2026-09-18",
+          "last_forward_start": "2056-08-18",
+          "omitted_labels": [
+            "30Y"
+          ],
+          "pillar_30Y_date": "2056-09-20",
+          "pillar_30Y_days_beyond_last_forward_start": 33
+        },
+        "complete_30Y_response_row": true,
+        "footer_outside_data_area": true,
+        "checkpoint": "C04c-F01",
+        "candidate_evidence_id": "C04c-F01/preview/H04_presentation_v1.png",
+        "validation_record": {
+          "evidence_id": "C04c-F01/metadata/render-validation.json",
+          "sha256": "e2ef227fe0bb30cf2746ebb377e36cf9525332383f19dd8939644cd6150cc56f",
+          "availability": "EXTERNAL_ARCHIVE_NOT_DISTRIBUTED_NO_PUBLIC_DOWNLOAD"
+        },
+        "human_approval": {
+          "authority": "Human visual review explicitly approved in C04c-F02 task",
+          "candidate": "H04_presentation_v1.png",
+          "recorded_utc": "2026-11-06T02:54:41.776304+00:00"
+        },
+        "reproduction_limit": "Observable public figure; full research replay requires both external numerical inputs and recorded rendering source/environment. No complete public replay archive is claimed."
+      }
+    },
+    {
+      "artifact_id": "L01",
+      "source_checkpoint": "C03b2a",
+      "original_source_evidence_id": "C03b2a/full-global-root/tables/07_global_sensitivity/forward_sensitivity_locality.csv",
+      "original_sha256": "de59820c13e5cbcf21d36e4ad86184eb43709192c8a7c2a14c466a18918db340",
+      "size_bytes": 9411,
+      "approved_destination": "evidence/c03/locality/forward_sensitivity_locality.csv",
+      "public_relative_path": "evidence/c03/locality/forward_sensitivity_locality.csv",
+      "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "original_workflow_id": "locality",
+      "original_script": {
+        "project_relative_path": "scripts/experiments/sensitivity/report_forward_sensitivity_locality.py",
+        "sha256": "15267683e7a5e6ac3070ebf47c98f1283384b760dcbdc4122110f20fd913088b",
+        "size_bytes": 19195,
+        "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+      },
+      "original_execution_start_utc": "2026-11-04T22:10:38.409846+00:00",
+      "original_execution_end_utc": "2026-11-04T22:10:50.011690+00:00",
+      "classification": "VALIDATED_RESEARCH_EVIDENCE",
+      "methodology": "Weights are normalized absolute central forward sensitivities; measures sampled response distribution, not monetary risk.",
+      "units": "ACT/360 years for centers/spread/RMS; mass fractions 0–1",
+      "limitations": "Synthetic FTIIE_KNOWN_TRUTH_V1 scenario; projected calendar; no observed-market or production-readiness conclusion.",
+      "format_and_dimensions": {
+        "data_rows": 45,
+        "columns": 14,
+        "header": [
+          "scenario",
+          "reference_date",
+          "method",
+          "shock_index",
+          "shock_tenor",
+          "shock_pillar_date",
+          "shock_pillar_years",
+          "weighted_center_years",
+          "center_offset_from_shock_years",
+          "weighted_spread_years",
+          "rms_distance_from_shock_years",
+          "sensitivity_mass_within_1y",
+          "sensitivity_mass_within_2y",
+          "observation_count"
+        ]
+      },
+      "status": "COPIED_UNCHANGED_FOR_REVIEW",
+      "figure_review_status": null,
+      "historical_comparison_scope": {
+        "status": "SAVED_GLOBAL_FINANCIAL_VALUES_EXACT",
+        "comparison_record": {
+          "evidence_id": "C03b2a/metadata/full-historical-numerical-comparison.json",
+          "sha256": "b3a482a6bf4295cdbd029ebd35aa2807d0cbe976285979f065e010cedb56ed86",
+          "size_bytes": 61401,
+          "availability": "EXTERNAL_ARCHIVE_NOT_DISTRIBUTED_NO_PUBLIC_DOWNLOAD"
+        },
+        "scope": "Only global_calibration_diagnostics elapsed seconds differ (three method cells); runtime is not a financial result. Figures excluded from numerical identity."
+      }
+    },
+    {
+      "artifact_id": "L03",
+      "source_checkpoint": "C03b2a",
+      "original_source_evidence_id": "C03b2a/full-global-root/figures/07_global_sensitivity/forward_sensitivity_mass_within_2y_by_shock.png",
+      "original_sha256": "0de0497a5e19b00b5efe3306adedacc31897632b7e7bca5b94f65d503f692719",
+      "size_bytes": 159834,
+      "approved_destination": "evidence/c03/locality/forward_sensitivity_mass_within_2y_by_shock.png",
+      "public_relative_path": "evidence/c03/locality/forward_sensitivity_mass_within_2y_by_shock.png",
+      "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "original_workflow_id": "locality",
+      "original_script": {
+        "project_relative_path": "scripts/experiments/sensitivity/report_forward_sensitivity_locality.py",
+        "sha256": "15267683e7a5e6ac3070ebf47c98f1283384b760dcbdc4122110f20fd913088b",
+        "size_bytes": 19195,
+        "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+      },
+      "original_execution_start_utc": "2026-11-04T22:10:38.409846+00:00",
+      "original_execution_end_utc": "2026-11-04T22:10:50.011690+00:00",
+      "classification": "VALIDATED_RESEARCH_EVIDENCE",
+      "methodology": "Absolute-sensitivity weights on 7-day forward starts.",
+      "units": "y: sensitivity mass %; x: ordinal quote tenor labels",
+      "limitations": "Synthetic FTIIE_KNOWN_TRUTH_V1 scenario; projected calendar; no observed-market or production-readiness conclusion.",
+      "format_and_dimensions": {
+        "width": 2179,
+        "height": 1137,
+        "mode": "RGBA"
+      },
+      "status": "COPIED_UNCHANGED_FOR_REVIEW",
+      "figure_review_status": "CAPTIONED",
+      "historical_comparison_scope": {
+        "status": "ORIGINAL_RUN_IDENTITY_ONLY",
+        "scope": "Current bytes verified; no historical figure/metadata equality or golden-reference designation claimed."
+      }
+    },
+    {
+      "artifact_id": "M04",
+      "source_checkpoint": "C03b2b",
+      "original_source_evidence_id": "C03b2b/reports/C/compare_three_interpolation_methods/metadata/06_interpolation_comparison/experiment_metadata.json",
+      "original_sha256": "4cbd00b1237b0d1b9b605d7b2dcd2ff4f4717e9620d7e037b9c781b77202e1ed",
+      "size_bytes": 1166,
+      "approved_destination": "evidence/c03/methodology/experiment_metadata.json",
+      "public_relative_path": null,
+      "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "original_workflow_id": "compare_three_interpolation_methods",
+      "original_script": {
+        "project_relative_path": "scripts/experiments/interpolation/compare_three_interpolation_methods.py",
+        "sha256": "04544e59a71fcafceecd62b470fc93ea419124c790ac32ef60d4edd5c606423b",
+        "size_bytes": 18828,
+        "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+      },
+      "original_execution_start_utc": "2026-11-05T01:28:32.061446+00:00",
+      "original_execution_end_utc": "2026-11-05T01:31:01.937738+00:00",
+      "classification": "VALIDATED_RESEARCH_EVIDENCE",
+      "methodology": "Known truth only after calibration; same simultaneous engine across all three methods.",
+      "units": "methods; dates; days; output paths",
+      "limitations": "Synthetic FTIIE_KNOWN_TRUTH_V1 scenario; projected calendar; no observed-market or production-readiness conclusion.",
+      "format_and_dimensions": null,
+      "status": "WITHHELD_PUBLICATION_SAFETY",
+      "figure_review_status": null,
+      "historical_comparison_scope": {
+        "status": "ORIGINAL_RUN_IDENTITY_ONLY",
+        "scope": "Current bytes verified; no historical figure/metadata equality or golden-reference designation claimed."
+      },
+      "withholding_reason": "Original JSON contains machine-specific absolute local paths in output/input provenance; original bytes are retained externally, never edited.",
+      "unsafe_json_pointers": [
+        "/calibration_diagnostics_output",
+        "/global_recovery_output",
+        "/horizon_recovery_output"
+      ],
+      "curation_provenance_summary": {
+        "role": "C04C_AUTHORED_SUMMARY_NOT_AN_ORIGINAL_OR_SANITIZED_REPLACEMENT_ARTIFACT",
+        "original_sha256": "4cbd00b1237b0d1b9b605d7b2dcd2ff4f4717e9620d7e037b9c781b77202e1ed",
+        "original_metadata_fields_described": {
+          "calibration_engine": "simultaneous_nodal_least_squares",
+          "dense_grid_step_days": 7,
+          "forward_period_days": 28,
+          "interpolation_methods": [
+            "LOG_LINEAR_DF",
+            "LINEAR_CONTINUOUS_ZERO",
+            "CUBIC_CONTINUOUS_ZERO"
+          ],
+          "known_truth_usage": "Introduced only after calibration for recovery analysis.",
+          "quote_source": "data/synthetic/ftiie_ois_quotes_v1.csv",
+          "reference_date": "2026-09-18",
+          "scenario": "FTIIE_KNOWN_TRUTH_V1"
+        },
+        "omitted_machine_specific_top_level_fields": [
+          "calibration_diagnostics_output",
+          "global_recovery_output",
+          "horizon_recovery_output"
+        ],
+        "artifact_mapping": "Approved destinations and original identities are in this manifest; dense dependencies remain external."
+      }
+    },
+    {
+      "artifact_id": "G06",
+      "source_checkpoint": "C03b2a",
+      "original_source_evidence_id": "C03b2a/full-global-root/metadata/07_global_sensitivity/experiment_metadata.json",
+      "original_sha256": "58d40ffe14c4eabbfc8286f2b8fd3797b851a3aa0820201ed7d9310f17cb3614",
+      "size_bytes": 5896,
+      "approved_destination": "evidence/c03/global/experiment_metadata.json",
+      "public_relative_path": null,
+      "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "original_workflow_id": "global",
+      "original_script": {
+        "project_relative_path": "scripts/experiments/sensitivity/report_global_sensitivity.py",
+        "sha256": "c14a7222a61082783edc7585e04ee071088fe777ef27e53f221086e8e7f984fe",
+        "size_bytes": 45543,
+        "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+      },
+      "original_execution_start_utc": "2026-11-04T20:48:51.505918+00:00",
+      "original_execution_end_utc": "2026-11-04T22:08:53.993316+00:00",
+      "classification": "VALIDATED_RESEARCH_EVIDENCE",
+      "methodology": "Simultaneous nodal least squares; symmetric one-factor-at-a-time design.",
+      "units": "days; bp bumps; ACT/360 dates; seconds",
+      "limitations": "Synthetic FTIIE_KNOWN_TRUTH_V1 scenario; projected calendar; no observed-market or production-readiness conclusion.",
+      "format_and_dimensions": null,
+      "status": "WITHHELD_PUBLICATION_SAFETY",
+      "figure_review_status": null,
+      "historical_comparison_scope": {
+        "status": "ORIGINAL_RUN_IDENTITY_ONLY",
+        "scope": "Current bytes verified; no historical figure/metadata equality or golden-reference designation claimed."
+      },
+      "withholding_reason": "Original JSON contains machine-specific absolute local paths in output/input provenance; original bytes are retained externally, never edited.",
+      "unsafe_json_pointers": [
+        "/outputs/figures/0",
+        "/outputs/figures/1",
+        "/outputs/figures/2",
+        "/outputs/figures/3",
+        "/outputs/figures/4",
+        "/outputs/figures/5",
+        "/outputs/figures/6",
+        "/outputs/figures/7",
+        "/outputs/figures/8",
+        "/outputs/figures/9",
+        "/outputs/figures/10",
+        "/outputs/figures/11",
+        "/outputs/matrix_tables/0",
+        "/outputs/matrix_tables/1",
+        "/outputs/matrix_tables/2",
+        "/outputs/matrix_tables/3",
+        "/outputs/matrix_tables/4",
+        "/outputs/matrix_tables/5",
+        "/outputs/summary_tables/0",
+        "/outputs/summary_tables/1",
+        "/outputs/summary_tables/2",
+        "/outputs/summary_tables/3",
+        "/outputs/text/0"
+      ],
+      "curation_provenance_summary": {
+        "role": "C04C_AUTHORED_SUMMARY_NOT_AN_ORIGINAL_OR_SANITIZED_REPLACEMENT_ARTIFACT",
+        "original_sha256": "58d40ffe14c4eabbfc8286f2b8fd3797b851a3aa0820201ed7d9310f17cb3614",
+        "original_metadata_fields_described": {
+          "calculation_and_reporting_elapsed_seconds_before_metadata": 4795.65796596001,
+          "calibration_engine": "simultaneous_nodal_least_squares",
+          "dense_forward_output_reason": "Persisted because symmetric quote perturbation requires repeated global calibrations. The stored dense series supports subsequent forward-response analysis and visualization without recalibration.",
+          "forward_analysis": {
+            "forward_period_days": 28,
+            "grid_step_days": 7
+          },
+          "interpolation_methods": [
+            "LOG_LINEAR_DF",
+            "LINEAR_CONTINUOUS_ZERO",
+            "CUBIC_CONTINUOUS_ZERO"
+          ],
+          "locality_metric": {
+            "definition": "sum(abs(J_ji), j != i) / sum(abs(J_ji), all j)",
+            "name": "off_diagonal_share"
+          },
+          "matrix_definition": {
+            "columns": "calibrated zero-curve nodes",
+            "curvature_values": "central second-order zero response in bp/bp^2",
+            "rows": "shocked market quotes",
+            "sensitivity_values": "central zero sensitivity in bp/bp"
+          },
+          "quote_count": 15,
+          "quote_source": "data/synthetic/ftiie_ois_quotes_v1.csv",
+          "reference_date": "2026-09-18",
+          "runtime_seconds": {
+            "CUBIC_CONTINUOUS_ZERO": 1826.6726349579985,
+            "LINEAR_CONTINUOUS_ZERO": 2439.0713569450018,
+            "LOG_LINEAR_DF": 519.8216524640156
+          },
+          "scenario": "FTIIE_KNOWN_TRUTH_V1",
+          "shock_design": {
+            "base_calibrations_per_method": 1,
+            "bump_bp": 1.0,
+            "perturbed_calibrations_per_method": 30,
+            "shocks_per_method": 15,
+            "type": "symmetric_one_factor_at_a_time"
+          }
+        },
+        "omitted_machine_specific_top_level_fields": [
+          "outputs"
+        ],
+        "artifact_mapping": "Approved destinations and original identities are in this manifest; dense dependencies remain external."
+      }
+    },
+    {
+      "artifact_id": "H02",
+      "source_checkpoint": "C03b2a",
+      "original_source_evidence_id": "C03b2a/full-global-root/metadata/07_global_sensitivity/forward_sensitivity_heatmap_metadata.json",
+      "original_sha256": "5ce01f5f845c3ff5b31c3e68ca8614687385e41042e04cc9c0f97f73a4f5b7d5",
+      "size_bytes": 3968,
+      "approved_destination": "evidence/c03/heatmaps/forward_sensitivity_heatmap_metadata.json",
+      "public_relative_path": null,
+      "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "original_workflow_id": "heatmaps",
+      "original_script": {
+        "project_relative_path": "scripts/experiments/sensitivity/plot_global_forward_sensitivity_heatmaps.py",
+        "sha256": "c5b62462070a2cd1ac7ba1d51553d6352bbc55b75869fa21d4201d2cc67ce754",
+        "size_bytes": 27630,
+        "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+      },
+      "original_execution_start_utc": "2026-11-04T22:10:22.202233+00:00",
+      "original_execution_end_utc": "2026-11-04T22:10:38.372494+00:00",
+      "classification": "VALIDATED_RESEARCH_EVIDENCE",
+      "methodology": "Central forward sensitivity; rows=quote shocks, columns=forward start dates.",
+      "units": "bp/bp; dates; quantile fraction",
+      "limitations": "Synthetic FTIIE_KNOWN_TRUTH_V1 scenario; projected calendar; no observed-market or production-readiness conclusion.",
+      "format_and_dimensions": null,
+      "status": "WITHHELD_PUBLICATION_SAFETY",
+      "figure_review_status": null,
+      "historical_comparison_scope": {
+        "status": "ORIGINAL_RUN_IDENTITY_ONLY",
+        "scope": "Current bytes verified; no historical figure/metadata equality or golden-reference designation claimed."
+      },
+      "withholding_reason": "Original JSON contains machine-specific absolute local paths in output/input provenance; original bytes are retained externally, never edited.",
+      "unsafe_json_pointers": [
+        "/figure_outputs/0",
+        "/figure_outputs/1",
+        "/figure_outputs/2",
+        "/figure_outputs/3",
+        "/figure_outputs/4",
+        "/figure_outputs/5",
+        "/figure_outputs/6",
+        "/figure_outputs/7",
+        "/figure_outputs/8",
+        "/figure_outputs/9",
+        "/figure_outputs/10",
+        "/figure_outputs/11",
+        "/scale_diagnostics_output",
+        "/source_forward_data",
+        "/source_node_data"
+      ],
+      "curation_provenance_summary": {
+        "role": "C04C_AUTHORED_SUMMARY_NOT_AN_ORIGINAL_OR_SANITIZED_REPLACEMENT_ARTIFACT",
+        "original_sha256": "5ce01f5f845c3ff5b31c3e68ca8614687385e41042e04cc9c0f97f73a4f5b7d5",
+        "original_metadata_fields_described": {
+          "color_scale": {
+            "center": 0.0,
+            "diverging": true,
+            "full_common_cap_bp_per_bp": 20.04398642012309,
+            "full_scale_interpretation": "Common symmetric scale across all methods using the largest absolute observed sensitivity. No values are intentionally clipped.",
+            "robust_common_cap_bp_per_bp": 11.33194135019177,
+            "robust_quantile": 0.995,
+            "robust_scale_interpretation": "Common symmetric scale across all methods using the pooled absolute sensitivity quantile. Values outside the cap are intentionally saturated."
+          },
+          "matrix_definition": {
+            "columns": "dense 28-day forward start dates",
+            "rows": "shocked market quotes",
+            "values": "central forward sensitivity dF/dK in bp/bp"
+          },
+          "reference_date": "2026-09-18",
+          "scenario": "FTIIE_KNOWN_TRUTH_V1"
+        },
+        "omitted_machine_specific_top_level_fields": [
+          "figure_outputs",
+          "scale_diagnostics_output",
+          "source_forward_data",
+          "source_node_data"
+        ],
+        "artifact_mapping": "Approved destinations and original identities are in this manifest; dense dependencies remain external."
+      }
+    },
+    {
+      "artifact_id": "L02",
+      "source_checkpoint": "C03b2a",
+      "original_source_evidence_id": "C03b2a/full-global-root/metadata/07_global_sensitivity/forward_sensitivity_locality_metadata.json",
+      "original_sha256": "036cf8047774a58ada5066f398f7148262e2272308ce432964be597965921a78",
+      "size_bytes": 2747,
+      "approved_destination": "evidence/c03/locality/forward_sensitivity_locality_metadata.json",
+      "public_relative_path": null,
+      "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "original_workflow_id": "locality",
+      "original_script": {
+        "project_relative_path": "scripts/experiments/sensitivity/report_forward_sensitivity_locality.py",
+        "sha256": "15267683e7a5e6ac3070ebf47c98f1283384b760dcbdc4122110f20fd913088b",
+        "size_bytes": 19195,
+        "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+      },
+      "original_execution_start_utc": "2026-11-04T22:10:38.409846+00:00",
+      "original_execution_end_utc": "2026-11-04T22:10:50.011690+00:00",
+      "classification": "VALIDATED_RESEARCH_EVIDENCE",
+      "methodology": "RMS distance sqrt(sum w_j*(t_j–T_shock)²); companion ±1Y/±2Y sensitivity mass.",
+      "units": "years; fractions",
+      "limitations": "Synthetic FTIIE_KNOWN_TRUTH_V1 scenario; projected calendar; no observed-market or production-readiness conclusion.",
+      "format_and_dimensions": null,
+      "status": "WITHHELD_PUBLICATION_SAFETY",
+      "figure_review_status": null,
+      "historical_comparison_scope": {
+        "status": "ORIGINAL_RUN_IDENTITY_ONLY",
+        "scope": "Current bytes verified; no historical figure/metadata equality or golden-reference designation claimed."
+      },
+      "withholding_reason": "Original JSON contains machine-specific absolute local paths in output/input provenance; original bytes are retained externally, never edited.",
+      "unsafe_json_pointers": [
+        "/outputs/figures/0",
+        "/outputs/figures/1",
+        "/outputs/figures/2",
+        "/outputs/figures/3",
+        "/outputs/figures/4",
+        "/outputs/figures/5",
+        "/outputs/figures/6",
+        "/outputs/figures/7",
+        "/outputs/table",
+        "/outputs/text",
+        "/source_forward_data",
+        "/source_node_data"
+      ],
+      "curation_provenance_summary": {
+        "role": "C04C_AUTHORED_SUMMARY_NOT_AN_ORIGINAL_OR_SANITIZED_REPLACEMENT_ARTIFACT",
+        "original_sha256": "036cf8047774a58ada5066f398f7148262e2272308ce432964be597965921a78",
+        "original_metadata_fields_described": {
+          "companion_metrics": "weighted_center_years, center_offset_from_shock_years, weighted_spread_years, sensitivity_mass_within_1y, sensitivity_mass_within_2y",
+          "primary_metric": {
+            "definition": "sqrt(sum_j w_j * (t_j - T_shock)^2)",
+            "name": "rms_distance_from_shock_years",
+            "weights": "absolute central forward sensitivity normalized to sum to one"
+          },
+          "reference_date": "2026-09-18",
+          "scenario": "FTIIE_KNOWN_TRUTH_V1"
+        },
+        "omitted_machine_specific_top_level_fields": [
+          "outputs",
+          "source_forward_data",
+          "source_node_data"
+        ],
+        "artifact_mapping": "Approved destinations and original identities are in this manifest; dense dependencies remain external."
+      }
+    }
+  ],
+  "excluded_artifacts": [
+    {
+      "artifact_id": "G07",
+      "evidence_id": "C03b2a/full-global-root/figures/07_global_sensitivity/node_zero_sensitivity_heatmap_cubic_continuous_zero.png",
+      "sha256": "24ac8192ff0f2847985223b238762635b027c5a44e377f221c29ceb3867eb5cc",
+      "size_bytes": 110228,
+      "availability": "EXTERNAL_ARCHIVE_NOT_DISTRIBUTED_NO_PUBLIC_DOWNLOAD",
+      "reason": "Original non-diverging cubic node palette can obscure signed off-diagonal responses. Not copied."
+    }
+  ],
+  "original_workflows": [
+    {
+      "workflow_id": "report_quote_sensitivity",
+      "source_checkpoint": "C03b2b",
+      "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "original_script": {
+        "project_relative_path": "scripts/experiments/bootstrap/report_quote_sensitivity.py",
+        "sha256": "8535699fc12dc5a7e9d55edcf9e17e381173eb0561933fdcc7521b48a409533b",
+        "size_bytes": 9720,
+        "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+      },
+      "original_start_utc": "2026-11-05T01:23:18.674054+00:00",
+      "original_end_utc": "2026-11-05T01:25:10.116619+00:00",
+      "observed_duration_seconds": 111.4423706580128,
+      "original_exit_code": 0,
+      "executed_in_C04c": false,
+      "original_command_receipt": {
+        "evidence_id": "C03b2b/metadata/B-report_quote_sensitivity.json",
+        "sha256": "f57443081d91229e6035771e6c732ffb52c16e886d662148a60c629a2bc34ef8",
+        "size_bytes": 2478,
+        "availability": "EXTERNAL_ARCHIVE_NOT_DISTRIBUTED_NO_PUBLIC_DOWNLOAD"
+      },
+      "receipt_timestamps_and_exit_code_verified": true
+    },
+    {
+      "workflow_id": "report_central_quote_sensitivity",
+      "source_checkpoint": "C03b2b",
+      "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "original_script": {
+        "project_relative_path": "scripts/experiments/bootstrap/report_central_quote_sensitivity.py",
+        "sha256": "630afb2aafbe4090d637b92dfd1895acd0e6c594d3350c44ae9588cfe3077aff",
+        "size_bytes": 11648,
+        "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+      },
+      "original_start_utc": "2026-11-05T01:25:10.120345+00:00",
+      "original_end_utc": "2026-11-05T01:28:32.001072+00:00",
+      "observed_duration_seconds": 201.88048397999955,
+      "original_exit_code": 0,
+      "executed_in_C04c": false,
+      "original_command_receipt": {
+        "evidence_id": "C03b2b/metadata/B-report_central_quote_sensitivity.json",
+        "sha256": "7a90b83a92ac160257d5960a5f6bdd03fa73f7fcecde4f6b7e789f5b83b6dade",
+        "size_bytes": 2794,
+        "availability": "EXTERNAL_ARCHIVE_NOT_DISTRIBUTED_NO_PUBLIC_DOWNLOAD"
+      },
+      "receipt_timestamps_and_exit_code_verified": true
+    },
+    {
+      "workflow_id": "compare_three_interpolation_methods",
+      "source_checkpoint": "C03b2b",
+      "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "original_script": {
+        "project_relative_path": "scripts/experiments/interpolation/compare_three_interpolation_methods.py",
+        "sha256": "04544e59a71fcafceecd62b470fc93ea419124c790ac32ef60d4edd5c606423b",
+        "size_bytes": 18828,
+        "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+      },
+      "original_start_utc": "2026-11-05T01:28:32.061446+00:00",
+      "original_end_utc": "2026-11-05T01:31:01.937738+00:00",
+      "observed_duration_seconds": 149.876119714987,
+      "original_exit_code": 0,
+      "executed_in_C04c": false,
+      "original_command_receipt": {
+        "evidence_id": "C03b2b/metadata/C-compare_three_interpolation_methods.json",
+        "sha256": "2ef6f6f21abd67b571f8eb625fd5d46b5aa32ae832ae123fc375613590587124",
+        "size_bytes": 3133,
+        "availability": "EXTERNAL_ARCHIVE_NOT_DISTRIBUTED_NO_PUBLIC_DOWNLOAD"
+      },
+      "receipt_timestamps_and_exit_code_verified": true
+    },
+    {
+      "workflow_id": "plot_three_interpolation_methods",
+      "source_checkpoint": "C03b2b",
+      "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "original_script": {
+        "project_relative_path": "scripts/experiments/interpolation/plot_three_interpolation_methods.py",
+        "sha256": "ac6d99ef642688756f972fc6f66792176d3e6ced76275f96b41c8dfb32425683",
+        "size_bytes": 27690,
+        "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+      },
+      "original_start_utc": "2026-11-05T01:31:38.728110+00:00",
+      "original_end_utc": "2026-11-05T01:33:55.682682+00:00",
+      "observed_duration_seconds": 136.95433608797612,
+      "original_exit_code": 0,
+      "executed_in_C04c": false,
+      "original_command_receipt": {
+        "evidence_id": "C03b2b/metadata/C-plot_three_interpolation_methods.json",
+        "sha256": "644751045853374faa92a7175da6bdc8df4f3a105b01a653afd5ba59a6056997",
+        "size_bytes": 5369,
+        "availability": "EXTERNAL_ARCHIVE_NOT_DISTRIBUTED_NO_PUBLIC_DOWNLOAD"
+      },
+      "receipt_timestamps_and_exit_code_verified": true
+    },
+    {
+      "workflow_id": "global",
+      "source_checkpoint": "C03b2a",
+      "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "original_script": {
+        "project_relative_path": "scripts/experiments/sensitivity/report_global_sensitivity.py",
+        "sha256": "c14a7222a61082783edc7585e04ee071088fe777ef27e53f221086e8e7f984fe",
+        "size_bytes": 45543,
+        "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+      },
+      "original_start_utc": "2026-11-04T20:48:51.505918+00:00",
+      "original_end_utc": "2026-11-04T22:08:53.993316+00:00",
+      "observed_duration_seconds": 4802.487169651984,
+      "original_exit_code": 0,
+      "executed_in_C04c": false,
+      "original_command_receipt": {
+        "evidence_id": "C03b2a/metadata/full-producer.json",
+        "sha256": "838059712718ee347b3bf88de61e8a4aced103ccbd553ec7bb6f19111da0789a",
+        "size_bytes": 2633,
+        "availability": "EXTERNAL_ARCHIVE_NOT_DISTRIBUTED_NO_PUBLIC_DOWNLOAD"
+      },
+      "receipt_timestamps_and_exit_code_verified": true
+    },
+    {
+      "workflow_id": "heatmaps",
+      "source_checkpoint": "C03b2a",
+      "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "original_script": {
+        "project_relative_path": "scripts/experiments/sensitivity/plot_global_forward_sensitivity_heatmaps.py",
+        "sha256": "c5b62462070a2cd1ac7ba1d51553d6352bbc55b75869fa21d4201d2cc67ce754",
+        "size_bytes": 27630,
+        "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+      },
+      "original_start_utc": "2026-11-04T22:10:22.202233+00:00",
+      "original_end_utc": "2026-11-04T22:10:38.372494+00:00",
+      "observed_duration_seconds": 16.140392832981888,
+      "original_exit_code": 0,
+      "executed_in_C04c": false,
+      "original_command_receipt": {
+        "evidence_id": "C03b2a/metadata/full-heatmaps.json",
+        "sha256": "374d288c83c2a9ebcf6301c5428a966035c81cd21d2175415acb89d429a56689",
+        "size_bytes": 2659,
+        "availability": "EXTERNAL_ARCHIVE_NOT_DISTRIBUTED_NO_PUBLIC_DOWNLOAD"
+      },
+      "receipt_timestamps_and_exit_code_verified": true
+    },
+    {
+      "workflow_id": "locality",
+      "source_checkpoint": "C03b2a",
+      "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "original_script": {
+        "project_relative_path": "scripts/experiments/sensitivity/report_forward_sensitivity_locality.py",
+        "sha256": "15267683e7a5e6ac3070ebf47c98f1283384b760dcbdc4122110f20fd913088b",
+        "size_bytes": 19195,
+        "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+      },
+      "original_start_utc": "2026-11-04T22:10:38.409846+00:00",
+      "original_end_utc": "2026-11-04T22:10:50.011690+00:00",
+      "observed_duration_seconds": 11.576685254985932,
+      "original_exit_code": 0,
+      "executed_in_C04c": false,
+      "original_command_receipt": {
+        "evidence_id": "C03b2a/metadata/full-locality.json",
+        "sha256": "c6a2079ca034090332be70b74467e11d9dabe16d39f23ab61cc6d2c3cdbf48b1",
+        "size_bytes": 2651,
+        "availability": "EXTERNAL_ARCHIVE_NOT_DISTRIBUTED_NO_PUBLIC_DOWNLOAD"
+      },
+      "receipt_timestamps_and_exit_code_verified": true
+    }
+  ],
+  "input_and_calendar_provenance": {
+    "scenario": "FTIIE_KNOWN_TRUTH_V1",
+    "trade_date": "2026-09-15",
+    "reference_date": "2026-09-18",
+    "single_curve_projection_and_discounting": true,
+    "synthetic_quotes": {
+      "project_relative_path": "data/synthetic/ftiie_ois_quotes_v1.csv",
+      "sha256": "38469f91b95ad5afad4a593a39c791a49e34ca435fc461f88d3b2039b717a5e6"
+    },
+    "research_calendar": {
+      "model": "build_projected_mxmc_calendar(2026,2057)",
+      "classification": "PROJECTED_NOT_OFFICIAL",
+      "source": {
+        "project_relative_path": "src/yield_curves/research/calendars.py",
+        "sha256": "4d4b739eec76a8413f25947c321930da26c56774290c8b0f2079ebed1b5103b5",
+        "size_bytes": 4286,
+        "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+      }
+    },
+    "c04b_supplied_calendar_materialization": {
+      "project_relative_path": "evidence/c03/inputs/projected_mxmc_2026_2057.csv",
+      "sha256": "d8eb688b8d48a1de7492cc6ed150a94fe070a9424e8d2a4375e1b4e0d5406507",
+      "scope": "Existing C04b input identity; research workflows build the projected calendar in memory."
+    },
+    "known_truth_source": {
+      "project_relative_path": "src/yield_curves/research/synthetic.py",
+      "sha256": "f4faffb632238f9842576c6697caa53703cc7c929d799db118241cfabe268140",
+      "size_bytes": 8957,
+      "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+    },
+    "environment_receipt": {
+      "evidence_id": "C03c/metadata/environment.json",
+      "sha256": "e6a632dc9817d496035885435fbfc9240ed1f5a2f61b115fb501310dcc091401",
+      "size_bytes": 990,
+      "availability": "EXTERNAL_ARCHIVE_NOT_DISTRIBUTED_NO_PUBLIC_DOWNLOAD"
+    },
+    "recorded_environment": {
+      "Python": "3.11.15",
+      "NumPy": "2.4.6",
+      "SciPy": "1.17.1",
+      "Matplotlib": "3.11.2",
+      "yield-curves": "0.1.0"
+    }
+  },
+  "external_dense_dependencies": [
+    {
+      "evidence_id": "C03b2a/full-global-root/tables/07_global_sensitivity/global_forward_sensitivity_dense.csv",
+      "sha256": "25cc79642af8acc9c6f8ddabdaaa0d10c6c7282274b36c2695032abdbeab6a40",
+      "size_bytes": 13313113,
+      "availability": "EXTERNAL_ARCHIVE_NOT_DISTRIBUTED_NO_PUBLIC_DOWNLOAD",
+      "data_rows": 70290,
+      "columns": [
+        "scenario",
+        "reference_date",
+        "method",
+        "bump_bp",
+        "shock_index",
+        "shock_tenor",
+        "forward_start_date",
+        "forward_end_date",
+        "forward_period_days",
+        "base_forward_rate",
+        "plus_forward_rate",
+        "minus_forward_rate",
+        "central_sensitivity_bp_per_bp",
+        "curvature_bp_per_bp2"
+      ],
+      "required_consumer_relative_path": "tables/07_global_sensitivity/global_forward_sensitivity_dense.csv",
+      "role": "Both global files are required by saved-data consumers."
+    },
+    {
+      "evidence_id": "C03b2a/full-global-root/tables/07_global_sensitivity/global_node_sensitivity_long.csv",
+      "sha256": "8ab114ac102b6ff382d96d69a2b32101515f5da6f12f41a2c6db563984f63e1c",
+      "size_bytes": 84886,
+      "availability": "EXTERNAL_ARCHIVE_NOT_DISTRIBUTED_NO_PUBLIC_DOWNLOAD",
+      "data_rows": 675,
+      "columns": [
+        "scenario",
+        "reference_date",
+        "method",
+        "bump_bp",
+        "shock_index",
+        "shock_tenor",
+        "node_index",
+        "node_tenor",
+        "node_date",
+        "maturity_distance",
+        "central_sensitivity_bp_per_bp",
+        "curvature_bp_per_bp2"
+      ],
+      "required_consumer_relative_path": "tables/07_global_sensitivity/global_node_sensitivity_long.csv",
+      "role": "Both global files are required by saved-data consumers."
+    },
+    {
+      "evidence_id": "C03b2b/reports/C/plot_three_interpolation_methods/tables/06_interpolation_comparison/forward_28d_recovery_three_methods_dense.csv",
+      "sha256": "bc642f52b9b654c5e8274d055adddac89080e2f50738dfed334a175e2a5be87e",
+      "size_bytes": 283195,
+      "availability": "EXTERNAL_ARCHIVE_NOT_DISTRIBUTED_NO_PUBLIC_DOWNLOAD",
+      "data_rows": 1563,
+      "columns": [
+        "start_date",
+        "end_date",
+        "start_act360_years",
+        "forward_period_days",
+        "true_forward_rate",
+        "log_linear_forward_rate",
+        "linear_continuous_zero_forward_rate",
+        "cubic_continuous_zero_forward_rate",
+        "log_linear_error_bp",
+        "linear_continuous_zero_error_bp",
+        "cubic_continuous_zero_error_bp"
+      ],
+      "required_consumer_relative_path": null,
+      "role": "Original M05 dense plot input; not bundled."
+    }
+  ],
+  "reproduction_boundary": {
+    "complete_global_replay_archive": false,
+    "original_global_root_file_count": 49,
+    "original_global_root_bytes": 16847372,
+    "global_producer_observed_duration_seconds": 4802.487169651984,
+    "consumer_requirement": "Both saved global input files must be under tables/07_global_sensitivity/ in the same expected reports root. Neither is bundled.",
+    "durable_dense_distribution": "DEFERRED_TO_C04d; no public download or full consumer replay claimed.",
+    "executed_in_C04c": false,
+    "presentation_rendering": "C04c-F01 rendered all three interpolation methods and both scales from verified persisted data; C04c-F02 copied only the two approved cubic PNGs. No producer or rendering was rerun in C04c-F02."
+  },
+  "claims": [
+    {
+      "original_claim_id": "C07",
+      "supported_wording": "Core-v1 uses the same curve for projection and discounting; strict sequential freezing is used for local log-linear construction, while the cubic baseline solves nodes simultaneously.",
+      "claim_type": "methodology assumption",
+      "financial_interpretation": "Explains which valuation problem is actually implemented.",
+      "methodology": "Sequential Brent terminal-node solves vs simultaneous nodal least squares; natural cubic continuous-zero representation.",
+      "source_artifact_ids": [
+        "B04",
+        "M04",
+        "S07"
+      ],
+      "available_public_artifacts": [
+        "B04"
+      ],
+      "original_source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "units": "nodal DF; continuous zero annual decimal",
+      "limitations": "Project model assumption, not a statement of institutional MXN discounting architecture.",
+      "evidence_strength": "STRONG_WITHIN_DECLARED_SCOPE",
+      "evidence": [
+        {
+          "artifact_id": "B04",
+          "original_source_evidence_id": "C03b2b/reports/B/bootstrap_synthetic_reference_data/tables/02_bootstrap_recovery/bootstrap_node_recovery.csv",
+          "original_sha256": "6018fd6b7ee525cd0400f7b472e52c3712a4407393e977ba6116c026b0761414",
+          "original_source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+          "original_script": {
+            "project_relative_path": "scripts/experiments/bootstrap/bootstrap_synthetic_reference_data.py",
+            "sha256": "17aad20a61c7de704e6b36d0fb175d8d0ca52ea75eefbb322dc6d7e624a5f9e2",
+            "size_bytes": 6353,
+            "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+          },
+          "original_workflow_id": "bootstrap_synthetic_reference_data",
+          "public_relative_path": "evidence/c03/bootstrap/bootstrap_node_recovery.csv",
+          "availability": "PUBLIC_REPOSITORY_EXHIBIT",
+          "role": "SUPPORTING_EVIDENCE"
+        },
+        {
+          "artifact_id": "M04",
+          "original_source_evidence_id": "C03b2b/reports/C/compare_three_interpolation_methods/metadata/06_interpolation_comparison/experiment_metadata.json",
+          "original_sha256": "4cbd00b1237b0d1b9b605d7b2dcd2ff4f4717e9620d7e037b9c781b77202e1ed",
+          "original_source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+          "original_script": {
+            "project_relative_path": "scripts/experiments/interpolation/compare_three_interpolation_methods.py",
+            "sha256": "04544e59a71fcafceecd62b470fc93ea419124c790ac32ef60d4edd5c606423b",
+            "size_bytes": 18828,
+            "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+          },
+          "original_workflow_id": "compare_three_interpolation_methods",
+          "public_relative_path": null,
+          "availability": "EXTERNAL_NOT_DISTRIBUTED",
+          "role": "SUPPORTING_EVIDENCE"
+        },
+        {
+          "artifact_id": "S07",
+          "original_source_evidence_id": "C03b1/operational_snapshot/runs/ab8b26ab993140dca7dcbd7491c3a8c0/metadata.json",
+          "original_sha256": "7c7a14588c276ec6156f5559f3451d2efb3cecac428e3e4aaa78868c4ab9b945",
+          "original_source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+          "original_script": {
+            "project_relative_path": "scripts/operational/build_baseline_curve.py",
+            "sha256": "b34d4e702ad496fa11b2494322eb7eb5dc21b7297f3c71adb78a74708422834b",
+            "size_bytes": 1402,
+            "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+          },
+          "original_workflow_id": "snapshot-build",
+          "public_relative_path": null,
+          "availability": "EXTERNAL_NOT_DISTRIBUTED",
+          "role": "SUPPORTING_EVIDENCE"
+        },
+        {
+          "artifact_id": null,
+          "original_source_evidence_id": "C03c/coverage-matrix.json",
+          "original_sha256": "ce4b84c772fc187e3107b211bfb7d0ed6249f2794a5f23513328c9b4fdca10ca",
+          "original_source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+          "original_script": {
+            "evidence_id": "C03c/metadata/build_delivery.py",
+            "sha256": "e54ccc032bd1865f1917a8b00523f0f21cea08e485222030915dc519d9cad7d7",
+            "size_bytes": 19129,
+            "availability": "EXTERNAL_ARCHIVE_NOT_DISTRIBUTED_NO_PUBLIC_DOWNLOAD"
+          },
+          "original_workflow_id": "original audit program; not a financial producer",
+          "public_relative_path": null,
+          "availability": "EXTERNAL_NOT_DISTRIBUTED",
+          "role": "SUPPORTING_EVIDENCE"
+        }
+      ],
+      "external_evidence_dependencies": [
+        "C03b1/operational_snapshot/runs/ab8b26ab993140dca7dcbd7491c3a8c0/metadata.json",
+        "C03b2b/reports/C/compare_three_interpolation_methods/metadata/06_interpolation_comparison/experiment_metadata.json",
+        "C03c/coverage-matrix.json"
+      ],
+      "additional_review_limitations": null
+    },
+    {
+      "original_claim_id": "C08",
+      "supported_wording": "In the shared simultaneous three-method study, all three calibrations succeed; saved 28D-forward recovery RMSE is 3.811009931078169 bp for log-linear DF and 0.24931760566157052 bp for cubic continuous zero.",
+      "claim_type": "observed result",
+      "financial_interpretation": "Shows measurable methodology tradeoffs with controlled engine and inputs.",
+      "methodology": "Compare method rows within M02 only; M03 supplies all horizons and all methods. Known truth is introduced after calibration.",
+      "source_artifact_ids": [
+        "M01",
+        "M02",
+        "M03",
+        "M04",
+        "M05"
+      ],
+      "available_public_artifacts": [
+        "M01",
+        "M02",
+        "M03",
+        "M05"
+      ],
+      "original_source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "units": "repricing/zero/forward bp; DF absolute",
+      "limitations": "Single smooth synthetic truth; does not establish universal superiority or observed-market suitability. Zero-plot and metrics grids are different.",
+      "evidence_strength": "STRONG_WITHIN_DECLARED_SCOPE",
+      "evidence": [
+        {
+          "artifact_id": "M01",
+          "original_source_evidence_id": "C03b2b/reports/C/compare_three_interpolation_methods/tables/06_interpolation_comparison/simultaneous_calibration_diagnostics.csv",
+          "original_sha256": "ea8873afc30ec0412eb09c8865d22d9e499407372472ad8fd833754796a03a62",
+          "original_source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+          "original_script": {
+            "project_relative_path": "scripts/experiments/interpolation/compare_three_interpolation_methods.py",
+            "sha256": "04544e59a71fcafceecd62b470fc93ea419124c790ac32ef60d4edd5c606423b",
+            "size_bytes": 18828,
+            "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+          },
+          "original_workflow_id": "compare_three_interpolation_methods",
+          "public_relative_path": "evidence/c03/methodology/simultaneous_calibration_diagnostics.csv",
+          "availability": "PUBLIC_REPOSITORY_EXHIBIT",
+          "role": "SUPPORTING_EVIDENCE"
+        },
+        {
+          "artifact_id": "M02",
+          "original_source_evidence_id": "C03b2b/reports/C/compare_three_interpolation_methods/tables/06_interpolation_comparison/three_method_global_recovery.csv",
+          "original_sha256": "5a948bca410d6653dac8ef4fd7d54673ecf2f756b61b85d385e5bc6e9ab1e8cb",
+          "original_source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+          "original_script": {
+            "project_relative_path": "scripts/experiments/interpolation/compare_three_interpolation_methods.py",
+            "sha256": "04544e59a71fcafceecd62b470fc93ea419124c790ac32ef60d4edd5c606423b",
+            "size_bytes": 18828,
+            "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+          },
+          "original_workflow_id": "compare_three_interpolation_methods",
+          "public_relative_path": "evidence/c03/methodology/three_method_global_recovery.csv",
+          "availability": "PUBLIC_REPOSITORY_EXHIBIT",
+          "role": "SUPPORTING_EVIDENCE"
+        },
+        {
+          "artifact_id": "M03",
+          "original_source_evidence_id": "C03b2b/reports/C/compare_three_interpolation_methods/tables/06_interpolation_comparison/three_method_recovery_by_horizon.csv",
+          "original_sha256": "420e1afa2bd0202d5a2353e833d73465cf8abd3995c2d763659e7c9990329a58",
+          "original_source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+          "original_script": {
+            "project_relative_path": "scripts/experiments/interpolation/compare_three_interpolation_methods.py",
+            "sha256": "04544e59a71fcafceecd62b470fc93ea419124c790ac32ef60d4edd5c606423b",
+            "size_bytes": 18828,
+            "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+          },
+          "original_workflow_id": "compare_three_interpolation_methods",
+          "public_relative_path": "evidence/c03/methodology/three_method_recovery_by_horizon.csv",
+          "availability": "PUBLIC_REPOSITORY_EXHIBIT",
+          "role": "SUPPORTING_EVIDENCE"
+        },
+        {
+          "artifact_id": "M04",
+          "original_source_evidence_id": "C03b2b/reports/C/compare_three_interpolation_methods/metadata/06_interpolation_comparison/experiment_metadata.json",
+          "original_sha256": "4cbd00b1237b0d1b9b605d7b2dcd2ff4f4717e9620d7e037b9c781b77202e1ed",
+          "original_source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+          "original_script": {
+            "project_relative_path": "scripts/experiments/interpolation/compare_three_interpolation_methods.py",
+            "sha256": "04544e59a71fcafceecd62b470fc93ea419124c790ac32ef60d4edd5c606423b",
+            "size_bytes": 18828,
+            "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+          },
+          "original_workflow_id": "compare_three_interpolation_methods",
+          "public_relative_path": null,
+          "availability": "EXTERNAL_NOT_DISTRIBUTED",
+          "role": "SUPPORTING_EVIDENCE"
+        },
+        {
+          "artifact_id": "M05",
+          "original_source_evidence_id": "C03b2b/reports/C/plot_three_interpolation_methods/figures/06_interpolation_comparison/forward_28d_recovery_three_methods.png",
+          "original_sha256": "50b2b01fa4e45832d731a9f0eba120cdd22a7a2627cbdf9e495fe1652a13b195",
+          "original_source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+          "original_script": {
+            "project_relative_path": "scripts/experiments/interpolation/plot_three_interpolation_methods.py",
+            "sha256": "ac6d99ef642688756f972fc6f66792176d3e6ced76275f96b41c8dfb32425683",
+            "size_bytes": 27690,
+            "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+          },
+          "original_workflow_id": "plot_three_interpolation_methods",
+          "public_relative_path": "evidence/c03/methodology/forward_28d_recovery_three_methods.png",
+          "availability": "PUBLIC_REPOSITORY_EXHIBIT",
+          "role": "SUPPORTING_EVIDENCE"
+        }
+      ],
+      "external_evidence_dependencies": [
+        "C03b2b/metadata/cross-workflow-consistency.json",
+        "C03b2b/reports/C/compare_three_interpolation_methods/metadata/06_interpolation_comparison/experiment_metadata.json",
+        "C03b2b/reports/C/plot_three_interpolation_methods/tables/06_interpolation_comparison/forward_28d_recovery_three_methods_dense.csv"
+      ],
+      "additional_review_limitations": null
+    },
+    {
+      "original_claim_id": "C09",
+      "supported_wording": "Section 05 one-sided and central workflows persist finite 15×15 node matrices with exact upstream zeros and matching own-node summary diagonals.",
+      "claim_type": "observed result",
+      "financial_interpretation": "Provides inspectable local quote-to-node risk responses.",
+      "methodology": "Sequential LOG_LINEAR_DF; +1 bp and ±1 bp quote shocks. C03 structural/internal financial tests passed.",
+      "source_artifact_ids": [
+        "Q01",
+        "Q02",
+        "Q03",
+        "Q04",
+        "Q05"
+      ],
+      "available_public_artifacts": [
+        "Q01",
+        "Q02",
+        "Q03",
+        "Q04",
+        "Q05"
+      ],
+      "original_source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "units": "matrix rows=shocked quotes; columns=responding nodes; bp/bp",
+      "limitations": "No tracked historical section 05 baseline; no historical equality claimed; do not transfer exact-zero behavior to the simultaneous global engine.",
+      "evidence_strength": "STRONG_WITHIN_DECLARED_SCOPE",
+      "evidence": [
+        {
+          "artifact_id": "Q01",
+          "original_source_evidence_id": "C03b2b/reports/B/report_quote_sensitivity/tables/05_quote_sensitivity/one_sided_quote_sensitivity_summary.csv",
+          "original_sha256": "57f1a55ecd7d62c83d428338e8a59b79b1efd4d6a1b1f0b802a1ef550565f7bd",
+          "original_source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+          "original_script": {
+            "project_relative_path": "scripts/experiments/bootstrap/report_quote_sensitivity.py",
+            "sha256": "8535699fc12dc5a7e9d55edcf9e17e381173eb0561933fdcc7521b48a409533b",
+            "size_bytes": 9720,
+            "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+          },
+          "original_workflow_id": "report_quote_sensitivity",
+          "public_relative_path": "evidence/c03/section05/one_sided_quote_sensitivity_summary.csv",
+          "availability": "PUBLIC_REPOSITORY_EXHIBIT",
+          "role": "SUPPORTING_EVIDENCE"
+        },
+        {
+          "artifact_id": "Q02",
+          "original_source_evidence_id": "C03b2b/reports/B/report_quote_sensitivity/tables/05_quote_sensitivity/one_sided_zero_sensitivity_matrix.csv",
+          "original_sha256": "574a8c6cba4851c53437a3c1af16b661be5865f5909cdfba33521dd9c470f2b4",
+          "original_source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+          "original_script": {
+            "project_relative_path": "scripts/experiments/bootstrap/report_quote_sensitivity.py",
+            "sha256": "8535699fc12dc5a7e9d55edcf9e17e381173eb0561933fdcc7521b48a409533b",
+            "size_bytes": 9720,
+            "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+          },
+          "original_workflow_id": "report_quote_sensitivity",
+          "public_relative_path": "evidence/c03/section05/one_sided_zero_sensitivity_matrix.csv",
+          "availability": "PUBLIC_REPOSITORY_EXHIBIT",
+          "role": "SUPPORTING_EVIDENCE"
+        },
+        {
+          "artifact_id": "Q03",
+          "original_source_evidence_id": "C03b2b/reports/B/report_central_quote_sensitivity/tables/05_quote_sensitivity/central_quote_sensitivity_summary.csv",
+          "original_sha256": "ff2ad6dfe8424896d1fc5ef9c4e78ce98c1a04f9d9170e3326d9c1439c5bb390",
+          "original_source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+          "original_script": {
+            "project_relative_path": "scripts/experiments/bootstrap/report_central_quote_sensitivity.py",
+            "sha256": "630afb2aafbe4090d637b92dfd1895acd0e6c594d3350c44ae9588cfe3077aff",
+            "size_bytes": 11648,
+            "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+          },
+          "original_workflow_id": "report_central_quote_sensitivity",
+          "public_relative_path": "evidence/c03/section05/central_quote_sensitivity_summary.csv",
+          "availability": "PUBLIC_REPOSITORY_EXHIBIT",
+          "role": "SUPPORTING_EVIDENCE"
+        },
+        {
+          "artifact_id": "Q04",
+          "original_source_evidence_id": "C03b2b/reports/B/report_central_quote_sensitivity/tables/05_quote_sensitivity/central_zero_sensitivity_matrix.csv",
+          "original_sha256": "d4d7a732e21a4a06e70a254ba6b096a356edf92b5a4f67cd0e819c5e0112da1e",
+          "original_source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+          "original_script": {
+            "project_relative_path": "scripts/experiments/bootstrap/report_central_quote_sensitivity.py",
+            "sha256": "630afb2aafbe4090d637b92dfd1895acd0e6c594d3350c44ae9588cfe3077aff",
+            "size_bytes": 11648,
+            "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+          },
+          "original_workflow_id": "report_central_quote_sensitivity",
+          "public_relative_path": "evidence/c03/section05/central_zero_sensitivity_matrix.csv",
+          "availability": "PUBLIC_REPOSITORY_EXHIBIT",
+          "role": "SUPPORTING_EVIDENCE"
+        },
+        {
+          "artifact_id": "Q05",
+          "original_source_evidence_id": "C03b2b/reports/B/report_central_quote_sensitivity/tables/05_quote_sensitivity/own_node_local_curvature.csv",
+          "original_sha256": "6accab217ab1c2215cd48fdf6b1b25f55c89adb4e4ee9694c1976afed79d0ca5",
+          "original_source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+          "original_script": {
+            "project_relative_path": "scripts/experiments/bootstrap/report_central_quote_sensitivity.py",
+            "sha256": "630afb2aafbe4090d637b92dfd1895acd0e6c594d3350c44ae9588cfe3077aff",
+            "size_bytes": 11648,
+            "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+          },
+          "original_workflow_id": "report_central_quote_sensitivity",
+          "public_relative_path": "evidence/c03/section05/own_node_local_curvature.csv",
+          "availability": "PUBLIC_REPOSITORY_EXHIBIT",
+          "role": "SUPPORTING_EVIDENCE"
+        },
+        {
+          "artifact_id": null,
+          "original_source_evidence_id": "C03b2b/metadata/quote-sensitivity-validation.json",
+          "original_sha256": "33cced8cbf12d98bfd7bfa149ba3a15579697ac3b4201d143571c451ddb60596",
+          "original_source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+          "original_script": {
+            "evidence_id": "C03b2b/validate_evidence.py",
+            "sha256": "47338a6c77dab284d37f3fecc64c10d282a0f9448281a616cfb2ca75d887c0a6",
+            "size_bytes": 34944,
+            "availability": "EXTERNAL_ARCHIVE_NOT_DISTRIBUTED_NO_PUBLIC_DOWNLOAD"
+          },
+          "original_workflow_id": "original audit program; not a financial producer",
+          "public_relative_path": null,
+          "availability": "EXTERNAL_NOT_DISTRIBUTED",
+          "role": "SUPPORTING_EVIDENCE"
+        }
+      ],
+      "external_evidence_dependencies": [
+        "C03b2b/metadata/quote-sensitivity-validation.json"
+      ],
+      "additional_review_limitations": null
+    },
+    {
+      "original_claim_id": "C10",
+      "supported_wording": "The section 05 30Y one-sided own-node zero change is 2.497681564725407 bp for +1 bp; central sensitivity is 2.490478975129551 bp/bp and local curvature is 0.014405179191712136 bp/bp².",
+      "claim_type": "observed result",
+      "financial_interpretation": "Demonstrates asymmetric local response and finite-difference curvature.",
+      "methodology": "D+ = (Z+−Z0)/h; Dc=(Z+−Z−)/(2h); C=(Z+−2Z0+Z−)/h², where Z is node zero in bp and h=1 quote bp.",
+      "source_artifact_ids": [
+        "Q01",
+        "Q03",
+        "Q05"
+      ],
+      "available_public_artifacts": [
+        "Q01",
+        "Q03",
+        "Q05"
+      ],
+      "original_source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "units": "bp change; bp/bp; bp/bp²",
+      "limitations": "Different estimators, not contradictory results; curvature is finite-bump node-rate response, not portfolio gamma or an analytic derivative. Floating arithmetic residuals are disclosed in original checker.",
+      "evidence_strength": "STRONG_WITHIN_DECLARED_SCOPE",
+      "evidence": [
+        {
+          "artifact_id": "Q01",
+          "original_source_evidence_id": "C03b2b/reports/B/report_quote_sensitivity/tables/05_quote_sensitivity/one_sided_quote_sensitivity_summary.csv",
+          "original_sha256": "57f1a55ecd7d62c83d428338e8a59b79b1efd4d6a1b1f0b802a1ef550565f7bd",
+          "original_source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+          "original_script": {
+            "project_relative_path": "scripts/experiments/bootstrap/report_quote_sensitivity.py",
+            "sha256": "8535699fc12dc5a7e9d55edcf9e17e381173eb0561933fdcc7521b48a409533b",
+            "size_bytes": 9720,
+            "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+          },
+          "original_workflow_id": "report_quote_sensitivity",
+          "public_relative_path": "evidence/c03/section05/one_sided_quote_sensitivity_summary.csv",
+          "availability": "PUBLIC_REPOSITORY_EXHIBIT",
+          "role": "SUPPORTING_EVIDENCE"
+        },
+        {
+          "artifact_id": "Q03",
+          "original_source_evidence_id": "C03b2b/reports/B/report_central_quote_sensitivity/tables/05_quote_sensitivity/central_quote_sensitivity_summary.csv",
+          "original_sha256": "ff2ad6dfe8424896d1fc5ef9c4e78ce98c1a04f9d9170e3326d9c1439c5bb390",
+          "original_source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+          "original_script": {
+            "project_relative_path": "scripts/experiments/bootstrap/report_central_quote_sensitivity.py",
+            "sha256": "630afb2aafbe4090d637b92dfd1895acd0e6c594d3350c44ae9588cfe3077aff",
+            "size_bytes": 11648,
+            "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+          },
+          "original_workflow_id": "report_central_quote_sensitivity",
+          "public_relative_path": "evidence/c03/section05/central_quote_sensitivity_summary.csv",
+          "availability": "PUBLIC_REPOSITORY_EXHIBIT",
+          "role": "SUPPORTING_EVIDENCE"
+        },
+        {
+          "artifact_id": "Q05",
+          "original_source_evidence_id": "C03b2b/reports/B/report_central_quote_sensitivity/tables/05_quote_sensitivity/own_node_local_curvature.csv",
+          "original_sha256": "6accab217ab1c2215cd48fdf6b1b25f55c89adb4e4ee9694c1976afed79d0ca5",
+          "original_source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+          "original_script": {
+            "project_relative_path": "scripts/experiments/bootstrap/report_central_quote_sensitivity.py",
+            "sha256": "630afb2aafbe4090d637b92dfd1895acd0e6c594d3350c44ae9588cfe3077aff",
+            "size_bytes": 11648,
+            "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+          },
+          "original_workflow_id": "report_central_quote_sensitivity",
+          "public_relative_path": "evidence/c03/section05/own_node_local_curvature.csv",
+          "availability": "PUBLIC_REPOSITORY_EXHIBIT",
+          "role": "SUPPORTING_EVIDENCE"
+        }
+      ],
+      "external_evidence_dependencies": [],
+      "additional_review_limitations": null
+    },
+    {
+      "original_claim_id": "C11",
+      "supported_wording": "The global study covers 3 base plus 90 shocked simultaneous calibrations, all successful within the existing 0.01 bp repricing policy; G01 retains 45 method/shock rows.",
+      "claim_type": "observed result",
+      "financial_interpretation": "Establishes calibration credibility before interpreting propagated risk.",
+      "methodology": "3 interpolation methods × 15 one-factor ±1 bp quote shocks; 28D forwards sampled every 7 days.",
+      "source_artifact_ids": [
+        "G01",
+        "G02",
+        "G06"
+      ],
+      "available_public_artifacts": [
+        "G01",
+        "G02"
+      ],
+      "original_source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "units": "repricing bp; response bp/bp; curvature bp/bp²",
+      "limitations": "Not a correlated stress, portfolio P&L, hedging or monetary DV01 study.",
+      "evidence_strength": "STRONG_WITHIN_DECLARED_SCOPE",
+      "evidence": [
+        {
+          "artifact_id": "G01",
+          "original_source_evidence_id": "C03b2a/full-global-root/tables/07_global_sensitivity/global_sensitivity_summary.csv",
+          "original_sha256": "42e571ff3c58cf3a87cbeac3573818dab1329136722d38bc88ea53b899416bb9",
+          "original_source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+          "original_script": {
+            "project_relative_path": "scripts/experiments/sensitivity/report_global_sensitivity.py",
+            "sha256": "c14a7222a61082783edc7585e04ee071088fe777ef27e53f221086e8e7f984fe",
+            "size_bytes": 45543,
+            "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+          },
+          "original_workflow_id": "global",
+          "public_relative_path": "evidence/c03/global/global_sensitivity_summary.csv",
+          "availability": "PUBLIC_REPOSITORY_EXHIBIT",
+          "role": "SUPPORTING_EVIDENCE"
+        },
+        {
+          "artifact_id": "G02",
+          "original_source_evidence_id": "C03b2a/full-global-root/tables/07_global_sensitivity/global_calibration_diagnostics.csv",
+          "original_sha256": "a30987b133c522a13eb73dfaf04851db4fc8d4f0b722816381cd824d00fc7f01",
+          "original_source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+          "original_script": {
+            "project_relative_path": "scripts/experiments/sensitivity/report_global_sensitivity.py",
+            "sha256": "c14a7222a61082783edc7585e04ee071088fe777ef27e53f221086e8e7f984fe",
+            "size_bytes": 45543,
+            "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+          },
+          "original_workflow_id": "global",
+          "public_relative_path": "evidence/c03/global/global_calibration_diagnostics.csv",
+          "availability": "PUBLIC_REPOSITORY_EXHIBIT",
+          "role": "SUPPORTING_EVIDENCE"
+        },
+        {
+          "artifact_id": "G06",
+          "original_source_evidence_id": "C03b2a/full-global-root/metadata/07_global_sensitivity/experiment_metadata.json",
+          "original_sha256": "58d40ffe14c4eabbfc8286f2b8fd3797b851a3aa0820201ed7d9310f17cb3614",
+          "original_source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+          "original_script": {
+            "project_relative_path": "scripts/experiments/sensitivity/report_global_sensitivity.py",
+            "sha256": "c14a7222a61082783edc7585e04ee071088fe777ef27e53f221086e8e7f984fe",
+            "size_bytes": 45543,
+            "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+          },
+          "original_workflow_id": "global",
+          "public_relative_path": null,
+          "availability": "EXTERNAL_NOT_DISTRIBUTED",
+          "role": "SUPPORTING_EVIDENCE"
+        },
+        {
+          "artifact_id": null,
+          "original_source_evidence_id": "C03b2a/metadata/producer-structure-validation.json",
+          "original_sha256": "8496ee1962d660eed13ac0bc42c3e96bbcdbbd8935534e182a75bfb4d6273ceb",
+          "original_source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+          "original_script": {
+            "project_relative_path": "scripts/experiments/sensitivity/report_global_sensitivity.py",
+            "sha256": "c14a7222a61082783edc7585e04ee071088fe777ef27e53f221086e8e7f984fe",
+            "size_bytes": 45543,
+            "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+          },
+          "original_workflow_id": "financial workflow",
+          "public_relative_path": null,
+          "availability": "EXTERNAL_NOT_DISTRIBUTED",
+          "role": "SUPPORTING_EVIDENCE"
+        }
+      ],
+      "external_evidence_dependencies": [
+        "C03b2a/full-global-root/metadata/07_global_sensitivity/experiment_metadata.json",
+        "C03b2a/metadata/producer-structure-validation.json"
+      ],
+      "additional_review_limitations": null
+    },
+    {
+      "original_claim_id": "C12",
+      "supported_wording": "Cubic forward responses spread across the curve; a small-looking nodal off-diagonal heatmap cell does not prove absence of forward propagation.",
+      "claim_type": "interpretation",
+      "financial_interpretation": "Links interpolation choice to hedge localization and model-risk questions.",
+      "methodology": "Read signed matrices and forward sensitivity together; distinguish responding nodes from off-node forward starts.",
+      "source_artifact_ids": [
+        "G01",
+        "G03",
+        "G04",
+        "G05",
+        "G07",
+        "H03",
+        "H04"
+      ],
+      "available_public_artifacts": [
+        "G01",
+        "G03",
+        "G04",
+        "G05",
+        "H03",
+        "H04"
+      ],
+      "original_source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "units": "bp/bp",
+      "limitations": "Node heatmap sequential palette suppresses sign/small magnitude; future narrative may omit that figure after review. No quantified hedging effectiveness claimed.",
+      "evidence_strength": "STRONG_SCENARIO_SPECIFIC_INTERPRETATION",
+      "evidence": [
+        {
+          "artifact_id": "G01",
+          "original_source_evidence_id": "C03b2a/full-global-root/tables/07_global_sensitivity/global_sensitivity_summary.csv",
+          "original_sha256": "42e571ff3c58cf3a87cbeac3573818dab1329136722d38bc88ea53b899416bb9",
+          "original_source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+          "original_script": {
+            "project_relative_path": "scripts/experiments/sensitivity/report_global_sensitivity.py",
+            "sha256": "c14a7222a61082783edc7585e04ee071088fe777ef27e53f221086e8e7f984fe",
+            "size_bytes": 45543,
+            "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+          },
+          "original_workflow_id": "global",
+          "public_relative_path": "evidence/c03/global/global_sensitivity_summary.csv",
+          "availability": "PUBLIC_REPOSITORY_EXHIBIT",
+          "role": "SUPPORTING_EVIDENCE"
+        },
+        {
+          "artifact_id": "G03",
+          "original_source_evidence_id": "C03b2a/full-global-root/tables/07_global_sensitivity/node_zero_sensitivity_matrix_log_linear_df.csv",
+          "original_sha256": "bef56ddcb4695f551c22a8018e51e377df868e827422ea1f9f160570000bfb64",
+          "original_source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+          "original_script": {
+            "project_relative_path": "scripts/experiments/sensitivity/report_global_sensitivity.py",
+            "sha256": "c14a7222a61082783edc7585e04ee071088fe777ef27e53f221086e8e7f984fe",
+            "size_bytes": 45543,
+            "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+          },
+          "original_workflow_id": "global",
+          "public_relative_path": "evidence/c03/global/node_zero_sensitivity_matrix_log_linear_df.csv",
+          "availability": "PUBLIC_REPOSITORY_EXHIBIT",
+          "role": "SUPPORTING_EVIDENCE"
+        },
+        {
+          "artifact_id": "G04",
+          "original_source_evidence_id": "C03b2a/full-global-root/tables/07_global_sensitivity/node_zero_sensitivity_matrix_linear_continuous_zero.csv",
+          "original_sha256": "6071b4c13b315f30850c2fe295640cd7fad927a68c262c87891608096212d28b",
+          "original_source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+          "original_script": {
+            "project_relative_path": "scripts/experiments/sensitivity/report_global_sensitivity.py",
+            "sha256": "c14a7222a61082783edc7585e04ee071088fe777ef27e53f221086e8e7f984fe",
+            "size_bytes": 45543,
+            "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+          },
+          "original_workflow_id": "global",
+          "public_relative_path": "evidence/c03/global/node_zero_sensitivity_matrix_linear_continuous_zero.csv",
+          "availability": "PUBLIC_REPOSITORY_EXHIBIT",
+          "role": "SUPPORTING_EVIDENCE"
+        },
+        {
+          "artifact_id": "G05",
+          "original_source_evidence_id": "C03b2a/full-global-root/tables/07_global_sensitivity/node_zero_sensitivity_matrix_cubic_continuous_zero.csv",
+          "original_sha256": "a8dc5e5da4aa9db2913ddbd70874431c2750831d3d33ad0be7c34d45b81606fb",
+          "original_source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+          "original_script": {
+            "project_relative_path": "scripts/experiments/sensitivity/report_global_sensitivity.py",
+            "sha256": "c14a7222a61082783edc7585e04ee071088fe777ef27e53f221086e8e7f984fe",
+            "size_bytes": 45543,
+            "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+          },
+          "original_workflow_id": "global",
+          "public_relative_path": "evidence/c03/global/node_zero_sensitivity_matrix_cubic_continuous_zero.csv",
+          "availability": "PUBLIC_REPOSITORY_EXHIBIT",
+          "role": "SUPPORTING_EVIDENCE"
+        },
+        {
+          "artifact_id": "G07",
+          "original_source_evidence_id": "C03b2a/full-global-root/figures/07_global_sensitivity/node_zero_sensitivity_heatmap_cubic_continuous_zero.png",
+          "original_sha256": "24ac8192ff0f2847985223b238762635b027c5a44e377f221c29ceb3867eb5cc",
+          "original_source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+          "original_script": {
+            "project_relative_path": "scripts/experiments/sensitivity/report_global_sensitivity.py",
+            "sha256": "c14a7222a61082783edc7585e04ee071088fe777ef27e53f221086e8e7f984fe",
+            "size_bytes": 45543,
+            "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+          },
+          "original_workflow_id": "global",
+          "public_relative_path": null,
+          "availability": "EXTERNAL_NOT_DISTRIBUTED",
+          "role": "EXCLUDED_G07_NOT_USED_AS_PUBLIC_SUPPORT"
+        },
+        {
+          "artifact_id": "H03",
+          "original_source_evidence_id": "C03b2a/full-global-root/figures/07_global_sensitivity/forward_sensitivity_heatmap_cubic_continuous_zero_robust_common_scale.png",
+          "original_sha256": "8d406ed6f7390f7f09d00bc8448afaecafd54b2ee71c5361672f2f8c0874adc4",
+          "original_source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+          "original_script": {
+            "project_relative_path": "scripts/experiments/sensitivity/plot_global_forward_sensitivity_heatmaps.py",
+            "sha256": "c5b62462070a2cd1ac7ba1d51553d6352bbc55b75869fa21d4201d2cc67ce754",
+            "size_bytes": 27630,
+            "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+          },
+          "original_workflow_id": "heatmaps",
+          "public_relative_path": "evidence/c03/heatmaps/forward_sensitivity_heatmap_cubic_continuous_zero_robust_common_scale.png",
+          "availability": "PUBLIC_PRESENTATION_DERIVATIVE_ORIGINAL_EXTERNAL",
+          "role": "SUPPORTING_EVIDENCE",
+          "published_sha256": "30c92c26b5ddc2774c0d8c700f3204636f09461f471be7c9f004d6fef875ed3a",
+          "published_classification": "PRESENTATION_DERIVATIVE_FROM_VALIDATED_DATA",
+          "published_provenance_artifact_id": "H03"
+        },
+        {
+          "artifact_id": "H04",
+          "original_source_evidence_id": "C03b2a/full-global-root/figures/07_global_sensitivity/forward_sensitivity_heatmap_cubic_continuous_zero_full_common_scale.png",
+          "original_sha256": "4f202724ca1bcf9615cadaa22373604cc5e7a761fcfbb89f38f4be23f1038428",
+          "original_source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+          "original_script": {
+            "project_relative_path": "scripts/experiments/sensitivity/plot_global_forward_sensitivity_heatmaps.py",
+            "sha256": "c5b62462070a2cd1ac7ba1d51553d6352bbc55b75869fa21d4201d2cc67ce754",
+            "size_bytes": 27630,
+            "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+          },
+          "original_workflow_id": "heatmaps",
+          "public_relative_path": "evidence/c03/heatmaps/forward_sensitivity_heatmap_cubic_continuous_zero_full_common_scale.png",
+          "availability": "PUBLIC_PRESENTATION_DERIVATIVE_ORIGINAL_EXTERNAL",
+          "role": "SUPPORTING_EVIDENCE",
+          "published_sha256": "d83abfd9abb197eba45c5dad8d102a2c14ff4fed063ea3464da3abab850c1a04",
+          "published_classification": "PRESENTATION_DERIVATIVE_FROM_VALIDATED_DATA",
+          "published_provenance_artifact_id": "H04"
+        }
+      ],
+      "external_evidence_dependencies": [
+        "C03b2a/full-global-root/figures/07_global_sensitivity/node_zero_sensitivity_heatmap_cubic_continuous_zero.png",
+        "C03b2a/full-global-root/tables/07_global_sensitivity/global_forward_sensitivity_dense.csv",
+        "C03b2a/full-global-root/tables/07_global_sensitivity/global_node_sensitivity_long.csv"
+      ],
+      "additional_review_limitations": "H03/H04 are human-approved presentation derivatives of unchanged validated matrices. Robust clipping 1.5023474%; full-range clipping 0%. The out-of-domain 30Y pillar marker is omitted; the complete 30Y response row remains. Full replay inputs remain external."
+    },
+    {
+      "original_claim_id": "C13",
+      "supported_wording": "Robust heatmaps use a common pooled 99.5th-percentile cap of ±11.33194135019177 bp/bp; full scale is ±20.04398642012309 bp/bp. Cubic clipped fraction is 0.015023474178403756; full plots intentionally clip none.",
+      "claim_type": "observed result",
+      "financial_interpretation": "Prevents color saturation from understating tail amplification.",
+      "methodology": "Scales pooled across all methods; robust scale intentionally saturates tails.",
+      "source_artifact_ids": [
+        "H01",
+        "H02",
+        "H03",
+        "H04"
+      ],
+      "available_public_artifacts": [
+        "H01",
+        "H03",
+        "H04"
+      ],
+      "original_source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "units": "bp/bp; clipped fraction 0–1 (1.5023474% cubic)",
+      "limitations": "Selected figures show cubic only; all methods appear in H01 and G01. Compare colors only under the stated common scale, never robust vs full without accounting for caps.",
+      "evidence_strength": "STRONG_WITHIN_DECLARED_SCOPE",
+      "evidence": [
+        {
+          "artifact_id": "H01",
+          "original_source_evidence_id": "C03b2a/full-global-root/tables/07_global_sensitivity/forward_sensitivity_heatmap_scale_diagnostics.csv",
+          "original_sha256": "39315d80286b50ced878b07f24b44c97213a285c4b2f72d7a3d94424dbc2a307",
+          "original_source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+          "original_script": {
+            "project_relative_path": "scripts/experiments/sensitivity/plot_global_forward_sensitivity_heatmaps.py",
+            "sha256": "c5b62462070a2cd1ac7ba1d51553d6352bbc55b75869fa21d4201d2cc67ce754",
+            "size_bytes": 27630,
+            "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+          },
+          "original_workflow_id": "heatmaps",
+          "public_relative_path": "evidence/c03/heatmaps/forward_sensitivity_heatmap_scale_diagnostics.csv",
+          "availability": "PUBLIC_REPOSITORY_EXHIBIT",
+          "role": "SUPPORTING_EVIDENCE"
+        },
+        {
+          "artifact_id": "H02",
+          "original_source_evidence_id": "C03b2a/full-global-root/metadata/07_global_sensitivity/forward_sensitivity_heatmap_metadata.json",
+          "original_sha256": "5ce01f5f845c3ff5b31c3e68ca8614687385e41042e04cc9c0f97f73a4f5b7d5",
+          "original_source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+          "original_script": {
+            "project_relative_path": "scripts/experiments/sensitivity/plot_global_forward_sensitivity_heatmaps.py",
+            "sha256": "c5b62462070a2cd1ac7ba1d51553d6352bbc55b75869fa21d4201d2cc67ce754",
+            "size_bytes": 27630,
+            "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+          },
+          "original_workflow_id": "heatmaps",
+          "public_relative_path": null,
+          "availability": "EXTERNAL_NOT_DISTRIBUTED",
+          "role": "SUPPORTING_EVIDENCE"
+        },
+        {
+          "artifact_id": "H03",
+          "original_source_evidence_id": "C03b2a/full-global-root/figures/07_global_sensitivity/forward_sensitivity_heatmap_cubic_continuous_zero_robust_common_scale.png",
+          "original_sha256": "8d406ed6f7390f7f09d00bc8448afaecafd54b2ee71c5361672f2f8c0874adc4",
+          "original_source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+          "original_script": {
+            "project_relative_path": "scripts/experiments/sensitivity/plot_global_forward_sensitivity_heatmaps.py",
+            "sha256": "c5b62462070a2cd1ac7ba1d51553d6352bbc55b75869fa21d4201d2cc67ce754",
+            "size_bytes": 27630,
+            "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+          },
+          "original_workflow_id": "heatmaps",
+          "public_relative_path": "evidence/c03/heatmaps/forward_sensitivity_heatmap_cubic_continuous_zero_robust_common_scale.png",
+          "availability": "PUBLIC_PRESENTATION_DERIVATIVE_ORIGINAL_EXTERNAL",
+          "role": "SUPPORTING_EVIDENCE",
+          "published_sha256": "30c92c26b5ddc2774c0d8c700f3204636f09461f471be7c9f004d6fef875ed3a",
+          "published_classification": "PRESENTATION_DERIVATIVE_FROM_VALIDATED_DATA",
+          "published_provenance_artifact_id": "H03"
+        },
+        {
+          "artifact_id": "H04",
+          "original_source_evidence_id": "C03b2a/full-global-root/figures/07_global_sensitivity/forward_sensitivity_heatmap_cubic_continuous_zero_full_common_scale.png",
+          "original_sha256": "4f202724ca1bcf9615cadaa22373604cc5e7a761fcfbb89f38f4be23f1038428",
+          "original_source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+          "original_script": {
+            "project_relative_path": "scripts/experiments/sensitivity/plot_global_forward_sensitivity_heatmaps.py",
+            "sha256": "c5b62462070a2cd1ac7ba1d51553d6352bbc55b75869fa21d4201d2cc67ce754",
+            "size_bytes": 27630,
+            "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+          },
+          "original_workflow_id": "heatmaps",
+          "public_relative_path": "evidence/c03/heatmaps/forward_sensitivity_heatmap_cubic_continuous_zero_full_common_scale.png",
+          "availability": "PUBLIC_PRESENTATION_DERIVATIVE_ORIGINAL_EXTERNAL",
+          "role": "SUPPORTING_EVIDENCE",
+          "published_sha256": "d83abfd9abb197eba45c5dad8d102a2c14ff4fed063ea3464da3abab850c1a04",
+          "published_classification": "PRESENTATION_DERIVATIVE_FROM_VALIDATED_DATA",
+          "published_provenance_artifact_id": "H04"
+        }
+      ],
+      "external_evidence_dependencies": [
+        "C03b2a/full-global-root/metadata/07_global_sensitivity/forward_sensitivity_heatmap_metadata.json",
+        "C03b2a/full-global-root/tables/07_global_sensitivity/global_forward_sensitivity_dense.csv",
+        "C03b2a/full-global-root/tables/07_global_sensitivity/global_node_sensitivity_long.csv"
+      ],
+      "additional_review_limitations": "H03/H04 are human-approved presentation derivatives of unchanged validated matrices. Robust clipping 1.5023474%; full-range clipping 0%. The out-of-domain 30Y pillar marker is omitted; the complete 30Y response row remains. Full replay inputs remain external."
+    },
+    {
+      "original_claim_id": "C14",
+      "supported_wording": "Locality depends on tenor and metric: cubic ±2Y sensitivity mass at the 30Y shock is 0.29034212262038983, and the selected all-method plot shows cubic above both challengers there.",
+      "claim_type": "interpretation",
+      "financial_interpretation": "Avoids overselling a universal method ranking.",
+      "methodology": "w_j=|central forward sensitivity_j|/sum|sensitivity|; mass sums weights with |t_j−T_shock|≤2 ACT/360 years; RMS uses saved weighted distance.",
+      "source_artifact_ids": [
+        "L01",
+        "L02",
+        "L03"
+      ],
+      "available_public_artifacts": [
+        "L01",
+        "L03"
+      ],
+      "original_source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+      "units": "fractions in CSV; percentages in figure; years for distances",
+      "limitations": "Absolute weights discard response sign. These are sampled curve-response metrics, not probabilities, portfolio risk or a guarantee that cubic is always less local. Finite domain affects boundary shocks.",
+      "evidence_strength": "STRONG_SCENARIO_SPECIFIC_INTERPRETATION",
+      "evidence": [
+        {
+          "artifact_id": "L01",
+          "original_source_evidence_id": "C03b2a/full-global-root/tables/07_global_sensitivity/forward_sensitivity_locality.csv",
+          "original_sha256": "de59820c13e5cbcf21d36e4ad86184eb43709192c8a7c2a14c466a18918db340",
+          "original_source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+          "original_script": {
+            "project_relative_path": "scripts/experiments/sensitivity/report_forward_sensitivity_locality.py",
+            "sha256": "15267683e7a5e6ac3070ebf47c98f1283384b760dcbdc4122110f20fd913088b",
+            "size_bytes": 19195,
+            "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+          },
+          "original_workflow_id": "locality",
+          "public_relative_path": "evidence/c03/locality/forward_sensitivity_locality.csv",
+          "availability": "PUBLIC_REPOSITORY_EXHIBIT",
+          "role": "SUPPORTING_EVIDENCE"
+        },
+        {
+          "artifact_id": "L02",
+          "original_source_evidence_id": "C03b2a/full-global-root/metadata/07_global_sensitivity/forward_sensitivity_locality_metadata.json",
+          "original_sha256": "036cf8047774a58ada5066f398f7148262e2272308ce432964be597965921a78",
+          "original_source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+          "original_script": {
+            "project_relative_path": "scripts/experiments/sensitivity/report_forward_sensitivity_locality.py",
+            "sha256": "15267683e7a5e6ac3070ebf47c98f1283384b760dcbdc4122110f20fd913088b",
+            "size_bytes": 19195,
+            "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+          },
+          "original_workflow_id": "locality",
+          "public_relative_path": null,
+          "availability": "EXTERNAL_NOT_DISTRIBUTED",
+          "role": "SUPPORTING_EVIDENCE"
+        },
+        {
+          "artifact_id": "L03",
+          "original_source_evidence_id": "C03b2a/full-global-root/figures/07_global_sensitivity/forward_sensitivity_mass_within_2y_by_shock.png",
+          "original_sha256": "0de0497a5e19b00b5efe3306adedacc31897632b7e7bca5b94f65d503f692719",
+          "original_source_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+          "original_script": {
+            "project_relative_path": "scripts/experiments/sensitivity/report_forward_sensitivity_locality.py",
+            "sha256": "15267683e7a5e6ac3070ebf47c98f1283384b760dcbdc4122110f20fd913088b",
+            "size_bytes": 19195,
+            "source_commit": "bee31fd0883660f171ebe84817b98641239eae5b"
+          },
+          "original_workflow_id": "locality",
+          "public_relative_path": "evidence/c03/locality/forward_sensitivity_mass_within_2y_by_shock.png",
+          "availability": "PUBLIC_REPOSITORY_EXHIBIT",
+          "role": "SUPPORTING_EVIDENCE"
+        }
+      ],
+      "external_evidence_dependencies": [
+        "C03b2a/full-global-root/metadata/07_global_sensitivity/forward_sensitivity_locality_metadata.json",
+        "C03b2a/full-global-root/tables/07_global_sensitivity/global_forward_sensitivity_dense.csv",
+        "C03b2a/full-global-root/tables/07_global_sensitivity/global_node_sensitivity_long.csv"
+      ],
+      "additional_review_limitations": null
+    }
+  ],
+  "rejected_claims": [
+    {
+      "claim": "Production-ready or observed-market certified valuation engine",
+      "reason": "Synthetic quotes, projected calendar, closed Core-v1 scope; separate release and market-data work absent."
+    },
+    {
+      "claim": "All 1,035 tests passed together on current clean HEAD",
+      "reason": "Composite historical evidence: 1,008 repaired non-slow plus 27 original slow, with unchanged production/slow source across test-only PR #13."
+    },
+    {
+      "claim": "Section 05 reproduces a historical golden baseline",
+      "reason": "No tracked historical baseline; internal consistency does not establish history."
+    },
+    {
+      "claim": "Cubic is universally superior or always less local",
+      "reason": "Single smooth synthetic scenario; tenor/metric-dependent results, including 30Y ±2Y mass exception."
+    },
+    {
+      "claim": "Full shocked forwards or a node curvature matrix are saved in section 05",
+      "reason": "Those CLIs persist node sensitivities, own-node curvature and forward summaries only. Global section 07 is a separate workflow."
+    },
+    {
+      "claim": "Selected public collection is a complete replay archive for all research",
+      "reason": "Dense consumer/figure inputs are intentionally retained externally; only the seven-file operational snapshot group is complete as a snapshot."
+    },
+    {
+      "claim": "Portfolio monetary DV01, gamma, hedge performance, multi-curve or observed-market capability was demonstrated",
+      "reason": "Unverified future capability; existing curve-rate sensitivities and same-curve synthetic study provide no such evidence."
+    },
+    {
+      "claim": "Bitwise results are guaranteed on all versions/platforms",
+      "reason": "Supported numerical comparison scope is the measured reference environment only."
+    }
+  ],
+  "blockers": [],
+  "boundaries": [
+    "No new financial computation, producer, calibration, sensitivity numerical output or pytest execution. C04c-F01 rendered persisted data only; C04c-F02 performs byte-copy integration and static validation.",
+    "Original outputs, execution receipts, scripts and hashes stay separate from authored C04c summaries.",
+    "Metadata withholding is documented and safe subsets proceed; no original metadata file was sanitized or replaced.",
+    "C01–C06 and all C04b artifacts remain unchanged; C06 is cross-referenced.",
+    "C04d remains pending; no staging, commit, push, PR, merge or website publication."
+  ],
+  "external_supporting_records": [
+    {
+      "evidence_id": "C03b2b/metadata/cross-workflow-consistency.json",
+      "sha256": "25600c94f1193bdc64ceaf242c533c48ed0a96bc63bb53ecc17bbd3e67ab8b98",
+      "size_bytes": 10904,
+      "availability": "EXTERNAL_ARCHIVE_NOT_DISTRIBUTED_NO_PUBLIC_DOWNLOAD"
+    },
+    {
+      "evidence_id": "C03b2b/metadata/quote-sensitivity-validation.json",
+      "sha256": "33cced8cbf12d98bfd7bfa149ba3a15579697ac3b4201d143571c451ddb60596",
+      "size_bytes": 8054,
+      "availability": "EXTERNAL_ARCHIVE_NOT_DISTRIBUTED_NO_PUBLIC_DOWNLOAD"
+    },
+    {
+      "evidence_id": "C03b2a/metadata/producer-structure-validation.json",
+      "sha256": "8496ee1962d660eed13ac0bc42c3e96bbcdbbd8935534e182a75bfb4d6273ceb",
+      "size_bytes": 41248,
+      "availability": "EXTERNAL_ARCHIVE_NOT_DISTRIBUTED_NO_PUBLIC_DOWNLOAD"
+    },
+    {
+      "evidence_id": "C03c/coverage-matrix.json",
+      "sha256": "ce4b84c772fc187e3107b211bfb7d0ed6249f2794a5f23513328c9b4fdca10ca",
+      "size_bytes": 48263,
+      "availability": "EXTERNAL_ARCHIVE_NOT_DISTRIBUTED_NO_PUBLIC_DOWNLOAD"
+    },
+    {
+      "evidence_id": "C03c/findings.json",
+      "sha256": "28e3298b868a0e845bd10a2273bf24e4402807507f8cb3d0da72845315abda4e",
+      "size_bytes": 17821,
+      "availability": "EXTERNAL_ARCHIVE_NOT_DISTRIBUTED_NO_PUBLIC_DOWNLOAD"
+    },
+    {
+      "evidence_id": "C04a/claim-evidence-matrix.md",
+      "sha256": "fac47b86cceee6f6663ed7331dd202ec1e0fa7a59ec1a6ad43ca5cf4e6fc8889",
+      "size_bytes": 60187,
+      "availability": "EXTERNAL_ARCHIVE_NOT_DISTRIBUTED_NO_PUBLIC_DOWNLOAD"
+    },
+    {
+      "evidence_id": "C04a/curation-policy.md",
+      "sha256": "c9f6fc2f55f7f48b962a853374f3ed66eb96dd4c9105b98787c51459c4e4fccd",
+      "size_bytes": 7727,
+      "availability": "EXTERNAL_ARCHIVE_NOT_DISTRIBUTED_NO_PUBLIC_DOWNLOAD"
+    },
+    {
+      "evidence_id": "C04a/public-evidence-architecture.md",
+      "sha256": "02fdfdafe18eb1cc287ac5d376623dc209479d49ec0bd8e77c1e4d396b3e4928",
+      "size_bytes": 23009,
+      "availability": "EXTERNAL_ARCHIVE_NOT_DISTRIBUTED_NO_PUBLIC_DOWNLOAD"
+    },
+    {
+      "evidence_id": "C04a/section05-policy-proposal.md",
+      "sha256": "45854320bf9b5eee60be46764b41e74294c2d8733baa7dcc9a6a8e38ab96b754",
+      "size_bytes": 6656,
+      "availability": "EXTERNAL_ARCHIVE_NOT_DISTRIBUTED_NO_PUBLIC_DOWNLOAD"
+    },
+    {
+      "evidence_id": "C04a/implementation-backlog.md",
+      "sha256": "3c68336caa44b87627c87593e6fe4ea2aebb9390d538b014e3461b8b13ce48bb",
+      "size_bytes": 4619,
+      "availability": "EXTERNAL_ARCHIVE_NOT_DISTRIBUTED_NO_PUBLIC_DOWNLOAD"
+    }
+  ],
+  "cross_references": [
+    {
+      "original_claim_id": "C06",
+      "claims_project_relative_path": "docs/evidence/claims-valuation.md#c06",
+      "narrative_project_relative_path": "docs/evidence/valuation.md#h-fit-versus-known-truth-recovery",
+      "scope": "Original C04b claim unchanged; excellent quote fit does not establish exact known-truth recovery."
+    }
+  ],
+  "workflow_grids": {
+    "method_recovery_metrics": {
+      "df_dates": [
+        "2026-09-18",
+        "2056-09-20"
+      ],
+      "df_count": 1567,
+      "zero_dates": [
+        "2026-09-25",
+        "2056-09-20"
+      ],
+      "zero_count": 1566,
+      "forward_start_dates": [
+        "2026-09-18",
+        "2056-08-23"
+      ],
+      "forward_end_dates": [
+        "2026-10-16",
+        "2056-09-20"
+      ],
+      "forward_count": 1563,
+      "grid_step_days": 7,
+      "forward_period_days": 28,
+      "terminal_endpoint_included": true
+    },
+    "method_plot_zero": {
+      "dates": [
+        "2026-09-19",
+        "2056-09-20"
+      ],
+      "count": 1567,
+      "grid_step_days": 7,
+      "scope": "External zero plot; reference+1 offset, not the metrics zero grid."
+    },
+    "synthetic_truth_forward_plot": {
+      "final_start": "2056-08-21",
+      "final_end": "2056-09-18",
+      "common_observations_in_original_comparison": 1562,
+      "excluded_distinct_terminal_starts": [
+        "2056-08-21",
+        "2056-08-23"
+      ]
+    },
+    "global_forward_sensitivity_and_consumers": {
+      "forward_start_dates": [
+        "2026-09-18",
+        "2056-08-18"
+      ],
+      "forward_end_dates": [
+        "2026-10-16",
+        "2056-09-15"
+      ],
+      "count_per_method_shock": 1562,
+      "grid_step_days": 7,
+      "forward_period_days": 28,
+      "recovery_terminal_start_appended": false
+    },
+    "basis": "Original saved tables, original source and C03 cross-workflow/producer audits; no curve evaluation or new metric computation."
+  },
+  "presentation_integration_task": "C04c-F02",
+  "presentation_integration_timestamp_utc": "2026-11-06T02:54:41.776304+00:00",
+  "artifact_field_semantics": "original_sha256, original_* and source_commit preserve historical exhibit identity; size_bytes and format_and_dimensions describe the public exhibit when distributed. H03/H04 original_historical_exhibit and published_derivative separately bind historical and presentation provenance.",
+  "presentation_derivative_count": 2,
+  "presentation_derivative_bytes": 297723,
+  "distributed_count": 19,
+  "distributed_bytes": 691611,
+  "distribution_count_semantics": "23 selected historical candidate identities: 17 byte-identical original exhibits, 2 approved presentation derivatives, 4 withheld metadata artifacts. 19 distributed and 4 withheld; these are distribution counts, not additional financial datasets. selected_original_bytes and withheld_bytes retain historical sizes.",
+  "resolved_blockers": [
+    {
+      "id": "FIGURE-01",
+      "artifact_ids": [
+        "H03",
+        "H04"
+      ],
+      "finding": "Original footer annotations cover long-end 30Y data and intersect shock-pillar ticks at normal display size. Paired unchanged figures remain review exhibits; publication presentation requires an external decision.",
+      "status": "RESOLVED_BY_APPROVED_PRESENTATION_DERIVATIVES",
+      "resolution": "Human approved H03/H04 C04c-F01 PNGs; C04c-F02 integrates exact approved bytes with a footer outside the data and omits only the out-of-domain 30Y pillar marker. Financial matrices and historical originals remain unchanged.",
+      "resolution_recorded_utc": "2026-11-06T02:54:41.776304+00:00"
+    }
+  ]
+}
