@@ -1,12 +1,12 @@
 # Claims C07–C14: methodology and risk
 
-[Evidence index](index.md) · [Methodology](methodology.md) · [Risk](risk.md) · [Machine-readable manifest](../../evidence/c03/methodology-risk-manifest.json)
+[Evidence index](index.md) · [Methodology](methodology.md) · [Risk](risk.md) · [Machine-readable manifest](../../evidence/c03/methodology-risk-manifest.json) · [Unified claims](claims.md) · [Reproduce](reproduce.md) · [Unified index](../../evidence/c03/index.json)
 
 Original C04a claim identities are preserved below. All claims concern previously validated C03 evidence from synthetic `FTIIE_KNOWN_TRUTH_V1`, projected MXMC 2026–2057, reference date 2026-09-18 and same-curve projection/discounting. C04c supplies authored interpretation and static curation, with no new financial results.
 
 **Historical pre-PR review status: `C04C_READY_FOR_PR_REVIEW`.** H03/H04 are paired, human-approved presentation derivatives from unchanged validated financial matrices. Their footers are outside the data; the complete 30Y response row is visible. Only the out-of-domain 30Y payment-pillar marker is omitted. Robust clipping is **1.5023474%** of cubic cells; full-range clipping is **0%**. M04/G06/H02/L02 remain withheld for absolute local paths, with original hashes and expressly authored provenance summaries in the manifest. Their original files are not replaced by those summaries.
 
-Original financial source commit for every record: **`bee31fd0883660f171ebe84817b98641239eae5b`**. Curation starts from **`39f24aff2e2c5e13d2eb53ab43d4fee53cc18dae`** on branch `c04c-methodology-risk-evidence`; the base commit is not the financial execution identity. Exact original timestamps, source-script hashes, command-receipt hashes and separate curation time are in the manifest.
+Original financial source commit for every record: **`bee31fd0883660f171ebe84817b98641239eae5b`**. Historical curation started from **`39f24aff2e2c5e13d2eb53ab43d4fee53cc18dae`** on branch `c04c-methodology-risk-evidence`; the base commit is not the financial execution identity. Exact original timestamps, source-script hashes, command-receipt hashes and separate curation time are in the manifest.
 
 Each `C03…/…` evidence identifier below names a file relative to the retained external checkpoint archive. It is an archival identity, **not a public download or an inaccessible local hyperlink**. Public exhibit and source-code links resolve relative to this repository; original source hashes bind scripts to the historical financial source commit. The linked heatmap script now includes the C04c-F01 presentation-only revision; its rendering identity is separate from its original script hash.
 
@@ -331,9 +331,11 @@ The following archived records support grid/validation/provenance context; they 
 | `C04a/section05-policy-proposal.md` | `45854320bf9b5eee60be46764b41e74294c2d8733baa7dcc9a6a8e38ab96b754` |
 | `C04a/implementation-backlog.md` | `3c68336caa44b87627c87593e6fe4ea2aebb9390d538b014e3461b8b13ce48bb` |
 
-## External dense dependencies
+<a id="external-dense-dependencies"></a>
 
-The compact selection is not the full 49-file global replay archive. Heatmap/locality consumers require both global input files below under `tables/07_global_sensitivity/` in the same expected reports root; neither is distributed. The M05 plot input is also external. Durable access and the remaining reproduction appendix are deferred to **C04d**.
+## Dense dependencies and current availability
+
+The compact selection is not the full 49-file global replay archive. The two original global inputs below are now included as verified lossless gzip computational dependencies in the C04d2 local review change set; see the [transport manifest](../../evidence/c03/replay-inputs.json) and [validated extraction/replay contract](reproduce.md). Both must be restored under `tables/07_global_sensitivity/` in the same new explicit reports root. Original global identifiers in the claim dependency lists above retain their historical archival meaning; their bytes are now available through these two archives, while metadata/audit records remain external. The M05 dense CSV remains external; its plot script recalibrates and writes that file, with no saved-data reader mode.
 
 | External evidence identity | Bytes / data rows | SHA-256 |
 | --- | ---: | --- |
@@ -345,4 +347,4 @@ The compact selection is not the full 49-file global replay archive. Heatmap/loc
 
 Reject claims of observed-market calibration, real portfolio monetary DV01, portfolio P&L/gamma, hedge effectiveness, multi-curve validation or production readiness. The evidence also rejects universal cubic superiority/locality rankings, historical Section 05 identity, a complete public consumer replay archive and cross-platform bitwise guarantees. G07 is excluded; signed tables support the retained interpretation. Saturated heatmap colors do not reveal exact tail responses. A normalized absolute sensitivity mass is not a probability.
 
-The historical pre-PR curation checkpoints stopped before staging, commit, push and PR creation. The package is now committed in the existing PR; see the [current publication state](index.md#publication-state). Those historical stop instructions do not prohibit editorial commits or pushes to that PR. Merge remains a separate action; no formal release or website deployment is performed by this correction. C04d has not started.
+C04b and C04c are merged on main; see the [current publication state](index.md#publication-state). Historical pre-PR records and original rendering identities remain unchanged. C04d2 locally integrates the verified computational dependencies and scoped saved-data replay, pending external PR review. No staging, commit, push, PR creation, release or website deployment occurred in this task; C05/C06 remain separate.

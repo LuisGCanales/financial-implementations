@@ -1,0 +1,216 @@
+{
+  "schema": "c03-unified-evidence-index",
+  "schema_version": "1.0",
+  "task": "C04d2",
+  "curation_timestamp_utc": "2026-11-06T17:10:13.586159+00:00",
+  "source_financial_execution_commit": "bee31fd0883660f171ebe84817b98641239eae5b",
+  "publication_state": {
+    "as_of_utc": "2026-11-06T17:10:13.586159+00:00",
+    "c04b": {
+      "commit": "39f24aff2e2c5e13d2eb53ab43d4fee53cc18dae",
+      "pr": "https://github.com/LuisGCanales/financial-implementations/pull/14",
+      "state": "MERGED_ON_MAIN"
+    },
+    "c04c": {
+      "commit": "d9a79eac35a8224ee8633b56b8441d0a53d0a74c",
+      "pr": "https://github.com/LuisGCanales/financial-implementations/pull/15",
+      "state": "MERGED_ON_MAIN"
+    },
+    "c04d2": {
+      "state": "REFERENCE_ENVIRONMENT_SAVED_DATA_REPLAY_VALIDATION_PASSED",
+      "state_semantics": "Recorded C04d2 validation event at publication_state.as_of_utc; independent of later PR review or Git integration.",
+      "base_commit": "d9a79eac35a8224ee8633b56b8441d0a53d0a74c",
+      "integration_commit": null,
+      "integration_commit_semantics": "No C04d2 integration commit existed at curation time (publication_state.as_of_utc); this null is historical, not a statement of perpetual current repository state.",
+      "checkout_availability": "C04d2 files are available according to the branch or revision actually being viewed; later Git integration, formal tagged release and website deployment are separate events."
+    },
+    "complete_snapshot": "BLOCKED_PENDING_REVIEW_EXTERNAL_UNCHANGED",
+    "formal_release": "NOT_PERFORMED_BY_C04D2",
+    "website_deployment": "NOT_PERFORMED_BY_C04D2"
+  },
+  "historical_state_overlay": {
+    "semantics": "The publication state above records validation and integration context as of publication_state.as_of_utc; checkout availability follows the branch or revision actually being viewed. Historical manifest bytes, timestamps, claim wording and artifact hashes are unchanged.",
+    "valuation_manifest_fields": [
+      "publication_scope"
+    ],
+    "methodology_risk_manifest_fields": [
+      "review_state",
+      "publication_state",
+      "current_repository_commit_semantics",
+      "reproduction_boundary",
+      "boundaries"
+    ],
+    "historical_statements": "Pre-PR, pending-merge, original external-dense availability and C04d-not-started text in original manifests is historical, not the current checkout state."
+  },
+  "inventory_summary": {
+    "public_curated_exhibits": 30,
+    "byte_identical_historical_originals": 28,
+    "presentation_derivatives": 2,
+    "withheld_historical_originals": 8,
+    "new_compressed_computational_dependencies": 2,
+    "curated_exhibit_bytes": 830654,
+    "compressed_dependency_bytes": 2612856,
+    "semantics": "Dependencies do not increase exhibit count; this collection is not a complete financial audit archive."
+  },
+  "manifests": [
+    {
+      "path": "valuation-manifest.json",
+      "sha256": "50d4cce8fb0a92b6417ef58153b7bd15d2d73ee54dad1706ad664b36e2c3d16a",
+      "authority": "Original artifact identities, hashes and exact C01–C06 supported wording remain authoritative here; publication/reproduction statements describe historical curation state."
+    },
+    {
+      "path": "methodology-risk-manifest.json",
+      "sha256": "dcf837c7d08fb2b9764ba6edf855171ba42ca4dd878f1c6714660297fd196613",
+      "authority": "Original artifact identities, hashes and exact C07–C14 supported wording remain authoritative here; publication/reproduction statements describe historical curation state."
+    },
+    {
+      "path": "replay-inputs.json",
+      "sha256": "9dda0f08ef447872faaef3add897693a0bb54c4ce0cb8ba19bb7ff67795cc5d7",
+      "authority": "Two original computational dependencies and their verified lossless transport identities."
+    }
+  ],
+  "claims": [
+    {
+      "claim_id": "C01",
+      "manifest": "valuation-manifest.json",
+      "identity_field": "claim_id",
+      "documentation": "../../docs/evidence/claims-valuation.md#c01"
+    },
+    {
+      "claim_id": "C02",
+      "manifest": "valuation-manifest.json",
+      "identity_field": "claim_id",
+      "documentation": "../../docs/evidence/claims-valuation.md#c02"
+    },
+    {
+      "claim_id": "C03",
+      "manifest": "valuation-manifest.json",
+      "identity_field": "claim_id",
+      "documentation": "../../docs/evidence/claims-valuation.md#c03"
+    },
+    {
+      "claim_id": "C04",
+      "manifest": "valuation-manifest.json",
+      "identity_field": "claim_id",
+      "documentation": "../../docs/evidence/claims-valuation.md#c04"
+    },
+    {
+      "claim_id": "C05",
+      "manifest": "valuation-manifest.json",
+      "identity_field": "claim_id",
+      "documentation": "../../docs/evidence/claims-valuation.md#c05"
+    },
+    {
+      "claim_id": "C06",
+      "manifest": "valuation-manifest.json",
+      "identity_field": "claim_id",
+      "documentation": "../../docs/evidence/claims-valuation.md#c06"
+    },
+    {
+      "claim_id": "C07",
+      "manifest": "methodology-risk-manifest.json",
+      "identity_field": "original_claim_id",
+      "documentation": "../../docs/evidence/claims-methodology-risk.md#c07"
+    },
+    {
+      "claim_id": "C08",
+      "manifest": "methodology-risk-manifest.json",
+      "identity_field": "original_claim_id",
+      "documentation": "../../docs/evidence/claims-methodology-risk.md#c08"
+    },
+    {
+      "claim_id": "C09",
+      "manifest": "methodology-risk-manifest.json",
+      "identity_field": "original_claim_id",
+      "documentation": "../../docs/evidence/claims-methodology-risk.md#c09"
+    },
+    {
+      "claim_id": "C10",
+      "manifest": "methodology-risk-manifest.json",
+      "identity_field": "original_claim_id",
+      "documentation": "../../docs/evidence/claims-methodology-risk.md#c10"
+    },
+    {
+      "claim_id": "C11",
+      "manifest": "methodology-risk-manifest.json",
+      "identity_field": "original_claim_id",
+      "documentation": "../../docs/evidence/claims-methodology-risk.md#c11"
+    },
+    {
+      "claim_id": "C12",
+      "manifest": "methodology-risk-manifest.json",
+      "identity_field": "original_claim_id",
+      "documentation": "../../docs/evidence/claims-methodology-risk.md#c12"
+    },
+    {
+      "claim_id": "C13",
+      "manifest": "methodology-risk-manifest.json",
+      "identity_field": "original_claim_id",
+      "documentation": "../../docs/evidence/claims-methodology-risk.md#c13"
+    },
+    {
+      "claim_id": "C14",
+      "manifest": "methodology-risk-manifest.json",
+      "identity_field": "original_claim_id",
+      "documentation": "../../docs/evidence/claims-methodology-risk.md#c14"
+    }
+  ],
+  "reviewed_proposal_navigation": [
+    {
+      "claim_id": "C15",
+      "status": "SCOPED_REPRODUCIBILITY_STATEMENT_NOT_PREVIOUSLY_APPROVED_FINANCIAL_CLAIM",
+      "documentation": "../../docs/evidence/claims.md#c15"
+    },
+    {
+      "claim_id": "C16",
+      "status": "SCOPED_REPRODUCIBILITY_STATEMENT_NOT_PREVIOUSLY_APPROVED_FINANCIAL_CLAIM",
+      "documentation": "../../docs/evidence/claims.md#c16"
+    },
+    {
+      "claim_id": "C17",
+      "status": "SCOPED_REPRODUCIBILITY_STATEMENT_NOT_PREVIOUSLY_APPROVED_FINANCIAL_CLAIM",
+      "documentation": "../../docs/evidence/claims.md#c17"
+    }
+  ],
+  "documentation": {
+    "index": "../../docs/evidence/index.md",
+    "claims": "../../docs/evidence/claims.md",
+    "reproduce": "../../docs/evidence/reproduce.md"
+  },
+  "reproduction_levels": [
+    {
+      "level": 1,
+      "scope": "Public inspection of 30 curated exhibits; original complete receipts/withheld metadata remain external."
+    },
+    {
+      "level": 2,
+      "status": "PASS_IN_C04D2_REFERENCE_ENVIRONMENT",
+      "scope": "Verified original pair extraction and current heatmap/locality CLIs once each; exact H01/L01 saved-value equality, no calibration.",
+      "output_files": 27,
+      "public_recipe": "../../docs/evidence/reproduce.md"
+    },
+    {
+      "level": 3,
+      "status": "OPTIONAL_NOT_EXECUTED",
+      "scope": "Original producer recomputation; separate source/environment and new execution identity."
+    }
+  ],
+  "presentation_identity": {
+    "artifact_ids": [
+      "H03",
+      "H04"
+    ],
+    "authority": "methodology-risk-manifest.json",
+    "history": "Approved C04c-F01 derivatives were rendered with an uncommitted working-tree source revision; C04c integration does not change that historical fact.",
+    "current_heatmap_source_commit": "d9a79eac35a8224ee8633b56b8441d0a53d0a74c",
+    "current_heatmap_script_sha256": "3c3844dd9f133f88199fd4de1c2d48ede9de499ee1d0dabbcbc612b496a6c4e8",
+    "replay_renders": "New C04d2 execution/byte identities retained externally; approved public derivatives remain unchanged."
+  },
+  "boundaries": [
+    "Complete accepted operational snapshot remains withheld; standalone S03/S05/S06 are not an assurance archive.",
+    "Section 05 has no tracked historical baseline; G07 remains excluded.",
+    "Interpolation M05 plot script recalibrates and writes its dense CSV; no saved-data mode; dense CSV remains external.",
+    "Package 0.1.0, original policy IDs and snapshot schema 3.0 are unchanged.",
+    "No fresh-install or cross-platform/version bitwise guarantee; C05/C06 not started."
+  ]
+}
