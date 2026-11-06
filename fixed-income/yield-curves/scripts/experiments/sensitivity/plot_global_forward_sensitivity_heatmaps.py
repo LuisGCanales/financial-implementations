@@ -836,10 +836,19 @@ def save_forward_heatmap(
         shock_labels
     )
 
+    forward_domain = (
+        float(forward_years[0]),
+        float(forward_years[-1]),
+    )
+    ax.set_xlim(*forward_domain)
+
     # Mark the calibrated maturity associated with each shocked quote.
     #
     # These markers indicate where the corresponding shocked market
-    # instrument sits on the forward-maturity axis.
+    # instrument sits on the forward-start axis. The 30Y payment pillar
+    # lies beyond the last saved forward start: omit it, without extending
+    # the displayed domain or moving the marker to its boundary.
+    omitted_pillars = []
     for row_index, shock_index in enumerate(
         shock_indices
     ):
@@ -850,6 +859,10 @@ def save_forward_heatmap(
         )
 
         if pillar_year is None:
+            continue
+
+        if not forward_domain[0] <= pillar_year <= forward_domain[1]:
+            omitted_pillars.append(shock_labels[row_index])
             continue
 
         ax.plot(
@@ -879,20 +892,32 @@ def save_forward_heatmap(
         "dF / dK (bp/bp)"
     )
 
-    ax.text(
-        0.99,
-        0.01,
+    fig.text(
+        0.5,
+        0.065,
         (
             f"color limit = +/- {color_cap:.4f} bp/bp"
             f" | clipped cells = "
             f"{100.0 * clipped_fraction:.3f}%"
         ),
-        transform=ax.transAxes,
-        ha="right",
+        ha="center",
         va="bottom",
+        fontsize=10,
     )
 
-    fig.tight_layout()
+    if omitted_pillars:
+        fig.text(
+            0.5,
+            0.025,
+            "Pillars outside the saved forward-start domain "
+            "(markers omitted): " + ", ".join(omitted_pillars),
+            ha="center",
+            va="bottom",
+            fontsize=9,
+        )
+
+    # Reserve a separate footer band below the x-axis ticks and label.
+    fig.tight_layout(rect=(0.0, 0.13, 1.0, 1.0))
 
     paths = save_figure(
         reports_root=reports_root,

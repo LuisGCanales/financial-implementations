@@ -1,0 +1,4 @@
+scenario,reference_date,method,success,function_evaluations,jacobian_evaluations,cost,optimality,repricing_rmse_bp,max_abs_repricing_error_bp,optimizer_message
+FTIIE_KNOWN_TRUTH_V1,2026-09-18,LOG_LINEAR_DF,True,2,2,4.44449742161159e-21,1.4146252106182391e-05,2.4343369861522434e-11,5.4539706084710815e-11,`xtol` termination condition is satisfied.
+FTIIE_KNOWN_TRUTH_V1,2026-09-18,LINEAR_CONTINUOUS_ZERO,True,4,4,4.2018013596696325e-22,5.663293092197416e-07,7.48491938025577e-12,1.609823385706477e-11,`xtol` termination condition is satisfied.
+FTIIE_KNOWN_TRUTH_V1,2026-09-18,CUBIC_CONTINUOUS_ZERO,True,4,3,4.478605640926688e-21,3.84353211374714e-05,2.4436599984249548e-11,4.3853809472693683e-11,`xtol` termination condition is satisfied.
