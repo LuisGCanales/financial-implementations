@@ -3,7 +3,14 @@
 These repository tools support test maintenance and human review. They do not
 publish snapshots or perform operational assurance.
 
-From the repository root, after installing `.[dev,plots]`:
+Start at the `financial-implementations` Git repository root and enter the
+subproject:
+
+```bash
+cd fixed-income/yield-curves
+```
+
+From this project working directory, after installing `.[dev,plots]`:
 
 ```bash
 python scripts/tests/capture_baseline_reference.py --help

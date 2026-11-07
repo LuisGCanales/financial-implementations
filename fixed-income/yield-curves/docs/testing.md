@@ -2,7 +2,15 @@
 
 ## Installation
 
-Python 3.11 or later is required. From the repository root:
+The supported Python range is `>=3.11,<3.12` (Python 3.11 only).
+Start at the `financial-implementations` Git repository root, then enter the
+project directory before running installation or test commands:
+
+```bash
+cd fixed-income/yield-curves
+```
+
+From that project working directory:
 
 ```bash
 python -m pip install -e .                # core: NumPy and SciPy
@@ -34,6 +42,11 @@ pytest -s -vv -m slow --durations=20
 semantics. It is not assigned merely for using simultaneous calibration or a
 long dated curve. Every consumer of an expensive shared fixture is marked so
 excluding slow tests avoids constructing that fixture.
+
+Collection enumerates cases and applies marker selection; it does not execute
+tests or establish passes. The [test coverage map](test-coverage-map.md) records
+the audited revision, module/function/case counts, contracts and tolerances.
+A non-slow selection is not a timing measurement or a code-coverage percentage.
 
 ## Structural cost audit
 
@@ -67,3 +80,5 @@ pytest -q tests/tooling/test_reference_candidates.py
 
 Full suite and separately scheduled slow verification belong to release or
 numerical-change review; a successful fast run does not claim slow coverage.
+Fresh wheel/sdist builds, distribution contents, installation and release
+validation remain pending C06; the documentation audit does not establish them.

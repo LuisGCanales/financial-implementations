@@ -67,12 +67,18 @@ optimization. Hashes check integrity, not authenticity. This mode validates a
 published accepted run; it does not load legacy flat files or select
 unpublished/rejected runs. It performs no writes or recalibration.
 
-Both modes return 0 for accepted and 1 for rejected assessments. Missing CLI
-arguments return 2. Invalid files, integrity failures, insufficient coverage
-before calibration and I/O errors raise exceptions with a nonzero process exit;
-they do not publish a new current run. Automatic in-memory acceptance still
-occurs whenever the public baseline build API runs; this manual script is not
-called by that API or the operational builder.
+Both assurance modes return 0 for accepted and 1 for rejected assessments.
+Missing CLI arguments return 2. Invalid files, integrity failures and insufficient
+coverage before calibration raise with a nonzero process exit. Assurance performs
+no publication. In the operational builder, validation errors and failures before
+pointer replacement preserve the previous current run (a complete unpublished
+archive may remain). Publication commits at `os.replace(..., current.json)`;
+a later exception, including directory fsync failure, can leave the accepted run
+already current. A nonzero exit alone therefore does not prove no publication.
+See [snapshot failure semantics](snapshots.md#publication-and-failure-behavior).
+
+Automatic in-memory acceptance still occurs whenever the public baseline build
+API runs; this manual script is not called by that API or the operational builder.
 
 ## Explicit synthetic demo
 

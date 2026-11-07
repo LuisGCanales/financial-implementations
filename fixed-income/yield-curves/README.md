@@ -29,6 +29,9 @@ The rationale and trade-offs are documented in [docs/methodology.md](docs/method
 
 ## Architecture
 
+Developer navigation: [technical architecture](docs/architecture.md),
+[extension roadmaps](docs/extending.md), and [test coverage map](docs/test-coverage-map.md).
+
 ```text
 reusable financial library
         ↓
@@ -158,7 +161,7 @@ See the [curated evidence index](docs/evidence/index.md), [unified claims](docs/
 - `02_bootstrap_recovery`: historical bootstrap and recovery evidence.
 - `03_curve_validation`: historical sequential-bootstrap validation.
 - `04_curve_diagnostics`: historical log-linear diagnostics.
-- `05_quote_sensitivity`: no persisted section currently available.
+- `05_quote_sensitivity`: historical output section absent; curated C04 sensitivity exhibits are available through the evidence index above.
 - `06_interpolation_comparison`: historical interpolation comparison evidence.
 - `07_global_sensitivity`: simultaneous-calibration propagation and locality evidence.
 

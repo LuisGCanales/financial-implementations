@@ -9,6 +9,12 @@ This directory separates operational workflows, manual assurance, the synthetic 
 
 The current historical scripts are intentionally placed under `experiments/`.
 
+See [architecture](../docs/architecture.md) for reusable boundaries and the
+[curated C04 evidence index](../docs/evidence/index.md) for published exhibits.
+The absence statements below refer to historical `outputs/research/` sections,
+not to curated exhibits under `evidence/c03/`. See the
+[reproduction contract](../docs/evidence/reproduce.md) before replay or recomputation.
+
 ## Experiments
 
 ### `experiments/synthetic`
@@ -29,8 +35,8 @@ These scripts use the historical sequential bootstrap engine. Their validation a
 | `report_bootstrap_recovery_metrics.py` | Calculate global and maturity-horizon recovery metrics. | Synthetic quote CSV and known-truth model. | Writes tables/text under `outputs/research/{tables,text}/02_bootstrap_recovery/`. | `yield_curves.bootstrap`, `recovery`, `synthetic`, `reporting`. | MEDIUM |
 | `validate_synthetic_bootstrap.py` | Validate the sequential bootstrap and independently reprice calibration instruments. | Synthetic quote CSV and projected calendar. | Writes tables/text under `outputs/research/{tables,text}/03_curve_validation/`. | `yield_curves.bootstrap`, `validation`, `reporting`. | MEDIUM |
 | `report_curve_diagnostics.py` | Diagnose forward-curve shape and log-linear segment jumps. | Synthetic quote CSV and projected calendar. | Writes tables/text under `outputs/research/{tables,text}/04_curve_diagnostics/`. | `yield_curves.bootstrap`, `diagnostics`, `reporting`. | MEDIUM |
-| `report_quote_sensitivity.py` | Measure one-sided quote shocks and sequential upstream invariance. | Synthetic quote CSV and projected calendar. | Writes outputs under `outputs/research/{tables,text}/05_quote_sensitivity/` when executed; this section is currently absent from the repository. | `yield_curves.research.sensitivity`, `reporting`. | HIGH |
-| `report_central_quote_sensitivity.py` | Measure symmetric quote sensitivity and local curvature for the sequential engine. | Synthetic quote CSV and projected calendar. | Writes outputs under `outputs/research/{tables,text}/05_quote_sensitivity/` when executed; this section is currently absent from the repository. | `yield_curves.research.sensitivity`, `reporting`. | HIGH |
+| `report_quote_sensitivity.py` | Measure one-sided quote shocks and sequential upstream invariance. | Synthetic quote CSV and projected calendar. | Writes outputs under `outputs/research/{tables,text}/05_quote_sensitivity/` when executed; this historical section is absent under `outputs/research/`; curated C04 exhibits are linked above. | `yield_curves.research.sensitivity`, `reporting`. | HIGH |
+| `report_central_quote_sensitivity.py` | Measure symmetric quote sensitivity and local curvature for the sequential engine. | Synthetic quote CSV and projected calendar. | Writes outputs under `outputs/research/{tables,text}/05_quote_sensitivity/` when executed; this historical section is absent under `outputs/research/`; curated C04 exhibits are linked above. | `yield_curves.research.sensitivity`, `reporting`. | HIGH |
 
 ### `experiments/interpolation`
 
@@ -41,8 +47,8 @@ This directory preserves historical comparisons of two and three interpolation m
 | `compare_interpolation_methods.py` | Print global recovery/repricing comparison for two sequential methods. | Synthetic quote CSV and projected calendar. | Console output only. | `yield_curves.bootstrap`, `validation`, `recovery`. | MEDIUM |
 | `compare_interpolation_methods_by_horizon.py` | Print recovery comparison by maturity horizon for two sequential methods. | Synthetic quote CSV and projected calendar. | Console output only. | `yield_curves.bootstrap`, `recovery`. | MEDIUM |
 | `plot_interpolation_method_comparison.py` | Persist dense visual comparison of two sequential methods. | Synthetic quote CSV, projected calendar and known truth. | Writes the currently present `two_methods` figures/tables under `outputs/research/{figures,tables}/06_interpolation_comparison/`. | `yield_curves.bootstrap`, `synthetic`, `reporting`. | MEDIUM |
-| `compare_three_interpolation_methods.py` | Compare three methods with simultaneous nodal calibration. | Synthetic quote CSV, projected calendar and known truth. | Writes `three_method*`, diagnostics and metadata when executed; those outputs are currently absent. | `yield_curves.calibration`, `recovery`, `reporting`. | HIGH |
-| `plot_three_interpolation_methods.py` | Plot dense recovery for three methods, including cubic instantaneous forward. | Synthetic quote CSV, projected calendar and known truth. | Writes `three_methods*` figures/tables when executed; those outputs are currently absent. | `yield_curves.calibration`, `synthetic`, `reporting`. | HIGH |
+| `compare_three_interpolation_methods.py` | Compare three methods with simultaneous nodal calibration. | Synthetic quote CSV, projected calendar and known truth. | Writes `three_method*`, diagnostics and metadata when executed; those historical outputs are absent under `outputs/research/`; curated C04 exhibits are linked above. | `yield_curves.calibration`, `recovery`, `reporting`. | HIGH |
+| `plot_three_interpolation_methods.py` | Plot dense recovery for three methods, including cubic instantaneous forward. | Synthetic quote CSV, projected calendar and known truth. | Writes `three_methods*` figures/tables when executed; those historical outputs are absent under `outputs/research/`; curated C04 exhibits are linked above. | `yield_curves.calibration`, `synthetic`, `reporting`. | HIGH |
 
 ### `experiments/sensitivity`
 
