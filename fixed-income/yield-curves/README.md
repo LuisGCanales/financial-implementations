@@ -81,6 +81,9 @@ Snapshot assurance verifies the published archive without recalibration or write
 The operational CLI requires explicit inputs and an explicit output destination;
 it does not select demo defaults. See [CLI workflows](docs/cli.md).
 
+Release boundaries, immutable verification and the controlled-alpha approval
+process are documented in [release verification](docs/release.md).
+
 ### Installation modes
 
 - **Checkout development and repository scripts:** the editable installation above

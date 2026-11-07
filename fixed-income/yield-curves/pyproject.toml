@@ -59,8 +59,13 @@ plots = [
 ]
 
 
+[tool.setuptools]
+include-package-data = false
+
 [tool.setuptools.packages.find]
 where = ["src"]
+include = ["yield_curves", "yield_curves.*"]
+namespaces = false
 
 
 [tool.pytest.ini_options]

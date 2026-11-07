@@ -82,3 +82,18 @@ Full suite and separately scheduled slow verification belong to release or
 numerical-change review; a successful fast run does not claim slow coverage.
 Fresh wheel/sdist builds, distribution contents, installation and release
 validation remain pending C06; the documentation audit does not establish them.
+
+## Release verification tiers
+
+See [release verification](release.md) for Tier A (1008 non-slow), manual Tier B
+(27 slow in one serial session), and Tier C (isolated distributions and installed
+consumers). The exact existing identity remains 38 modules, 414 functions and
+1035 collected cases. New verifier self-tests live under
+`scripts/release/tests/`, outside the configured financial `testpaths`, and must
+be selected explicitly. The minimal library sdist excludes checkout test inputs;
+run the financial suite against a complete verified external Git export.
+
+The always-reporting PR aggregate is `yield-curves-required`. Manual numerical
+and release validation require reviewed immutable commit and project-tree SHAs.
+C06b1 local previews/self-tests do not establish C06b2 candidate verification,
+Tier A/B execution or C06c release approval.
