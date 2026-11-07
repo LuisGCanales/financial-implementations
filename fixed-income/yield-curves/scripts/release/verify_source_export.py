@@ -132,7 +132,7 @@ def tracked(repo, revision, subtree, expected_tree):
     return files
 
 
-def verify_directory(root, expected, mutable=False):
+def verify_directory(root, expected, mutable=False, mutable_test=False):
     actual = {}
     for p in root.rglob('*'):
         require(not p.is_symlink(), 'source symlink')
@@ -140,7 +140,7 @@ def verify_directory(root, expected, mutable=False):
             continue
         require(stat.S_ISREG(p.stat().st_mode), 'source nonregular file')
         name = p.relative_to(root).as_posix()
-        if mutable and name.startswith('src/yield_curves.egg-info/'):
+        if (mutable or mutable_test) and name.startswith('src/yield_curves.egg-info/'):
             require(name.split('/')[-1] in {'PKG-INFO', 'SOURCES.txt', 'dependency_links.txt', 'requires.txt', 'top_level.txt'} and len(name.split('/')) == 3, 'unknown generated metadata')
             continue
         if mutable and name.startswith('build/lib/'):
@@ -182,10 +182,12 @@ def main():
     for name in ('repo', 'revision', 'subtree', 'expected-tree', 'archive', 'destination', 'receipt'):
         parser.add_argument('--' + name, required=True)
     parser.add_argument('--check-directory', type=Path)
-    parser.add_argument('--mutable-build', action='store_true')
+    modes = parser.add_mutually_exclusive_group()
+    modes.add_argument('--mutable-build', action='store_true')
+    modes.add_argument('--mutable-test', action='store_true', help='allow only the five reviewed editable egg-info files')
     args = parser.parse_args()
     if args.check_directory:
-        verify_directory(args.check_directory, tracked(args.repo, args.revision, args.subtree, args.expected_tree), args.mutable_build)
+        verify_directory(args.check_directory, tracked(args.repo, args.revision, args.subtree, args.expected_tree), args.mutable_build, args.mutable_test)
     else:
         export(args.repo, args.revision, args.subtree, args.expected_tree,
                Path(args.archive), Path(args.destination), Path(args.receipt))

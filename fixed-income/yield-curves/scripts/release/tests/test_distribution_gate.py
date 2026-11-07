@@ -5,8 +5,10 @@ import hashlib
 import importlib.util
 import io
 import json
+import os
 from pathlib import Path
 import stat
+import subprocess
 import sys
 import tarfile
 import tomllib
@@ -215,6 +217,131 @@ def test_junit_substitution(tmp_path):
 def test_directory_modification(tmp_path):
     (tmp_path/'source.py').write_bytes(b'changed')
     with pytest.raises(ValueError):source_export.verify_directory(tmp_path,{'source.py':b'original'})
+
+
+def test_editable_test_metadata_is_explicit(tmp_path):
+    expected = {'src/yield_curves/__init__.py': b'approved'}
+    path = tmp_path / next(iter(expected))
+    path.parent.mkdir(parents=True)
+    path.write_bytes(next(iter(expected.values())))
+    metadata = tmp_path / 'src/yield_curves.egg-info'
+    metadata.mkdir()
+    for name in ('PKG-INFO', 'SOURCES.txt', 'dependency_links.txt', 'requires.txt', 'top_level.txt'):
+        (metadata / name).write_text('generated\n')
+    # The immutable source contract still forbids every generated file.
+    with pytest.raises(ValueError):
+        source_export.verify_directory(tmp_path, expected)
+    source_export.verify_directory(tmp_path, expected, mutable_test=True)
+    path.write_bytes(b'changed')
+    with pytest.raises(ValueError):
+        source_export.verify_directory(tmp_path, expected, mutable_test=True)
+
+
+@pytest.mark.parametrize('member', [
+    'src/yield_curves.egg-info/unknown.txt',
+    'src/yield_curves.egg-info/nested/PKG-INFO',
+    'src/other.egg-info/PKG-INFO',
+    'build/lib/yield_curves/__init__.py',
+    'results/private.json',
+])
+def test_editable_test_rejects_unapproved_files(tmp_path, member):
+    path = tmp_path / member
+    path.parent.mkdir(parents=True)
+    path.write_bytes(b'generated')
+    with pytest.raises(ValueError):
+        source_export.verify_directory(tmp_path, {}, mutable_test=True)
+
+
+def test_editable_test_rejects_metadata_symlink(tmp_path):
+    metadata = tmp_path / 'src/yield_curves.egg-info'
+    metadata.mkdir(parents=True)
+    (metadata/'PKG-INFO').symlink_to(tmp_path/'outside')
+    with pytest.raises(ValueError, match='symlink'):
+        source_export.verify_directory(tmp_path, {}, mutable_test=True)
+
+
+def run_finish(base, repo, code):
+    # Execute the actual shell EXIT handler, including its sanitizer and status.
+    script = (RELEASE/'run_release_validation.sh').read_text()
+    function = 'finish() {\n' + script.split('finish() {\n', 1)[1].split('\ntrap finish EXIT', 1)[0]
+    env = dict(os.environ, BASE=str(base), REPO=str(repo), REVISION='a'*40,
+               EXPECTED_TREE='b'*40, TIER='A', STATUS='PASS' if code == 0 else 'INCOMPLETE',
+               APPROVAL='LOCAL_SELF_TEST', TEST_EXIT_CODE=str(code))
+    return subprocess.run(['bash', '-c', function+'\ntrap finish EXIT\nexit "$TEST_EXIT_CODE"'],
+                          env=env, capture_output=True, text=True)
+
+
+@pytest.mark.parametrize('code', [0, 17])
+def test_public_diagnostics_exact_allowlist_on_success_and_failure(tmp_path, code):
+    base, repo = tmp_path/'attempt', tmp_path/'private-checkout'
+    (base/'results').mkdir(parents=True)
+    (base/'public').mkdir()
+    included = [
+        'results/source-export.json', 'results/wheelhouses.json',
+        'results/distribution.json', 'results/final-distribution.json',
+        'results/SHA256SUMS.txt', 'results/test-environment.json',
+        'results/wheel-consumer.json', 'results/sdist-consumer.json',
+        'results/tests/receipt.json', 'results/tests/collect.json', 'results/tests/run.json',
+        'results/tests/junit.xml', 'results/gate-tests.xml',
+        'results/tests/collect.stdout.log', 'results/tests/collect.stderr.log',
+        'results/tests/run.stdout.log', 'results/tests/run.stderr.log',
+        'logs/commands.log', 'logs/environment.stdout.log', 'logs/environment.stderr.log',
+        'logs/build.stdout.log', 'logs/build.stderr.log',
+        'logs/test-install.json', 'logs/test-install.stdout.log', 'logs/test-install.stderr.log',
+        'logs/tools-install.json', 'logs/test-dependencies.json',
+        'logs/wheel-install.json', 'logs/sdist-install.json',
+        'logs/wheel-dependencies.json', 'logs/sdist-dependencies.json',
+        'logs/wheel-smoke.stdout.log', 'logs/sdist-smoke.stderr.log',
+        'logs/test-origin.stdout.log', 'logs/test-source-integrity.stderr.log',
+        'logs/source-integrity-test-project.stdout.log',
+        'logs/financial-tests.stderr.log', 'logs/numerical-backend.stdout.log',
+        'logs/tools-inspect.stdout.log', 'logs/test-inspect.stdout.log',
+    ]
+    excluded = [
+        'results/tests/tmp/fixture.json', 'results/tests/tmp/fixture.txt',
+        'results/tests/tmp/fixture.xml', 'results/tests/tmp/nested/receipt.json',
+        'results/tests/mpl/fontlist.json', 'results/tests/cache/payload.txt',
+        'results/tests/temp/payload.xml', 'results/tests/snapshot.json',
+        'results/tests/dataset.txt', 'results/unknown.json', 'results/unknown.txt',
+        'results/unknown.xml', 'results/unknown.log', 'results/source-export.json.extra',
+        'logs/unknown.stdout.log', 'logs/private.json',
+        'source/immutable/private.txt', 'artifacts/private.json',
+        'runtime-wheelhouse/private.txt', 'envs/private.xml',
+        'private-original-research/archive.json',
+    ]
+    for name in included + excluded:
+        path = base/name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(f'{base}/internal {repo}/private /home/private/research /tmp/private/payload\n')
+    proc = run_finish(base, repo, code)
+    assert proc.returncode == code, proc.stderr
+    public = base/'public'
+    actual = {p.relative_to(public).as_posix() for p in public.rglob('*') if p.is_file()}
+    assert actual == set(included) | {'results/attempt.json'}
+    attempt = json.loads((public/'results/attempt.json').read_text())
+    assert attempt['exit_code'] == code
+    assert attempt['status'] == ('PASS' if code == 0 else 'INCOMPLETE')
+    for name in included:
+        assert (public/name).read_text() == '$RUN_ROOT/internal $REPOSITORY/private $ABSOLUTE_PATH $ABSOLUTE_PATH\n'
+
+
+@pytest.mark.parametrize('directory_link', [False, True])
+def test_public_diagnostics_reject_symlinked_allowlisted_paths(tmp_path, directory_link):
+    base = tmp_path/'attempt'
+    (base/'results').mkdir(parents=True)
+    (base/'public').mkdir()
+    private = tmp_path/'private'
+    private.mkdir()
+    (private/'receipt.json').write_text('PRIVATE_PAYLOAD')
+    if directory_link:
+        (base/'results/tests').symlink_to(private, target_is_directory=True)
+    else:
+        (base/'results/tests').mkdir()
+        (base/'results/tests/receipt.json').symlink_to(private/'receipt.json')
+    proc = run_finish(base, tmp_path/'repo', 17)
+    assert proc.returncode == 17, proc.stderr
+    assert not (base/'public/results/tests/receipt.json').exists()
+    assert (base/'public/results/attempt.json').is_file()
 
 
 @pytest.mark.parametrize('kind',['missing','substituted','no-teardown','interrupted','skipped','failed'])

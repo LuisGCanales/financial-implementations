@@ -61,16 +61,43 @@ import json, pathlib, re, sys
 base, repo, commit, tree, tier, status, code, approval = sys.argv[1:]
 b = pathlib.Path(base)
 (b/'results/attempt.json').write_text(json.dumps(dict(commit=commit,tree=tree,tier=tier,status=status,exit_code=int(code),approval=approval,release_approval=False),indent=2)+'\n')
-# Publish only receipts/logs. Never upload source exports, venvs or private staging.
-for directory in ('results', 'logs'):
-    for p in (b/directory).rglob('*'):
-        if not p.is_file() or p.suffix not in ('.json', '.log', '.xml', '.txt'):
-            continue
-        target = b/'public'/directory/p.relative_to(b/directory)
-        target.parent.mkdir(parents=True, exist_ok=True)
-        text = p.read_text(errors='replace').replace(base, '$RUN_ROOT').replace(repo, '$REPOSITORY')
-        text = re.sub(r'''(?<![:/\w])/(?:home|Users|tmp|usr|opt|var|runner|mnt)/[^\s"'<>]+''', '$ABSOLUTE_PATH', text)
-        target.write_text(text)
+# Exact diagnostic paths only: fixture payloads can also be JSON/TXT/XML.
+receipts = (
+    'attempt.json', 'source-export.json', 'wheelhouses.json',
+    'distribution.json', 'final-distribution.json', 'SHA256SUMS.txt',
+    'wheel-consumer.json', 'sdist-consumer.json', 'test-environment.json',
+    'gate-tests.xml', 'tests/receipt.json', 'tests/collect.json', 'tests/run.json',
+    'tests/junit.xml', 'tests/collect.stdout.log', 'tests/collect.stderr.log',
+    'tests/run.stdout.log', 'tests/run.stderr.log',
+)
+labels = (
+    'source-export', 'build-download', 'runtime-download', 'tools-install',
+    'build', 'distribution', 'twine', 'wheel-dependencies', 'wheel-install',
+    'wheel-check', 'wheel-freeze', 'wheel-inspect', 'wheel-smoke',
+    'sdist-dependencies', 'sdist-install', 'sdist-check', 'sdist-freeze',
+    'sdist-inspect', 'sdist-smoke', 'test-dependencies', 'test-install',
+    'test-source-integrity', 'test-origin', 'test-check', 'test-inspect',
+    'numerical-backend', 'financial-tests', 'gate-tests', 'tools-check',
+    'tools-inspect', 'environment', 'source-integrity-immutable',
+    'source-integrity-build-src', 'source-integrity-test-project',
+    'final-distribution',
+)
+reports = ('tools-install', 'wheel-dependencies', 'wheel-install',
+           'sdist-dependencies', 'sdist-install', 'test-dependencies', 'test-install')
+paths = ['results/' + name for name in receipts] + ['logs/commands.log']
+paths += ['logs/' + label + '.' + stream + '.log'
+          for label in labels for stream in ('stdout', 'stderr')]
+paths += ['logs/' + label + '.json' for label in reports]
+for name in paths:
+    p = b/name
+    # Do not follow a fixture-controlled link at any component of an allowed path.
+    if any(parent.is_symlink() for parent in (p, *p.parents)) or not p.is_file():
+        continue
+    target = b/'public'/name
+    target.parent.mkdir(parents=True, exist_ok=True)
+    text = p.read_text(errors='replace').replace(base, '$RUN_ROOT').replace(repo, '$REPOSITORY')
+    text = re.sub(r'''(?<![:/\w])/(?:home|Users|tmp|usr|opt|var|runner|mnt)/[^\s"'<>]+''', '$ABSOLUTE_PATH', text)
+    target.write_text(text)
 PY
   exit "$code"
 }
@@ -162,7 +189,34 @@ if [[ "$TIER" != C ]]; then
   python3.11 -m venv "$BASE/envs/test"
   TEST_PY="$BASE/envs/test/bin/python"
   run_log test-dependencies "$TOOLS" -m pip --python "$TEST_PY" install --no-index --find-links "$BASE/runtime-wheelhouse" --require-hashes -r "$SOURCE/requirements/ci-reference.txt" --report "$BASE/logs/test-dependencies.json"
-  run_log test-install "$TOOLS" -m pip --python "$TEST_PY" install --no-deps --no-cache-dir "$WHEEL"
+  # A/B exercise checkout contracts, including module-relative research defaults.
+  # Consumers above retain their independent, non-editable distribution installs.
+  run_log test-install "$TOOLS" -m pip --python "$TEST_PY" install -v --no-deps --no-cache-dir --editable "$BASE/test-project" --report "$BASE/logs/test-install.json"
+  run_log test-source-integrity python3.11 -B "$BOOTSTRAP/verify_source_export.py" --repo "$REPO" --revision "$REVISION" --subtree "$SUBTREE" --expected-tree "$EXPECTED_TREE" --archive "$BASE/source/project.tar" --destination "$SOURCE" --receipt "$BASE/results/source-export.json" --check-directory "$BASE/test-project" --mutable-test
+  run_log test-origin "$TEST_PY" -I -B - "$BASE/test-project" "$SOURCE" "$BASE/envs/test" "$BASE/results/test-environment.json" <<'PY'
+import hashlib, importlib, importlib.metadata, importlib.util, json, pathlib, sys
+project, source, prefix, output = map(pathlib.Path, sys.argv[1:])
+assert pathlib.Path(sys.prefix).resolve() == prefix.resolve(), 'wrong test environment'
+dist = importlib.metadata.distribution('yield-curves')
+direct = json.loads(dist.read_text('direct_url.json'))
+assert direct == {'dir_info': {'editable': True}, 'url': project.as_uri()}, 'wrong editable source'
+origins = {}
+for path in sorted((source/'src/yield_curves').rglob('*.py')):
+    relative = path.relative_to(source/'src')
+    parts = list(relative.with_suffix('').parts)
+    if parts[-1] == '__init__':
+        parts.pop()
+    module = '.'.join(parts)
+    origin = pathlib.Path(importlib.util.find_spec(module).origin).resolve()
+    assert origin == (project/'src'/relative).resolve(), 'wrong source module origin: ' + module
+    assert origin.read_bytes() == path.read_bytes(), 'source module bytes changed: ' + module
+    origins[module] = {'origin': str(origin), 'sha256': hashlib.sha256(origin.read_bytes()).hexdigest()}
+reporting = importlib.import_module('yield_curves.tooling.reporting')
+assert pathlib.Path(reporting.__file__).resolve() == project/'src/yield_curves/tooling/reporting.py'
+assert reporting.find_project_root(pathlib.Path(reporting.__file__)) == project, 'wrong checkout root'
+output.write_text(json.dumps(dict(status='PASS', prefix=str(prefix), project=str(project),
+                                 direct_url=direct, modules=origins), indent=2)+'\n')
+PY
   run_log test-check "$TOOLS" -m pip --python "$TEST_PY" check
   run_log test-inspect "$TOOLS" -m pip --python "$TEST_PY" inspect
   run_log numerical-backend "$TEST_PY" -I -B -c 'import numpy,scipy,os,platform; print(platform.platform()); print("cpu_count",os.cpu_count()); print("numpy",numpy.__version__,"scipy",scipy.__version__); numpy.show_config(); scipy.show_config()'
@@ -177,6 +231,7 @@ run_log environment "$TOOLS" -B -c 'import json,os,platform,sys; print(json.dump
 for directory in "$SOURCE" "$BASE/build-src" "$BASE/test-project"; do
   EXTRA=()
   [[ "$directory" != "$BASE/build-src" ]] || EXTRA=(--mutable-build)
+  [[ "$directory" != "$BASE/test-project" || "$TIER" == C ]] || EXTRA=(--mutable-test)
   run_log "source-integrity-$(basename "$directory")" python3.11 -B "$BOOTSTRAP/verify_source_export.py" --repo "$REPO" --revision "$REVISION" --subtree "$SUBTREE" --expected-tree "$EXPECTED_TREE" --archive "$BASE/source/project.tar" --destination "$SOURCE" --receipt "$BASE/results/source-export.json" --check-directory "$directory" "${EXTRA[@]}"
 done
 run_log final-distribution "$TOOLS" -B "$BOOTSTRAP/verify_distribution.py" --source "$SOURCE" --wheel "$WHEEL" --sdist "$SDIST" --expected-version "$VERSION" --output "$BASE/results/final-distribution.json"

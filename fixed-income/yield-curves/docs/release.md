@@ -32,8 +32,9 @@ current source; inherited editable metadata is rejected before building.
 Both distributions exclude checkout tests/fixtures, scripts, data, config, docs,
 evidence, outputs, notebooks, requirements locks, private checkpoints, virtual
 environments, caches and historical outputs. The full financial suite therefore
-runs against a separate complete source export with an independently installed
-wheel. The sdist is library build source, not a research reproduction checkout.
+runs in a fresh disposable environment with an editable installation of the
+verified external `test-project` source copy. The sdist is library build source,
+not a research reproduction checkout.
 README links refer to checkout documentation; that documentation is not bundled.
 
 Current evidence uses synthetic inputs and projected calendars with known
@@ -152,9 +153,24 @@ from independent working directories with `python -I -B`. Smoke checks cover
 site-packages origins, non-editable metadata, the baseline signature, accepted
 finite bounded queries, invalid quotes/calendars/vectors, rejected solver
 state, live-value mutations and out-of-domain queries. No checkout data or
-research module is needed. A/B use another independent wheel installation for
-the full checkout test resources. The existing project `.venv` is never used or
-modified. Artifacts and immutable/source bytes are rechecked after validation.
+research module is needed.
+
+A/B instead use a fresh `envs/test` with an offline, isolated editable installation
+of the verified external `test-project`, with `--no-deps` after hashed dependency
+installation. This suite includes checkout contracts: five reporting destination
+cases locate `outputs/research` relative to the imported module's project root.
+A site-packages wheel cannot supply that checkout root. No `PYTHONPATH` injection
+or original editable environment is used. Before testing, an isolated interpreter
+checks editable metadata, the exact external origins and immutable source bytes
+of every package module, and the reporting root; `test-environment.json` records
+the results. Only five generated files under `src/yield_curves.egg-info/` are
+allowed in this mutable test copy: `PKG-INFO`, `SOURCES.txt`,
+`dependency_links.txt`, `requires.txt`, `top_level.txt`. The test-copy mode rejects
+build payloads, unknown metadata, symlinks and any original source modification.
+The read-only export and its receipt stay unchanged. The existing project `.venv`
+is never used or modified. Artifacts and immutable/source bytes are rechecked
+after validation. Independent wheel/sdist consumers retain real distribution
+installs and enforce site-packages origins and non-editable metadata.
 
 ## Receipts and final approval
 
@@ -162,8 +178,16 @@ Preserve complete attempt receipts, command/stdout/stderr logs, dependency wheel
 URLs/hashes, Python/platform/tool provenance, build backend logs, archive member
 inventories, artifact `SHA256SUMS.txt`, pip reports/check/inspect/freeze, module
 origins, consumer results, and applicable selection/JUnit/resource evidence.
-GitHub uploads only sanitized `public` receipts, never exports, environments,
-private snapshots or entire staging directories. PR retention is 14 days;
+GitHub uploads only sanitized `public` receipts selected by exact paths in
+`finish()`, including on failures. The allowlist covers attempt/source/distribution
+receipts, exact test collection/outcomes, JUnit, test stdout/stderr, environment
+and dependency provenance, consumer receipts, named build/install/verification
+logs and artifact `SHA256SUMS.txt`. Missing diagnostics are tolerated on partial
+attempts; unknown paths are excluded regardless of extension. Symlinked paths
+are excluded. No recursive results/log copy is permitted: `results/tests/tmp/`,
+`mpl/`, caches, snapshot payloads, test datasets and unknown files stay private,
+as do source exports, wheelhouses, environments and original research archives.
+Every included text file passes the path sanitizer. PR retention is 14 days;
 manual numerical/release retention is 30 days. A cancelled job may not finish its
 receipt trap; absent receipts remain incomplete and cannot pass.
 
