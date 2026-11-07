@@ -100,6 +100,11 @@ The synthetic scenario itself is smooth and therefore favors methods capable of
 representing comparable smoothness. Real-market robustness is outside the
 current evidence base.
 
+Canonical C04 [methodology exhibits](evidence/methodology.md),
+[risk exhibits](evidence/risk.md) and [claims](evidence/claims.md) retain the
+financial evidence and its scope. See [extension roadmaps](extending.md) for
+engineering and validation required before adopting another method or architecture.
+
 ## Current selection rationale
 
 `CUBIC_CONTINUOUS_ZERO` with simultaneous nodal calibration is the
@@ -112,7 +117,7 @@ current baseline or the current method-selection conclusion.
 
 ## Configuration status
 
-`config/mxn_ftiie_ois.yaml` preserves the earlier descriptive convention
+`config/historical/mxn_ftiie_ois.yaml` preserves the earlier descriptive convention
 profile, including its log-linear interpolation entry. The operational API
 does not load that YAML file, so the entry is not an effective runtime switch
 for the current cubic baseline. It remains useful as a documented project

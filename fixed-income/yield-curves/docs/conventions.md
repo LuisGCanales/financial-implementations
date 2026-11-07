@@ -18,6 +18,21 @@ operational methodology are documented separately in
 
 ---
 
+## Implemented Core-v1 boundary
+
+[`FTiieOISConventions`](../src/yield_curves/conventions.py) is a closed profile:
+all fields and their types are validated against the supported defaults.
+Descriptor fields are fixed declarations, not general runtime selectors.
+Floating spread is zero; calibration instruments use unit notional. A downstream
+position may use a different positive notional without changing the calibration
+profile. `calendar_id="MXMC"` identifies a convention family, while the supplied
+calendar instance has its own name, holiday values and coverage; its name alone
+neither constrains nor authenticates that dataset.
+
+See [extension requirements](extending.md#add-a-financial-instrument) and the
+[convention test contracts](test-coverage-map.md#financial-conventions). This
+implementation note does not revalidate the external sources listed below.
+
 ## 1. Provenance Labels
 
 Each convention is classified using one of the following labels.

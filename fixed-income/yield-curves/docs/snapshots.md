@@ -1,5 +1,9 @@
 # Baseline execution archives and publication
 
+For technical navigation, see [architecture](architecture.md) and the
+[test coverage map](test-coverage-map.md). The detailed contracts below remain
+the authority for this workflow.
+
 The current artifact schema is `3.0` (`SCHEMA_VERSION` in
 `yield_curves.snapshots`). Publication consumes a completed `ExecutionEnvelope`,
 issued by the execution workflow rather than assembled from an existing result:

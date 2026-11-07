@@ -2,6 +2,9 @@
 
 All current nodal curves store discount factors at calibrated pillar dates.
 Interpolation determines how values between those nodes are represented.
+See [adding a method](extending.md#add-an-interpolation-method) for representation,
+engine and baseline review, and the [curve test contracts](test-coverage-map.md#curve-interpolation)
+for factory, domain, node and forward invariants.
 
 ## `LOG_LINEAR_DF`
 

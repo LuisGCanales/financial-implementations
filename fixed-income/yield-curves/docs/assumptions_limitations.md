@@ -57,6 +57,11 @@ real-market inputs.
 Perfect calibration is not equivalent to recovering a true curve between
 observed instruments.
 
+The canonical [methodology evidence](evidence/methodology.md),
+[risk evidence](evidence/risk.md) and [claims](evidence/claims.md) delimit the
+studied scenario. [Extension roadmaps](extending.md) separate present capability
+from required future engineering and financial validation.
+
 ## Architecture limits
 
 There is no multi-curve discounting architecture yet. Operational acceptance

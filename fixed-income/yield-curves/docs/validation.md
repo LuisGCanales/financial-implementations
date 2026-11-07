@@ -1,5 +1,9 @@
 # Validation and Acceptance
 
+For technical navigation, see [architecture](architecture.md) and the
+[test coverage map](test-coverage-map.md). The detailed contracts below remain
+the authority for this workflow.
+
 The project distinguishes historical bootstrap validation from acceptance of
 the current operational baseline.
 
