@@ -22,7 +22,8 @@ There is no root-package re-export façade and no generic instrument plugin
 registry. Reusable module interfaces are distinct from internal underscore
 helpers, mutable spline internals and the internal engine capability table.
 Checkout scripts are operational or research tooling, not installed console
-commands. Actual distribution contents and install validation remain pending C06.
+commands. Use a complete editable checkout for scripts and version metadata;
+financial research and engineering define the project scope.
 
 ## Module responsibilities
 

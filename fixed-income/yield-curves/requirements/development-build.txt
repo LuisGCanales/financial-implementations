@@ -1,0 +1,5 @@
+# Editable development backend; install together with ci-reference.txt.
+# Same CPython 3.11.15 / Linux x86_64 reference platform as ci-reference.txt.
+# Hashes retained from the existing lock; wheel's packaging dependency is pinned there.
+setuptools==79.0.1 --hash=sha256:e147c0549f27767ba362f9da434eab9c5dc0045d5304feb602a0af001089fc51
+wheel==0.48.0 --hash=sha256:3217dcc807155e45db462d7ef2431f5ddda0d7273b700d05a67b271ceb1287ab

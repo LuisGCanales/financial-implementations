@@ -18,7 +18,7 @@ Original financial source: `bee31fd0883660f171ebe84817b98641239eae5b`. Consumer 
 
 Measured environment: **Python 3.11.15, NumPy 2.4.6, SciPy 1.17.1, Matplotlib 3.11.2, Pillow 12.3.0, yield-curves 0.1.0**; zlib compile/runtime 1.2.11. The transport manifest records installed distribution versions. This is the tested environment, not a cross-version compatibility promise. C04d2 used the existing editable installation, without creating an environment or installing dependencies.
 
-Use a repository checkout containing these C04d2 files and an existing Python **3.11** environment at the project `.venv`. Repository scripts/fixtures are not supplied by a wheel-only installation. From the financial-implementations Git root:
+Use a repository checkout containing these C04d2 files and an existing Python **3.11** environment at the project `.venv`. Keep the complete checkout available for repository scripts and fixtures. From the financial-implementations Git root:
 
 ```bash
 set -eu
@@ -30,7 +30,7 @@ export PYTHONDONTWRITEBYTECODE=1
 "$PYTHON" -B -c 'import sys; assert sys.version_info[:2] == (3, 11)'
 ```
 
-**Separate future-user setup requirement, not executed/validated as a fresh install in C04d2:** provision Python 3.11 and install the checkout editably with plot extras if it is not already installed. Broad package requirements do not pin the reference environment. `wheel` is a declared build dependency and was absent in the measured existing environment; build dependency resolution belongs to setup.
+**Separate future-user setup requirement, not executed/validated as a fresh install in C04d2:** provision Python 3.11 and install the checkout editably with plot extras if it is not already installed. Broad package requirements do not pin the reference environment. Editable-build dependencies belong to local setup; the historical measured environment and execution above remain unchanged. For current pinned development setup, see [testing](../testing.md); those pins do not redefine the historical C04d2 reference environment.
 
 ```bash
 "$PYTHON" -B -m pip install -e '.[plots]'
