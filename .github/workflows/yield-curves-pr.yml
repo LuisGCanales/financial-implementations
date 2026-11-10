@@ -69,9 +69,6 @@ jobs:
       MKL_NUM_THREADS: '1'
       MPLBACKEND: Agg
       PYTHONDONTWRITEBYTECODE: '1'
-      TMPDIR: ${{ runner.temp }}/yield-curves/tmp
-      MPLCONFIGDIR: ${{ runner.temp }}/yield-curves/matplotlib
-      XDG_CACHE_HOME: ${{ runner.temp }}/yield-curves/cache
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4; verified GitHub tag ref
         with:
@@ -80,12 +77,29 @@ jobs:
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5; verified GitHub tag ref
         with:
           python-version: '3.11.15'
+      - name: Initialize runner temp paths
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          BASE="$RUNNER_TEMP/yield-curves"
+
+          mkdir -p \
+            "$BASE/tmp" \
+            "$BASE/matplotlib" \
+            "$BASE/cache" \
+            "$BASE/results"
+
+          {
+            echo "TMPDIR=$BASE/tmp"
+            echo "MPLCONFIGDIR=$BASE/matplotlib"
+            echo "XDG_CACHE_HOME=$BASE/cache"
+          } >> "$GITHUB_ENV"
       - name: Install reproducible development dependencies
         working-directory: fixed-income/yield-curves
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p "$TMPDIR" "$MPLCONFIGDIR" "$XDG_CACHE_HOME" "$RUNNER_TEMP/yield-curves/results"
           python -m pip install --require-hashes --only-binary=:all: \
             -r requirements/ci-reference.txt -r requirements/development-build.txt
           python -m pip install --no-deps --no-build-isolation -e .
