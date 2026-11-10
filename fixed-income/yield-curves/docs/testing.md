@@ -18,6 +18,20 @@ python -m pip install -e '.[dev]'         # pytest, tests without plotting
 python -m pip install -e '.[dev,plots]'   # full collection, including plotting
 ```
 
+For the reference Linux x86_64 platform, use Python 3.11.15 and the existing
+hash-pinned dependencies, including the editable-install backend:
+
+```bash
+python -m pip install --require-hashes --only-binary=:all: \
+  -r requirements/ci-reference.txt -r requirements/development-build.txt
+python -m pip install --no-deps --no-build-isolation -e .
+```
+
+The lock targets glibc >=2.34 and includes Matplotlib for full collection.
+Reuse the canonical `.venv` for local work. Keep editable metadata: snapshots and
+external baseline consumers read the installed project version. These build
+backend dependencies support local installation, not distribution certification.
+
 `tests/tooling/test_reporting.py` imports matplotlib during collection, so even
 whole-suite `-m 'not slow'` collection requires `plots`. With only `dev`, use
 `pytest --ignore=tests/tooling/test_reporting.py -m 'not slow'` or select individual
@@ -78,36 +92,35 @@ pytest -q tests/calibration/test_baseline.py
 pytest -q tests/tooling/test_reference_candidates.py
 ```
 
-Full suite and separately scheduled slow verification belong to release or
-numerical-change review; a successful fast run does not claim slow coverage.
-Fresh wheel/sdist builds, distribution contents, installation and release
-validation remain pending C06; the documentation audit does not establish them.
+A successful non-slow run does not claim slow coverage. Keep financial fixtures,
+assertions, tolerances and numerical reference review independent of test counts.
 
-## Release verification tiers
+## Continuous integration and manual numerical runs
 
-See [release verification](release.md) for Tier A (1008 non-slow), manual Tier B
-(27 slow in one serial session), and Tier C (isolated distributions and installed
-consumers). The exact existing identity remains 38 modules, 414 functions and
-1035 collected cases. New verifier self-tests live under
-`scripts/release/tests/`, outside the configured financial `testpaths`, and must
-be selected explicitly. The minimal library sdist excludes checkout test inputs;
-run the financial suite in a fresh disposable environment with an editable
-installation of the complete verified external `test-project` copy. A/B check
-checkout-relative defaults as well as financial behavior; five reporting cases
-need the imported module's source checkout root. Module origins, source bytes
-and editable metadata are verified before execution. The original `.venv` and
-arbitrary `PYTHONPATH` injection are not used. Only the five reviewed setuptools
-egg-info files may be generated in the external test copy; the immutable export
-and source-export receipt remain intact. Tier C keeps independent non-editable
-wheel/sdist consumers and source-byte/distribution checks.
+The PR/main workflow installs the reference dependencies and complete checkout
+editably, then runs `python -m pytest -q -m 'not slow'`. It does not build or
+certify distributions. Scope detection runs without top-level path filters.
+Changes under `fixed-income/yield-curves/` or `.github/workflows/` select validation;
+irrelevant monorepo changes skip validation and still finish the aggregate check.
 
-Public diagnostics use exact approved paths, including after failures. They
-retain selection/outcome receipts, JUnit, stdout/stderr and build/environment
-provenance, while excluding temporary fixtures, plotting caches, snapshots,
-datasets and unknown files even with `.json`, `.txt` or `.xml` extensions. Verifier
-self-tests exercise the actual exit handler's inclusion, exclusion and sanitizer.
+The exact required-check name is **`yield-curves-required`**. It always runs after
+scope and validation: scope must succeed; relevant changes require successful
+validation; irrelevant changes require skipped validation. Failed, cancelled or
+unknown results fail closed. No ruleset change is needed for this workflow.
 
-The always-reporting PR aggregate is `yield-curves-required`. Manual numerical
-and release validation require reviewed immutable commit and project-tree SHAs.
-C06b1 local previews/self-tests do not establish C06b2 candidate verification,
-Tier A/B execution or C06c release approval.
+The manual `Yield curves numerical` workflow takes a full commit SHA, verifies
+the checkout identity and runs `python -m pytest -s -vv -m slow --durations=20`
+in one serial session. Select a revision containing the development setup above.
+This is expensive financial verification; there are no release approval, version,
+archive or package-consumer gates and no fixed test-count/selection-hash gate.
+
+Both workflows set `OMP_NUM_THREADS=1`, `OPENBLAS_NUM_THREADS=1`,
+`MKL_NUM_THREADS=1` and `MPLBACKEND=Agg`. Temporary test, plotting and cache paths
+live under the runner's temporary directory. Small result artifacts contain
+JUnit, pytest output, checkout/subtree SHA and Python/dependency versions; they
+do not upload generated datasets or snapshots. PR artifacts last 14 days and
+manual numerical artifacts 30 days. A cancelled job may not finish its upload.
+
+For comparable local runs, set the same thread/backend variables before starting
+Python and use new temporary output/cache directories. Historical recorded counts
+in the coverage map describe their audited revision, not a permanent CI contract.

@@ -23,7 +23,7 @@ runs selected cases and produces outcomes. Code coverage requires separate
 instrumentation of executed source lines/branches; these counts establish
 neither executed passes nor line/branch coverage percentages. C05b runs only the
 published small public example, not this suite. See [testing](testing.md) for
-commands, environment/plot dependencies, marker rules and C06 release checks.
+commands, environment/plot dependencies, marker rules and ordinary CI.
 
 ## Fixtures and reading the map
 
@@ -242,4 +242,4 @@ Use [extension roadmaps](extending.md) to separate future engineering and financ
 validation. The canonical [evidence index](evidence/index.md) and
 [reproduction levels](evidence/reproduce.md) retain C04 authority. This map does
 not execute historical producers, generate reference candidates, establish
-multi-curve/FX/XVA evidence or complete C06 distribution/release validation.
+multi-curve/FX/XVA evidence or establish additional financial validation.

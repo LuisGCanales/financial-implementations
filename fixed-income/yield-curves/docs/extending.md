@@ -160,4 +160,4 @@ selection. A source function, a parametrized collected case and an executed pass
 are different evidence. Preserve expensive-fixture marker rules and the
 exclusive-candidate/human numerical-review workflow. Documentation of a future
 roadmap is not authorization to implement it or certification of its financial
-results; current distribution validation remains pending C06.
+results. Future work requires evidence appropriate to its financial claims.

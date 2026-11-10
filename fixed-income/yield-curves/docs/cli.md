@@ -2,8 +2,8 @@
 
 Operational inputs, manual assurance and the synthetic demo are separate workflows.
 Run these repository scripts from `fixed-income/yield-curves` in a checkout after
-installing the package; see the [README Quickstart](../README.md#quick-start).
-Wheel/sdist installations provide the library, not these scripts or demo datasets.
+installing the checkout editably; see the [README Quickstart](../README.md#quick-start).
+Keep the checkout available for scripts, fixtures and frozen demo datasets.
 
 ## Operational build
 

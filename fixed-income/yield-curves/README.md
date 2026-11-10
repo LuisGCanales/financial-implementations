@@ -1,8 +1,19 @@
-# Yield-Curve Bootstrapping & Validation
+# MXN F-TIIE OIS curves: construction and validation
 
-This project implements transparent MXN F-TIIE OIS curve construction, pricing, validation, diagnostics, and sensitivity analysis.
+This financial research and engineering implementation studies how instrument
+conventions, calibration and interpolation affect MXN F-TIIE OIS curves,
+repricing and sensitivities. Frozen synthetic inputs support controlled
+known-truth experiments and reproducible numerical comparisons.
 
-It separates reusable financial code from the current operational baseline, baseline assurance, and historical research workflows.
+Core-v1 uses MXMC calendars, T+2 effective dates, ACT/360, 28-day coupon periods,
+overnight compounding and a two-business-day payment lag. Projection and
+discounting share one curve as an explicit project assumption. See
+[conventions](docs/conventions.md) for the exact rules and calendar coverage.
+
+Development prioritizes financial methodology, pricing and risk, numerical
+robustness, reproducible scripts and useful scientific evidence. Python-package
+distribution and release certification are retired; editable checkout installation
+and package metadata remain for the Python API, snapshots and flagship consumers.
 
 ## What this project demonstrates
 
@@ -24,6 +35,10 @@ CUBIC_CONTINUOUS_ZERO
 ```
 
 Nodal discount factors are solved together and continuous zero rates are represented with a natural cubic spline. This is the selected baseline for the current implementation, not a claim of universal superiority.
+
+Sequential bootstrap, log-linear discount factors and linear-zero interpolation
+support methodological comparisons; PCHIP remains experimental. Independent
+repricing and acceptance checks accompany calibration.
 
 The rationale and trade-offs are documented in [docs/methodology.md](docs/methodology.md) and [docs/assumptions_limitations.md](docs/assumptions_limitations.md).
 
@@ -56,15 +71,23 @@ The flagship must depend on the Python baseline API, not on research scripts or 
 
 ## Quick start
 
-The package supports Python 3.11 only (`>=3.11,<3.12`).
-Run from a checkout of `financial-implementations`, starting at its repository
-root, with no existing `.venv` in the project directory:
+Use Python 3.11 (`>=3.11,<3.12`). Start at the `financial-implementations`
+repository root. Reuse the project `.venv` when it exists; create it only for a
+fresh checkout:
 
 ```bash
 cd fixed-income/yield-curves
-python3.11 -m venv .venv
+# Fresh checkout only: python3.11 -m venv .venv
 source .venv/bin/activate
-python -m pip install -e .
+```
+
+For the Linux x86_64 reference platform (CPython 3.11.15, glibc >=2.34), install
+hash-pinned financial, test, plot and editable-build dependencies:
+
+```bash
+python -m pip install --require-hashes --only-binary=:all: \
+  -r requirements/ci-reference.txt -r requirements/development-build.txt
+python -m pip install --no-deps --no-build-isolation -e .
 
 DEMO_ROOT="$(mktemp -d)"
 python scripts/demo/build_synthetic_baseline.py \
@@ -81,25 +104,12 @@ Snapshot assurance verifies the published archive without recalibration or write
 The operational CLI requires explicit inputs and an explicit output destination;
 it does not select demo defaults. See [CLI workflows](docs/cli.md).
 
-Release boundaries, immutable verification and the controlled-alpha approval
-process are documented in [release verification](docs/release.md).
-
-### Installation modes
-
-- **Checkout development and repository scripts:** the editable installation above
-  supplies the library while scripts, fixtures and frozen demonstration datasets
-  come from the checkout. Runtime dependencies are NumPy and SciPy.
-- **Wheel/sdist installation:** `python -m pip install /path/to/yield_curves-0.1.0-py3-none-any.whl`
-  or `python -m pip install /path/to/yield_curves-0.1.0.tar.gz` installs the Python
-  library. These distributions do not supply the repository scripts, test fixtures
-  or frozen demonstration datasets needed for this Quickstart. There is no
-  installed CLI command; script workflows require a checkout.
-- **Optional tests and plots in a checkout:** `dev` adds pytest and `plots` adds
-  Matplotlib. Full test collection, including plotting tests, requires both:
-
-```bash
-python -m pip install -e ".[dev,plots]"
-```
+The reference lock is platform-specific; do not reuse it on another platform.
+For development elsewhere, `python -m pip install -e '.[dev,plots]'` resolves the
+supported broad requirements without promising identical numerical results.
+Repository scripts, fixtures and demo inputs require the complete checkout.
+Editable installation also supplies version metadata used by snapshots and
+`valuation-price-validation`. See [testing](docs/testing.md) for setup and CI.
 
 ## Python API
 
@@ -175,7 +185,7 @@ Reports use synthetic data where documented and must not be interpreted as obser
 Fast unit and calibration tests:
 
 ```bash
-pytest -m "not slow"
+python -m pytest -q -m "not slow"
 ```
 
 Install `.[dev,plots]` before collecting the whole suite. Full quote-sensitivity
@@ -199,9 +209,14 @@ reference-candidate tooling.
 
 Perfect instrument calibration is not the same as true-curve recovery. A calibration can reprice its inputs while still depending materially on the interpolation and assumptions between nodes.
 
-## Status
+## Future financial work
 
-The yield-curve implementation is functionally closed for feeding the future `valuation-price-validation` flagship through the baseline API and operational snapshot. Historical methodology research remains available for maintenance and future, separately scoped investigation.
+Priorities include observed-market inputs and maturity conventions, certified
+calendar coverage, interpolation stability and locality, calibration robustness,
+and a separately specified multi-curve architecture. New claims require new
+financial evidence; see [extension roadmaps](docs/extending.md).
+The existing baseline API and operational snapshots remain the integration
+boundary for `valuation-price-validation`.
 
 ## License
 
