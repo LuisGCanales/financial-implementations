@@ -1,117 +1,111 @@
-# MXN F-TIIE OIS curves: construction and validation
+# Yield Curves — Construction, Calibration & Methodological Analysis
 
-This financial research and engineering implementation studies how instrument
-conventions, calibration and interpolation affect MXN F-TIIE OIS curves,
-repricing and sensitivities. Frozen synthetic inputs support controlled
-known-truth experiments and reproducible numerical comparisons.
+**Fixed Income · Interest Rates · Financial Engineering · Numerical Methods · Risk Sensitivities**
 
-Core-v1 uses MXMC calendars, T+2 effective dates, ACT/360, 28-day coupon periods,
-overnight compounding and a two-business-day payment lag. Projection and
-discounting share one curve as an explicit project assumption. See
-[conventions](docs/conventions.md) for the exact rules and calendar coverage.
+A financial engineering and research laboratory for constructing interest-rate term structures and investigating how financial conventions, calibration methods, and interpolation choices influence the resulting curves and their practical applications.
 
-Development prioritizes financial methodology, pricing and risk, numerical
-robustness, reproducible scripts and useful scientific evidence. Python-package
-distribution and release certification are retired; editable checkout installation
-and package metadata remain for the Python API, snapshots and flagship consumers.
+The project connects **instrument mechanics, financial pricing, numerical calibration, and analytical validation**. Beyond obtaining a curve that reproduces market quotations, it examines the behavior of the resulting term structure, its sensitivity to inputs, and the consequences of methodological assumptions.
 
-## What this project demonstrates
+The current implementation focuses on **MXN F-TIIE Overnight Indexed Swaps (OIS)**, using a single curve for projection and discounting. Its instrument mechanics, pricing calculations, calibration workflows, and validation controls are implemented directly in Python, with NumPy and SciPy providing general-purpose numerical tools.
 
-- Explicit F-TIIE OIS financial conventions and MXMC calendar handling.
-- OIS schedules, overnight observations, instruments, and pricing.
-- Sequential bootstrap and simultaneous nodal calibration.
-- Independent repricing and structural acceptance checks.
-- Curve-shape diagnostics and quote-sensitivity research.
-- A reusable Python API for the current project-selected baseline.
+---
 
-## Current baseline
+## Financial Workflow
 
-The current operational baseline is:
+An OIS quotation is not itself a discount factor. Constructing a usable term structure requires translating contractual conventions into cash flows, valuing the instruments, and calibrating a curve that reproduces their quoted par rates.
 
-```text
-simultaneous nodal calibration
-        +
-CUBIC_CONTINUOUS_ZERO
+```mermaid
+flowchart TD
+    A["<b>Market Inputs</b><br/>F-TIIE OIS Par Quotes"]
+    B["<b>Financial Conventions</b><br/>Calendars · Schedules · Overnight Compounding"]
+    C["<b>Pricing & Calibration</b><br/>Cash Flows · Present Values · Curve Construction"]
+    D["<b>Term Structure</b><br/>Discount Factors · Zero Rates · Forward Rates"]
+    E["<b>Validation & Research</b><br/>Repricing · Diagnostics · Sensitivities · Method Comparisons"]
+
+    A --> B --> C --> D --> E
+    E -. "Evaluate & refine" .-> C
 ```
 
-Nodal discount factors are solved together and continuous zero rates are represented with a natural cubic spline. This is the selected baseline for the current implementation, not a claim of universal superiority.
+The implementation makes these financial dependencies explicit and allows alternative numerical methodologies to be examined while preserving the underlying instrument definitions.
 
-Sequential bootstrap, log-linear discount factors and linear-zero interpolation
-support methodological comparisons; PCHIP remains experimental. Independent
-repricing and acceptance checks accompany calibration.
+---
 
-The rationale and trade-offs are documented in [docs/methodology.md](docs/methodology.md) and [docs/assumptions_limitations.md](docs/assumptions_limitations.md).
+## Implementation
 
-## Architecture
+### Financial mechanics developed directly
 
-Developer navigation: [technical architecture](docs/architecture.md),
-[extension roadmaps](docs/extending.md), and [test coverage map](docs/test-coverage-map.md).
+Rather than calling a prebuilt financial curve-construction engine, I implemented the components required to represent and calibrate F-TIIE OIS instruments.
 
-```text
-reusable financial library
-        ↓
-yield_curves.baseline
-        ↓
-operational workflow
-        ↓
-explicit output_root (for example, outputs/baseline/)
-        ↓
-external consumer / flagship
-```
+| Component | Implemented functionality |
+|---|---|
+| **Market conventions** | MXN business-day calendars, settlement adjustments, ACT/360 accrual, payment lags, and fixing rules |
+| **Instrument construction** | Contractual dates, 28-day coupon schedules, fixed and floating legs, and cash-flow definitions |
+| **Overnight compounding** | Daily fixing observations, calendar-day weights across weekends and holidays, and compounded floating coupons |
+| **Pricing** | Projected floating coupons, discounted cash flows, swap present values, and par-rate calculations |
+| **Curve calibration** | Sequential bootstrapping and simultaneous nodal calibration |
+| **Validation** | Input checks, instrument reconstruction and repricing, numerical tolerances, acceptance states, and explicit failure handling |
+| **Analytical research** | Interpolation comparisons, synthetic-reference recovery, forward-rate diagnostics, and quote-sensitivity analysis |
 
-In parallel:
+SciPy supplies numerical solvers and interpolation routines; NumPy supports numerical computation. The financial models, instrument conventions, cash-flow logic, calibration workflows, and validation processes are developed within the project.
 
-```text
-baseline result → assurance workflow → acceptance evidence
+This provides direct control over the assumptions connecting financial instruments to their calibrated term structures.
 
-historical development workflows → scripts/experiments/ → outputs/research/
-```
+### Curve construction methods
 
-The flagship must depend on the Python baseline API, not on research scripts or historical reports.
+The implementation supports two complementary calibration approaches:
 
-## Quick start
+- **Sequential bootstrap:** solves discount-factor nodes one at a time, retaining previously calibrated nodes under a local interpolation representation.
+- **Simultaneous nodal calibration:** solves discount-factor nodes jointly against instrument repricing residuals, accommodating globally coupled interpolation methods.
 
-Use Python 3.11 (`>=3.11,<3.12`). Start at the `financial-implementations`
-repository root. Reuse the project `.venv` when it exists; create it only for a
-fresh checkout:
+The current selected baseline combines **simultaneous nodal calibration** with **natural cubic interpolation of continuously compounded zero rates**.
 
-```bash
-cd fixed-income/yield-curves
-# Fresh checkout only: python3.11 -m venv .venv
-source .venv/bin/activate
-```
+Alternative representations include log-linear discount-factor interpolation and linear interpolation of continuously compounded zero rates. PCHIP is also available as an experimental method outside the selected baseline.
 
-For the Linux x86_64 reference platform (CPython 3.11.15, glibc >=2.34), install
-hash-pinned financial, test, plot and editable-build dependencies:
+The method selection reflects the conditions and trade-offs examined in this project, rather than a claim that one interpolation approach is universally superior.
 
-```bash
-python -m pip install --require-hashes --only-binary=:all: \
-  -r requirements/ci-reference.txt -r requirements/development-build.txt
-python -m pip install --no-deps --no-build-isolation -e .
+[Explore calibration and interpolation methodology](docs/methodology.md)
 
-DEMO_ROOT="$(mktemp -d)"
-python scripts/demo/build_synthetic_baseline.py \
-  --output-root "$DEMO_ROOT"
+---
 
-python scripts/assurance/validate_baseline_curve.py \
-  snapshot --output-root "$DEMO_ROOT"
-```
+## Analytical Evidence
 
-This demo uses frozen **synthetic quotes** and a **projected 2026–2057 calendar**,
-not observed market inputs. Both commands use the same explicit temporary
-`output_root`; generated archives stay outside the checkout's tracked outputs.
-Snapshot assurance verifies the published archive without recalibration or writes.
-The operational CLI requires explicit inputs and an explicit output destination;
-it does not select demo defaults. See [CLI workflows](docs/cli.md).
+**A curve can accurately reprice its calibration instruments without uniquely determining the term structure between observed maturities.**
 
-The reference lock is platform-specific; do not reuse it on another platform.
-For development elsewhere, `python -m pip install -e '.[dev,plots]'` resolves the
-supported broad requirements without promising identical numerical results.
-Repository scripts, fixtures and demo inputs require the complete checkout.
-Editable installation also supplies version metadata used by snapshots and
-`valuation-price-validation`. See [testing](docs/testing.md) for setup and CI.
+The project investigates this distinction through synthetic-reference recovery, interpolation comparisons, and controlled perturbations of market quotations.
 
-## Python API
+### Interpolation and forward-rate recovery
+
+![Comparison of 28-day forward curves obtained using three interpolation methods](evidence/c03/methodology/forward_28d_recovery_three_methods.png)
+
+*Three interpolation methods calibrated simultaneously to 15 synthetic F-TIIE OIS quotations (1M–30Y). The figure compares their implied 28-day forward curves against the known synthetic reference.*
+
+Despite near-exact repricing, forward-rate recovery differs materially:
+
+| Method | Forward RMSE |
+|---|---:|
+| Log-linear discount factors | 3.811 bp |
+| Linear continuous zero rates | 5.235 bp |
+| Cubic continuous zero rates | 0.249 bp |
+
+Cubic interpolation performs best in this smooth synthetic scenario, but its greater recovery accuracy comes with methodological trade-offs in sensitivity propagation.
+
+### Quote sensitivity and risk propagation
+
+![Sensitivity of the cubic forward curve to shocks in calibration quotations](evidence/c03/heatmaps/forward_sensitivity_heatmap_cubic_continuous_zero_full_common_scale.png)
+
+*Signed changes in 28-day forward rates resulting from ±1 bp perturbations of individual calibration quotations. The heatmap shows how sensitivity can extend beyond the maturity of the shocked instrument.*
+
+These experiments illustrate why **curve smoothness, calibration accuracy, and risk locality must be evaluated separately**.
+
+[Methodology and results](docs/evidence/methodology.md) · [Sensitivity analysis](docs/evidence/risk.md) · [Complete evidence index](docs/evidence/index.md)
+
+---
+
+## Outputs & Usage
+
+The calibrated curve provides **discount factors, continuously compounded zero rates, and forward rates**. Supporting outputs include independent instrument repricing, calibration diagnostics, acceptance status, and execution provenance.
+
+The Python interface exposes the selected baseline directly:
 
 ```python
 from yield_curves.baseline import build_baseline_ftiie_curve
@@ -125,101 +119,62 @@ if result.accepted_for_use:
     curve = result.curve
 ```
 
-The API does not read CSV, YAML, reports, or research outputs. See [docs/integration_contract.md](docs/integration_contract.md).
+The caller supplies the quotations and business calendar explicitly. The curve object can then be used for valuation or risk calculations within its supported date range.
 
-## Repository structure
+[Python integration contract](docs/integration_contract.md) · [Output specifications](docs/snapshots.md)
 
-```text
-yield-curves/
-├── config/                 # descriptive project specifications
-├── data/                   # calendars and frozen synthetic inputs
-├── docs/                   # conventions, methodology, contracts, limits
-├── outputs/baseline/       # example operational destination; legacy archive
-├── outputs/research/       # historical analytical and research evidence
-├── scripts/
-│   ├── operational/        # current baseline workflow
-│   ├── assurance/          # current baseline acceptance workflow
-│   ├── demo/               # synthetic quotes and projected calendar
-│   └── experiments/        # historical and research workflows
-├── src/yield_curves/       # reusable financial library and baseline API
-├── tests/
-├── CHANGELOG.md
-└── pyproject.toml
-```
+---
 
-## Operational outputs
+## Reproducibility
 
-At the caller's explicit `output_root`, `current.json` resolves the current run
-under `runs/<run-id>/`. For example, `--output-root outputs/baseline` uses
-`outputs/baseline/current.json`; this is not an operational default.
-The run contains these payloads among others (see [snapshots](docs/snapshots.md)):
+The project includes frozen synthetic inputs, reproducible analytical experiments, automated tests, and documented numerical environments.
 
-- `curve_nodes.csv`: tenor, pillar date, discount factor, and continuous zero rate.
-- `quote_repricing.csv`: input quote, independently repriced quote, error, and status.
-- `metadata.json`: baseline identity, provenance, method, solver state, acceptance, and tolerances.
-
-For arbitrary-date discount factors, zero rates, and forwards, consumers must use the Python curve object rather than reconstructing a dense curve from CSV.
-
-Historical schema-1.0 flat files are archived under
-`outputs/baseline/legacy/schema-1.0/`, preserving their original bytes and metadata.
-They are never used as a current fallback.
-
-## Analytical evidence
-
-See the [curated evidence index](docs/evidence/index.md), [unified claims](docs/evidence/claims.md) and [verified saved-data reproduction contract](docs/evidence/reproduce.md).
-
-`outputs/research/` contains historical analytical, diagnostic, and experimental evidence generated during development. It is not the operational delivery mechanism.
-
-- `01_synthetic_reference`: synthetic known-truth reference evidence.
-- `02_bootstrap_recovery`: historical bootstrap and recovery evidence.
-- `03_curve_validation`: historical sequential-bootstrap validation.
-- `04_curve_diagnostics`: historical log-linear diagnostics.
-- `05_quote_sensitivity`: historical output section absent; curated C04 sensitivity exhibits are available through the evidence index above.
-- `06_interpolation_comparison`: historical interpolation comparison evidence.
-- `07_global_sensitivity`: simultaneous-calibration propagation and locality evidence.
-
-Reports use synthetic data where documented and must not be interpreted as observed market data.
-
-## Testing
-
-Fast unit and calibration tests:
+Using Python 3.11, from the repository root:
 
 ```bash
+cd fixed-income/yield-curves
+python3.11 -m venv .venv
+source .venv/bin/activate
+python -m pip install -e '.[dev,plots]'
+
+DEMO_ROOT="$(mktemp -d)"
+python scripts/demo/build_synthetic_baseline.py \
+  --output-root "$DEMO_ROOT"
+
 python -m pytest -q -m "not slow"
 ```
 
-Install `.[dev,plots]` before collecting the whole suite. Full quote-sensitivity
-and global-sensitivity recalibration experiments are marked `slow`; individual
-calibration and small contract tests remain in normal feedback. Plain `pytest`
-runs all tests. See [docs/testing.md](docs/testing.md) for selection and safe
-reference-candidate tooling.
+The demonstration uses **synthetic quotations and a projected MXN calendar**, not observed market data.
 
-## Scope and limitations
+[Testing and environments](docs/testing.md) · [Reproduction details](docs/evidence/reproduce.md)
 
-- The canonical instrument is MXN F-TIIE OIS.
-- Core v1 uses one curve for projection and discounting as a project assumption.
-- The operational input demonstration is synthetic, not observed market data.
-- The current API does not claim CME or bank production-curve replication.
-- Extrapolation beyond calibrated coverage is not supported.
-- The projected calendar has explicit coverage limitations.
-- Cubic interpolation is globally coupled and has documented sensitivity/locality trade-offs.
-- Synthetic known-truth recovery does not establish real-market robustness.
-- A multi-curve discounting architecture is outside the current scope.
-- PCHIP is implemented as an experimental extension and is not the selected baseline.
+---
 
-Perfect instrument calibration is not the same as true-curve recovery. A calibration can reprice its inputs while still depending materially on the interpolation and assumptions between nodes.
+## Scope & Limitations
 
-## Future financial work
+The current implementation is a financial-methodology laboratory, not a production market-curve service.
 
-Priorities include observed-market inputs and maturity conventions, certified
-calendar coverage, interpolation stability and locality, calibration robustness,
-and a separately specified multi-curve architecture. New claims require new
-financial evidence; see [extension roadmaps](docs/extending.md).
-The existing baseline API and operational snapshots remain the integration
-boundary for `valuation-price-validation`.
+It focuses on MXN F-TIIE OIS under a **single-curve projection and discounting assumption**. The experimental results rely on synthetic inputs; calendar coverage has documented limitations, and extrapolation beyond calibrated maturities is unsupported.
+
+Strong recovery under the selected smooth reference scenario does not establish real-market robustness or universal methodological superiority. The cubic baseline also exhibits global sensitivity effects that require consideration in risk applications.
+
+[Financial conventions](docs/conventions.md) · [Assumptions and limitations](docs/assumptions_limitations.md)
+
+---
+
+## Documentation
+
+| Area | Reference |
+|---|---|
+| Financial specifications | [Conventions](docs/conventions.md) |
+| Curve construction | [Methodology](docs/methodology.md) |
+| Experimental findings | [Evidence index](docs/evidence/index.md) |
+| Validation | [Validation methodology](docs/validation.md) |
+| Technical implementation | [Architecture](docs/architecture.md) |
+| Downstream integration | [Python API](docs/integration_contract.md) |
+
+---
 
 ## License
 
-The `fixed-income/yield-curves` subproject is licensed under the
-[MIT License](LICENSE), copyright (c) 2026 Luis Gerardo Canales Ocampo.
-This license applies only to this subproject, not to the rest of the monorepo.
+This subproject is licensed under the [MIT License](LICENSE), copyright © 2026 Luis Gerardo Canales Ocampo. The license applies to `fixed-income/yield-curves`, not automatically to the entire repository.
