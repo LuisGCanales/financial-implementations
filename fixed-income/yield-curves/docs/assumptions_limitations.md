@@ -1,73 +1,57 @@
-# Assumptions and Limitations
+# Assumptions, Scope and Limitations
 
-## Market and instrument scope
+This document distinguishes the **implemented financial model**, the **conditions of its research experiments**, and the conclusions that its validation does—and does not—support. Contractual conventions are specified separately in [F-TIIE OIS Conventions](conventions.md); the selected calibration methodology is explained in [Methodology](methodology.md).
 
-The implementation targets MXN F-TIIE Overnight Index Swaps using the F-TIIE
-overnight benchmark, explicit conventions, and an MXMC business calendar.
-The detailed contractual conventions are documented in
-[conventions.md](conventions.md).
+## Instrument and curve scope
 
-## Same-curve assumption
+The implementation constructs term structures from **MXN F-TIIE Overnight Indexed Swaps (OIS)**, with explicit MXMC calendar handling, ACT/360, 28-day coupon schedules, compounded overnight observations, and payment-date conventions.
 
-Core v1 uses the same curve for projection and discounting:
+The curve's reference date is the common effective date of the calibration instruments. Calibration pillars use final **payment dates**, rather than contractual maturities, so the cash flows required for repricing fall within the supported curve domain.
 
-```text
-projection_curve = discount_curve
-```
+The project assumes a single curve for both projected F-TIIE payments and discounting:
 
-This is a project assumption. It is not a complete multi-curve or cleared-MXN
-implied-discounting architecture.
+$$
+P_{\mathrm{projection}}(t)
+=
+P_{\mathrm{discount}}(t)
+=
+P(t).
+$$
 
-## Synthetic demonstration data
+This isolates OIS construction and calibration mechanics. It is **not** a representation of the full MXN implied-discounting or collateral-specific architecture used in institutional markets. The present implementation does not construct a separate USD-collateralized MXN discount curve.
 
-The current reproducible demonstration uses
-`data/synthetic/ftiie_ois_quotes_v1.csv`, a frozen synthetic reference dataset.
-It is not observed market data, a market forecast, or a claim to replicate CME
-or bank production curves.
+## Data and calendar coverage
 
-The operational API does not depend on the synthetic truth function. The truth
-is used only by research workflows to evaluate recovery.
+The reproducible demonstration uses frozen **synthetic F-TIIE OIS par quotations**, not observed market quotes. The underlying synthetic reference curve is generated separately and is used **after calibration** to evaluate recovery, not as an input to the calibration engine.
 
-## Coverage and extrapolation
+Its smooth, non-flat reference term structure deliberately allows controlled comparisons of interpolation and calibration methods. Because the scenario is smooth, it can favor representations with similar smoothness. Recovery under this design does not establish performance with sparse, noisy, regime-changing, or observed market data.
 
-The curve does not extrapolate beyond its final calibrated node. Consumers must
-respect the calibrated coverage.
+The verified holiday dataset covers 2026. Long-dated synthetic experiments use a deterministic **projected MXMC calendar** for later years; its future holiday dates are a project model, not an authoritative CME, CNBV, or BMV holiday calendar. The supplied calendar's name or declared coverage does not authenticate its contents.
 
-The projected MXMC calendar extends beyond the directly verified calendar data.
-Future production use requires explicit calendar provenance and coverage
-appropriate to the input instruments.
+Synthetic instrument-tenor labels are resolved using project-defined month/year offsets before date adjustments; that mapping has not been independently verified as a replica of CME's production tenor-resolution rules.
 
-## Interpolation and sensitivity
+[Calendar sources and limits](../data/calendars/README.md) · [Synthetic inputs](../data/synthetic/README.md) · [Input contract](input_contract.md)
 
-The current baseline uses simultaneous nodal calibration with a natural cubic
-spline in continuous zero rates. Cubic interpolation is globally coupled:
-changes in one quote can affect distant curve regions.
+## Calibration, interpolation and sensitivity
 
-Existing sensitivity evidence found broader quote-shock propagation, lower
-forward-risk locality, and greater long-end forward-sensitivity amplification.
-These are known structural trade-offs, not implementation accidents to hide.
+The selected baseline uses **simultaneous nodal calibration** with **natural cubic interpolation of continuously compounded zero rates**. The implementation also provides sequential bootstrapping and alternative interpolation methods for compatible construction and research.
 
-## Synthetic known-truth bias
+A natural cubic spline is globally coupled. Perturbing one quotation may change the interpolated curve and forward rates across maturities. Existing synthetic sensitivity experiments reveal differences in response propagation, localization, and long-end amplification. These patterns depend on method, shock tenor, sampling range, and metric; they are **not** a claim that cubic interpolation is always less local for every instrument.
 
-The smooth known-truth scenario favors representations capable of expressing
-similar smoothness. Strong recovery under that scenario is useful evidence but
-does not establish robustness under noisy, sparse, regime-changing, or
-real-market inputs.
+PCHIP is implemented as an experimental alternative, but is not part of the selected baseline or the saved three-method selection evidence.
 
-Perfect calibration is not equivalent to recovering a true curve between
-observed instruments.
+Instrument fit alone does not identify a unique curve between calibration pillars. Even near-exact repricing can coexist with differences in implied forward rates or recovery of the synthetic reference curve.
 
-The canonical [methodology evidence](evidence/methodology.md),
-[risk evidence](evidence/risk.md) and [claims](evidence/claims.md) delimit the
-studied scenario. [Extension roadmaps](extending.md) separate present capability
-from required future engineering and financial validation.
+[Interpolation methods](interpolation.md) · [Method comparison](evidence/methodology.md) · [Sensitivity results](evidence/risk.md)
 
-## Architecture limits
+## Acceptance and model suitability
 
-There is no multi-curve discounting architecture yet. Operational acceptance
-checks numerical and structural conditions; it does not establish market-data
-correctness, economic suitability, liquidity quality, or universal methodology
-superiority.
+The standard baseline separates solver convergence from **acceptance for use**. It checks inputs and declared calendar coverage, curve structure, finite positive discount factors, and repricing of independently reconstructed calibration instruments against specified tolerances.
 
-PCHIP is implemented as an experimental extension but is not part of the
-current selected methodology or baseline conclusion.
+This repricing is independent of saved optimizer residuals **within the same codebase**; it is not an external vendor benchmark or independent verification of the underlying pricing model.
+
+Passing acceptance checks does **not** authenticate market quotes or holidays, demonstrate liquidity or economic suitability, establish unique recovery of an unobserved true curve, or certify production readiness. Synthetic known-truth recovery is research evidence, not a standard acceptance criterion.
+
+The curve rejects requests outside its calibrated date range; automatic extrapolation is not supported.
+
+[Validation and acceptance](validation.md) · [Evidence and limitations](evidence/index.md) · [Integration contract](integration_contract.md)
