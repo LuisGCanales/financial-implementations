@@ -1,12 +1,10 @@
-# Baseline execution archives and publication
+# Execution Archives, Integrity and Publication
 
-For technical navigation, see [architecture](architecture.md) and the
-[test coverage map](test-coverage-map.md). The detailed contracts below remain
-the authority for this workflow.
+The in-memory curve API serves valuation consumers directly. Some workflows also require **a persistent, auditable record** of input quotes, the supplied calendar, the calibrated nodes, model configuration, provenance, and acceptance checks.
 
-The current artifact schema is `3.0` (`SCHEMA_VERSION` in
-`yield_curves.snapshots`). Publication consumes a completed `ExecutionEnvelope`,
-issued by the execution workflow rather than assembled from an existing result:
+This document defines the **schema 3.0** execution archive, how a run becomes the accepted current result, and how stored results are verified **without recalibration**. Research exhibits and synthetic datasets are separate artifacts.
+
+Publication requires an `ExecutionEnvelope` issued by the execution workflow rather than source declarations attached to an arbitrary prior result:
 
 ```python
 from yield_curves.execution import build_baseline_execution
@@ -28,10 +26,10 @@ if exported.published:
 
 The caller supplies the loaded quote `dataset`, the covered business `calendar`
 and an explicit `output_root`. This is an API example with caller-owned objects;
-see [CLI workflows](cli.md) and the [README Quickstart](../README.md#quick-start)
+see [CLI workflows](cli.md) and the [project setup](../README.md#reproducibility)
 for runnable checkout commands, including the synthetic/projected demo.
 
-## Execution identity and publication authority
+## Financial identity, provenance and publication authority
 
 `build_baseline_execution` captures an execution ID, UTC capture time and source
 provenance before building. It prepares immutable financial inputs: ordered quote
@@ -62,7 +60,7 @@ cannot be published through this exporter. Accepted publication additionally
 requires solver success, valid structure, nonempty finite independent repricing,
 no issues and every check PASS. REVIEW is rejected.
 
-## Layout and supported schema
+## Run layout and supported schema
 
 Under the caller's `output_root`:
 
@@ -187,8 +185,7 @@ exceptions propagate, subject to the commit-point semantics above.
 
 ## Tests
 
-`tests/unit/test_snapshots.py` covers accepted/rejected archives, execution and H01
-identity, publication authority, strict JSON, integrity and binding mismatches,
+`tests/unit/test_snapshots.py` covers accepted/rejected archives, execution, tenor identity, publication authority, strict JSON, integrity and binding mismatches,
 unsupported policies/schemas, legacy exclusion, failures around run/pointer commits,
 and assurance without solver calls or writes. CLI integration uses temporary output
 directories.

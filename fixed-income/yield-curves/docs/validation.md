@@ -1,27 +1,24 @@
-# Validation and Acceptance
+# Financial Validation and Acceptance
 
-For technical navigation, see [architecture](architecture.md) and the
-[test coverage map](test-coverage-map.md). The detailed contracts below remain
-the authority for this workflow.
+**Numerical solver success, independent instrument repricing and acceptance for use are distinct tests.** A converged curve need not be structurally valid; near-zero quote errors do not uniquely determine the term structure between calibration maturities.
 
-The project distinguishes historical bootstrap validation from acceptance of
-the current operational baseline.
+## Two validation purposes
 
-## Historical bootstrap validation
+| Application | What is tested | Interpretation |
+|---|---|---|
+| **Sequential bootstrapping** | Quote consistency, scalar root solves, discount factors, instrument structure and independent repricing | Method-specific diagnostics for the sequential construction and compatible interpolation choices |
+| **Selected simultaneous/natural-cubic baseline** | Financial input preparation, calendar coverage, curve structure, solver state, independent OIS repricing and acceptance policy | Determines whether a particular result satisfies the implemented standard for **acceptance for use** |
 
-The historical validation workflow operates on `BootstrapResult`. It checks
-quote integrity, sequential solver steps, curve structure, discount-factor
-validity, and independently reprices the calibration instruments. Its outputs
-are preserved under `outputs/research/{tables,text}/03_curve_validation/` as historical evidence.
+The sequential diagnostics can be reproduced and inspected under `outputs/research/{tables,text}/03_curve_validation/`. Those are **research results**, not acceptance of the selected consumer baseline. Shared instrument repricing does not make the two curve-level policies interchangeable.
 
-Those reports document the sequential/log-linear path. They are not the
-acceptance contract for the current cubic baseline.
+[Construction methodology](methodology.md) · [Interpolation](interpolation.md) · [Integration](integration_contract.md)
 
-## Current operational baseline acceptance
+## Selected baseline acceptance
 
-`yield_curves.baseline` calibrates with simultaneous nodal calibration and
-`CUBIC_CONTINUOUS_ZERO`. It first validates the quote set and declared calendar
-coverage, then performs a baseline-specific acceptance check.
+The selected baseline uses **simultaneous nodal calibration with natural cubic
+interpolation of continuously compounded zero rates**, represented in code by
+`CUBIC_CONTINUOUS_ZERO`. It validates quotes and calendar coverage before solving,
+then checks the calibrated curve and independently reconstructed OIS.
 
 The acceptance checks:
 
@@ -45,23 +42,9 @@ The acceptance checks:
 Discount factors are not required to be strictly decreasing. That condition is
 not universally valid across rate regimes.
 
-The result exposes two different states:
+The result distinguishes **calibration success** from **acceptance for use**. For downstream consumption check `result.accepted_for_use`, which requires original standard acceptance and continued consistency of its current financial payload; it does not rerun calibration or repricing.
 
-```text
-calibration_success
-    solver found a numerical solution
-
-accepted_for_use
-    the solution also passed the operational checks above
-```
-
-Therefore:
-
-```text
-calibration_success != accepted_for_use
-```
-
-A result can converge and still be rejected for downstream use.
+**Solver convergence does not imply acceptance.** A result can converge and still be rejected for downstream valuation or risk.
 
 ## What acceptance does not prove
 
@@ -99,7 +82,7 @@ validate the curve's geometry against valid, covered input instruments.
 The build path reuses prepared geometry for assessment. Pricing still rebuilds
 the OIS independently, and both solvers keep their existing instrument preparation.
 A standalone assessment performs its own preflight so it cannot bypass input
-requirements. Legacy calendars without coverage remain usable by shared pricing
+requirements. Calendars without declared coverage remain usable by shared pricing
 and calibration utilities, but cannot build or pass acceptance of the baseline.
 
 Representative issue codes:

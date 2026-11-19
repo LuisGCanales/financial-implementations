@@ -1,22 +1,16 @@
-# Extending the implementation
+# Extending Financial Methods and Curve Architectures
 
-These are source-grounded maintenance roadmaps, not implemented capabilities or
-registration instructions. Read [architecture](architecture.md), the financial
-[conventions](conventions.md), [input contract](input_contract.md) and
-[limitations](assumptions_limitations.md) first. Preserve the dependency rules in
-[`test_dependencies.py`](../tests/architecture/test_dependencies.py).
-The public consumer boundary remains
-[`build_baseline_ftiie_curve`](integration_contract.md); internal helpers and the
-capability table are not a generic instrument or interpolation plugin registry.
+This guide describes the **financial specifications, implementation contracts, and validation evidence** needed to extend the MXN F-TIIE OIS curve project. These are **potential extensions**, not capabilities already available or a committed development roadmap.
 
-For each proposal, specify present capability, required engineering and required
-financial validation separately. Package, baseline/acceptance policy, snapshot
-schema and frozen scenario/reference identities are independently governed.
-An implementation experiment must not silently relabel existing V1 history.
+Adding an interpolation method, supporting another instrument, and introducing a collateral-specific multi-curve architecture are different problems. Each requires a financial justification, explicit changes to code and interfaces, and independent testing appropriate to the proposed use.
 
-## Add an interpolation method
+The current selected baseline calibrates **F-TIIE OIS only** with simultaneous nodal calibration and natural cubic interpolation of continuously compounded zero rates. Alternative curve representations are available for compatible research or construction purposes, but their existence does not confer baseline acceptance or publication authority. Internal factories and capability tables are not general-purpose plug-in registries.
 
-### Present capability
+See [Methodology](methodology.md), [Conventions](conventions.md), [Architecture](architecture.md), [Input contract](input_contract.md) and [Limitations](assumptions_limitations.md). Existing versioned policies, frozen datasets and snapshot identities remain distinct.
+
+## Extending interpolation methods
+
+### Current capability
 
 [`curves.py`](../src/yield_curves/curves.py) provides four nodal representations:
 log-linear DF, linear continuous zero, natural cubic continuous zero and PCHIP
@@ -26,7 +20,7 @@ explicitly supports the first two in both engines, and cubic/PCHIP in simultaneo
 calibration only. PCHIP is implemented as an experimental representation; it is
 not the approved operational baseline or part of the existing selection conclusion.
 
-### Required future engineering
+### Implementation requirements
 
 | Review surface | Change/design required |
 |---|---|
@@ -37,17 +31,17 @@ not the approved operational baseline or part of the existing selection conclusi
 | [`baseline.py`](../src/yield_curves/baseline.py) | Distinguish representation support from operational adoption. The current baseline selects cubic and checks the actual curve class. New operational adoption needs construction/acceptance policy, geometry and complete live value-binding design; cubic spline-state capture is currently specific to cubic. |
 | [`execution.py`](../src/yield_curves/execution.py) | Design supported-policy identity, construction history, provenance/value binding and standard publication authority for any new operational baseline. |
 | [`snapshot_assurance.py`](../src/yield_curves/snapshot_assurance.py) and [`snapshots.py`](../src/yield_curves/snapshots.py) | Assurance currently reconstructs cubic under supported historical V1 rules. Specify persistence/reconstruction, policy/schema compatibility, rejection of unsupported history and no-solve checks before promising operational delivery. |
-| [`tests/`](../tests/) and documentation | Add representation and engine evidence, acceptance/binding/publication/assurance contracts if adopted; update interpolation, methodology, limitations and test navigation. Keep historical two-/three-method research tuples deliberate. |
+| [`tests/`](../tests/) and documentation | Add representation and engine evidence, acceptance/binding/publication/assurance contracts if adopted; update interpolation, methodology, limitations and test navigation. Keep explicit two-/three-method research comparison sets deliberate. |
 
-### Required future financial validation
+### Financial validation requirements
 
 Prove node reproduction and DF/zero/forward relationships across the supported
 domain. Assess shape, origin behavior, smoothness, locality, negative-rate and
 sparse/noisy-input behavior appropriate to the proposed method. Compare
 independent repricing, recovery and sensitivities under explicitly identified
 scenarios. Strong synthetic fit alone cannot justify operational selection.
-Existing C04 [methodology](evidence/methodology.md) and [risk](evidence/risk.md)
-evidence delimit current conclusions; they do not validate a future method.
+The existing [methodology](evidence/methodology.md) and [risk](evidence/risk.md)
+evidence supports only the studied scenarios and does not validate a proposed extension.
 
 Maintainer checklist:
 
@@ -62,20 +56,20 @@ Maintainer checklist:
 - [ ] Document financial validation scope and review numerical changes through
   [candidate maintenance](../scripts/tests/README.md), without automatic fixture replacement.
 
-## Add a financial instrument
+## Supporting another financial instrument
 
-### Present capability
+### Current capability
 
 The baseline accepts **F-TIIE OIS quotes only**. The four-field
 [`OISCalibrationQuote`](../src/yield_curves/quotes.py) protocol is an OIS contract,
 not a multi-product interface. [`quote_io.py`](../src/yield_curves/quote_io.py)
 accepts only `PAR_OIS_RATE` when quote type is supplied; current preparation,
-engines and shared repricing rebuild Core-v1 OIS. Conventions form a closed
+engines and shared repricing reconstruct the currently supported F-TIIE OIS contracts. Conventions form a closed
 profile, floating spread is zero, and calibration uses unit notional.
 A downstream position's positive notional scales valuation; it is conceptually
 separate from the calibration notional and does not extend the product profile.
 
-### Required future engineering
+### Implementation requirements
 
 | Contract | Required design and implementation review |
 |---|---|
@@ -86,9 +80,9 @@ separate from the calibration notional and does not extend the product profile.
 | Calibration | Residual units/objective, admissible bounds, curve reference date and pillar assignment, instrument dependencies and engine compatibility in `bootstrap`/`calibration`. |
 | Independent repricing | Reconstruct the product from quotes and reprice final curves without trusting stored solver residuals; extend `repricing` deliberately. |
 | Acceptance | Product-specific input/structural/fit and economic checks; clarify which policy can accept it. Current cubic OIS baseline must not silently become multi-product. |
-| Execution and snapshot compatibility | Financial-context/policy identity, heterogeneous input serialization, source capture, payload/live binding, publication authority and historical schema/policy reconstruction in `baseline`, `execution`, `snapshots`, `snapshot_assurance`. |
+| Execution and snapshot compatibility | Financial-context/policy identity, heterogeneous input serialization, source capture, payload/live binding, publication authority and archived schema/policy reconstruction in `baseline`, `execution`, `snapshots`, `snapshot_assurance`. |
 
-### Required future financial validation
+### Financial validation requirements
 
 Establish contractual date/cash-flow examples, pricing identities and numerical
 references for the new product, including relevant zero/negative-rate, stub,
@@ -108,9 +102,9 @@ Maintainer checklist:
 - [ ] Update conventions, inputs, integration, validation, snapshots and
   [test contracts](test-coverage-map.md#instrument-and-pricing); review frozen candidates manually.
 
-## Add a multi-curve architecture
+## Introducing multi-curve construction
 
-### Present capability
+### Current capability
 
 [`pricing.calculate_par_rate`](../src/yield_curves/pricing.py) and
 `value_ftiie_ois` already accept separate `projection_curve` and `discount_curve`
@@ -120,7 +114,7 @@ uses different flat curves. This pricing seam is useful, while current solvers,
 shared repricing and operational policy still pass the **same curve** for both
 roles. There is no integrated multi-curve, FX-basis or XVA implementation/evidence.
 
-### Required future engineering
+### Implementation requirements
 
 | Area | Missing work |
 |---|---|
@@ -133,7 +127,7 @@ roles. There is no integrated multi-curve, FX-basis or XVA implementation/eviden
 | Acceptance and sensitivity | Role-specific structure/fit, cross-curve consistency, dependency propagation, shock definitions, risk units and multi-curve sensitivity evidence. |
 | Snapshot provenance/versioning | Persist the complete graph, nodes, inputs, policies, source identities and external dependencies; bind and reconstruct historical meaning without solving. Govern schema/policy compatibility rather than relabeling schema `3.0`/V1. |
 
-### Required future financial validation
+### Financial validation requirements
 
 Specify the intended collateral and market architecture, validate instruments
 and no-arbitrage relationships, and test curve dependency and shock transmission.

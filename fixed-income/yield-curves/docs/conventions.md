@@ -1,948 +1,151 @@
-# MXN F-TIIE OIS Conventions
+# MXN F-TIIE Overnight Indexed Swap — Financial Conventions
 
-## Purpose
+This document specifies the contractual conventions used to **construct, project, and value MXN F-TIIE OIS calibration instruments**. It separates market-sourced conventions from explicit project choices and simplifying assumptions.
 
-This document defines the financial conventions used by the canonical
-MXN F-TIIE OIS implementation.
+The project implements financial mechanics directly rather than relying on undocumented defaults in a pricing engine. The resulting curve methodology and evidence are discussed in [Methodology](methodology.md), while [Assumptions and Limitations](assumptions_limitations.md) sets out the model's boundaries.
 
-It translates the higher-level financial specification into an explicit
-instrument-convention profile that can be implemented and tested.
+## Instrument and convention profile
 
-The objective is to prevent material financial assumptions from remaining
-hidden inside code, third-party libraries, or default date-handling behavior.
+The instrument is a **Mexican-peso F-TIIE Overnight Indexed Swap**, with an overnight floating benchmark (TIIE de Fondeo), a fixed leg, and coupon calculation/payment periods based on 28-day schedules. The **overnight index tenor** must not be confused with the **28-day coupon period**.
 
-This document describes financial conventions. It does not select the current
-interpolation baseline. Project assumptions, synthetic-data setup, and
-operational methodology are documented separately in
-`docs/methodology.md` and `docs/assumptions_limitations.md`.
+The table distinguishes:
 
----
+- **Market source:** an attribute aligned with a cited market or institutional reference.
+- **Project decision:** a deliberately selected implementation or calibration convention.
+- **Model assumption:** a simplification of a broader financial architecture.
 
-## Implemented Core-v1 boundary
+| Convention | Implemented value | Basis |
+|---|---|---|
+| Currency | MXN | Market source [S2] |
+| Floating benchmark | F-TIIE / TIIE de Fondeo (overnight) | Market source [S1, S2] |
+| Floating index description | MXN-TIIE ON-OIS Compound; 1D underlying | Market source [S2] |
+| Business-day calendar | Mexico City (MXMC) | Market source [S2] |
+| Effective date | Trade date + 2 MXMC business days | Market source [S2] |
+| Day-count basis | ACT/360 | Market source [S2] |
+| Coupon calculation, payment, and reset frequency | 28 calendar days | Market source [S2, S7] |
+| Schedule roll convention | None | Market source [S2] |
+| Start, maturity, and period-end adjustments | Following | Market source [S2] |
+| Payment date | End of adjusted period + 2 business days; Following | Market source [S2] |
+| Reset relative to / adjustment | End of period; Following | Implemented descriptor |
+| Fixing offset and day type | 0 business days; business-day fixings | Market source [S2] |
+| Fixing adjustment | Preceding | Market source [S2] |
+| Floating compounding | ISDA Standard; spread exclusive | Market source [S2] |
+| Floating spread | Zero | Project decision |
+| Calibration notional | One unit | Project decision |
+| Curve reference date | Common OIS effective date | Project decision |
+| Calibration node date | Final payment date of each OIS | Project decision |
+| Projection and discounting | Same F-TIIE curve | Model assumption |
 
-[`FTiieOISConventions`](../src/yield_curves/conventions.py) is a closed profile:
-all fields and their types are validated against the supported defaults.
-Descriptor fields are fixed declarations, not general runtime selectors.
-Floating spread is zero; calibration instruments use unit notional. A downstream
-position may use a different positive notional without changing the calibration
-profile. `calendar_id="MXMC"` identifies a convention family, while the supplied
-calendar instance has its own name, holiday values and coverage; its name alone
-neither constrains nor authenticates that dataset.
+The implementation exposes a validated, **fixed** F-TIIE OIS convention profile through [`FTiieOISConventions`](../src/yield_curves/conventions.py). Its attributes are not unrestricted runtime switches. The supplied holiday calendar is a separate input: the label `MXMC` describes the required calendar family, not proof that a particular holiday dataset is complete or authoritative.
 
-See [extension requirements](extending.md#add-a-financial-instrument) and the
-[convention test contracts](test-coverage-map.md#financial-conventions). This
-implementation note does not revalidate the external sources listed below.
+## Dates, schedules and accrual
 
-## 1. Provenance Labels
+The construction distinguishes **trade, effective, contractual maturity, adjusted maturity, calculation-period start/end, overnight fixing, and payment dates**. Their meanings are not interchangeable.
 
-Each convention is classified using one of the following labels.
+For a spot-starting OIS, the effective date is the trade date plus two MXMC business days, provided the trade date itself is a valid business day. The project's curve reference date $T_0$ is that effective date, with
 
-### `SOURCE`
+$$
+P(T_0,T_0)=1.
+$$
 
-The convention follows an external market or institutional reference.
+Thus the calibration curve begins at the OIS effective date, not at the trade date. A discount bridge back to trade or valuation date would require a separate financial treatment.
 
-### `PROJECT DECISION`
+Coupon boundaries are generated in 28-calendar-day increments from the effective date, with a final shorter period if contractual maturity is not an exact multiple of 28 days. Applicable business-day adjustments are then applied. The resulting accrual fraction is
 
-The implementation deliberately chooses a methodology that is not claimed
-to be an external market-standard requirement.
-
-### `ASSUMPTION`
-
-The implementation intentionally simplifies a more complex institutional
-financial architecture.
-
-### `INFERENCE`
-
-The specification combines information from multiple sources where the
-exact project representation is not stated verbatim in one source.
-
----
-
-# 2. Canonical Instrument
-
-Instrument:
-
-> **MXN F-TIIE Overnight Index Swap**
-
-Currency:
-
-```text
-MXN
-```
-
-Floating benchmark:
-
-```text
-TIIE de Fondeo
-```
-
-Floating-index representation:
-
-```text
-MXN-TIIE ON-OIS Compound
-```
-
-Underlying benchmark tenor:
-
-```text
-1D / overnight
-```
-
-**Provenance:** `SOURCE`
-**References:** S1, S2
-
----
-
-# 3. Core-v1 Curve Architecture
-
-The canonical implementation constructs an:
-
-> **F-TIIE projection curve**
-
-from F-TIIE OIS market quotes.
-
-For Core v1, the same curve is also used for discounting:
-
-```text
-projection_curve = discount_curve
-```
-
-**Provenance:** `ASSUMPTION`
-
-This is a project simplification.
-
-It is not intended to reproduce the full CME MXN implied-discounting
-architecture.
-
-The software architecture must nevertheless keep projection and discount
-curve interfaces logically separable so that a future multi-curve extension
-can replace:
-
-```text
-projection_curve = discount_curve
-```
-
-with:
-
-```text
-projection_curve != discount_curve
-```
-
-without redesigning the OIS instrument itself.
-
----
-
-# 4. Institutional Discounting Boundary
-
-The project explicitly distinguishes the Core-v1 same-curve assumption from
-the cleared MXN implied-discounting architecture described by CME.
-
-The broader architecture may depend on:
-
-```text
-USD SOFR
-+
-USD/MXN FX instruments
-+
-SOFR/F-TIIE cross-currency swaps
-```
-
-to construct an MXN implied discounting curve.
-
-**Provenance:** `SOURCE`
-**References:** S4, S5, S6
-
-This architecture is outside Core v1.
-
----
-
-# 5. Convention Table
-
-| Attribute                     | Canonical value                  | Provenance       | Reference |
-| ----------------------------- | -------------------------------- | ---------------- | --------- |
-| Currency                      | MXN                              | SOURCE           | S2        |
-| Benchmark                     | F-TIIE                           | SOURCE           | S1        |
-| Floating index                | MXN-TIIE ON-OIS Compound         | SOURCE           | S2        |
-| Floating tenor                | 1D                               | SOURCE           | S2        |
-| Effective-date lag            | T+2 business days                | SOURCE           | S2        |
-| Calendar                      | Mexico City / MXMC               | SOURCE           | S2        |
-| Day count                     | ACT/360                          | SOURCE           | S2        |
-| Payment frequency             | 28D                              | SOURCE           | S2, S7    |
-| Calculation frequency         | 28D                              | SOURCE           | S2        |
-| Reset frequency               | 28D                              | SOURCE           | S2        |
-| Roll convention               | NONE                             | SOURCE           | S2        |
-| Start-date adjustment         | FOLLOWING                        | SOURCE           | S2        |
-| Maturity adjustment           | FOLLOWING                        | SOURCE           | S2        |
-| Calculation-period adjustment | FOLLOWING                        | SOURCE           | S2        |
-| Payment relative to           | END PERIOD                       | SOURCE           | S2        |
-| Payment adjustment            | FOLLOWING                        | SOURCE           | S2        |
-| Payment lag                   | 2 business days                  | SOURCE           | S2        |
-| Fixing offset                 | 0D                               | SOURCE           | S2        |
-| Fixing day type               | Business                         | SOURCE           | S2        |
-| Fixing adjustment             | PRECEDING                        | SOURCE           | S2        |
-| Floating compounding          | Spread Exclusive / ISDA Standard | SOURCE           | S2        |
-| Floating spread               | 0                                | PROJECT DECISION | —         |
-| Calibration notional          | 1                                | PROJECT DECISION | —         |
-| Curve reference date          | Effective date                   | PROJECT DECISION | —         |
-| Core-v1 projection curve      | F-TIIE curve                     | SOURCE-ALIGNED   | S4, S5    |
-| Core-v1 discount curve        | Same F-TIIE curve                | ASSUMPTION       | —         |
-
----
-
-# 6. Date Model
-
-The implementation must distinguish the following dates explicitly:
-
-```text
-trade_date
-
-valuation_date
-
-effective_date
-
-calculation_period_start
-
-calculation_period_end
-
-fixing_date
-
-payment_date
-
-maturity_date
-```
-
-No generic `date` variable should represent multiple financial concepts.
-
----
-
-# 7. Trade and Effective Dates
-
-For the canonical spot-starting OIS:
-
-```text
-effective_date
+$$
+\alpha_i
 =
-trade_date + 2 MXMC business days
-```
+\frac{\text{actual calendar days from adjusted start to adjusted end}}{360}.
+$$
 
-**Provenance:** `SOURCE`
-**Reference:** S2
+Because dates can be adjusted, $\alpha_i$ is **not always** $28/360$. Payment takes place two MXMC business days after the adjusted period end, so the accrual end and payment date generally differ.
 
-Example:
+The fixing observation schedule is distinct from the coupon-payment schedule. One fixing may cover multiple calendar days—for example, an observation beginning on Friday may accrue through the following Monday. The weights must reflect those actual calendar days, including weekends and holidays.
 
-```text
-Trade date:
-Monday
+[Calendar data and provenance](../data/calendars/README.md) · [Schedule implementation](../src/yield_curves/schedules.py) · [Overnight observations](../src/yield_curves/observations.py)
 
-Tuesday:
-business day +1
+## Cash flows, overnight compounding and par pricing
 
-Wednesday:
-business day +2
+For coupon period $i$, let $N$ be notional, $K$ the fixed rate, and $\alpha_i$ the ACT/360 accrual fraction. The fixed-leg coupon amount is
 
-Effective date:
-Wednesday
-```
+$$
+CF_i^{\mathrm{fixed}}=N K \alpha_i.
+$$
 
-Actual results depend on the MXMC holiday calendar.
+For the floating leg, let $r_{ij}$ denote the overnight rate applicable to observation $j$ within coupon $i$, and $d_{ij}$ its associated number of calendar days. Compounded growth is
 
----
-
-# 8. Curve Reference Date
-
-Core v1 defines:
-
-```text
-curve_reference_date = effective_date
-```
-
-and:
-
-```text
-P(T0, T0) = 1
-```
-
-where:
-
-```text
-T0 = effective_date
-```
-
-**Provenance:** `PROJECT DECISION`
-
-### Rationale
-
-This separates:
-
-```text
-valuation date → effective date
-```
-
-from the actual spot-starting OIS calibration problem.
-
-It also makes the synthetic known-truth calibration case easier to define
-and validate independently.
-
-If a valuation-date discount factor is later required, the short bridge
-should be modeled explicitly rather than hidden inside the curve bootstrap.
-
----
-
-# 9. 28-Day Period Structure
-
-The canonical OIS uses:
-
-```text
-Payment Frequency = 28D
-
-Calculation Frequency = 28D
-
-Reset Frequency = 28D
-```
-
-**Provenance:** `SOURCE`
-**References:** S2, S7
-
-This must not be confused with the tenor of the benchmark itself.
-
-The distinction is:
-
-```text
-Benchmark:
-overnight F-TIIE
-
-Coupon period:
-28 calendar days, subject to applicable date conventions
-```
-
----
-
-# 10. Accrual Convention
-
-The canonical day-count convention is:
-
-```text
-ACT/360
-```
-
-**Provenance:** `SOURCE`
-**Reference:** S2
-
-For dates:
-
-```text
-T_start
-T_end
-```
-
-the year fraction is:
-
-```text
-actual calendar days between T_start and T_end
-------------------------------------------------
-                       360
-```
-
-The implementation must not assume that every adjusted coupon period has:
-
-```text
-tau = 28 / 360
-```
-
-because calendar adjustments can alter actual accrual dates.
-
----
-
-# 11. Business-Day Adjustments
-
-Canonical conventions:
-
-```text
-Start Date:
-FOLLOWING
-
-Maturity:
-FOLLOWING
-
-Calculation Period:
-FOLLOWING
-
-Payment:
-FOLLOWING
-```
-
-**Provenance:** `SOURCE`
-**Reference:** S2
-
-The implementation should expose each convention independently even where
-several currently have the same value.
-
-Do not collapse them into a single global:
-
-```text
-business_day_convention
-```
-
-because different instrument variants may eventually require different
-rules.
-
----
-
-# 12. Payment Date
-
-For each coupon period:
-
-```text
-payment_date
+$$
+G_i
 =
-adjusted period end
-+
-2 MXMC business days
-```
+\prod_j\left(1+r_{ij}\frac{d_{ij}}{360}\right),
+$$
 
-subject to the specified payment convention.
+giving a zero-spread floating coupon amount of
 
-**Provenance:** `SOURCE`
-**Reference:** S2
+$$
+CF_i^{\mathrm{float}}=N(G_i-1).
+$$
 
-Therefore:
+For projected coupons, the implementation infers each overnight rate from the projection curve over the observation's accrual interval, rather than treating the 28-day coupon as one overnight fixing.
 
-```text
-period_end != payment_date
-```
+Both legs are discounted to the curve reference date using the **payment dates**. For a receive-floating/pay-fixed position, the model's sign convention is
 
-in general.
-
-The two dates must be represented separately.
-
----
-
-# 13. Fixing Convention
-
-Canonical fixing attributes:
-
-```text
-floating tenor:
-1D
-
-fixing offset:
-0D
-
-fixing day type:
-Business
-
-fixing adjustment:
-PRECEDING
-```
-
-**Provenance:** `SOURCE`
-**Reference:** S2
-
-The fixing schedule must remain distinct from the coupon-payment schedule.
-
----
-
-# 14. Overnight Compounding
-
-The floating coupon represents compounded overnight F-TIIE observations
-over the applicable interest period.
-
-Conceptually:
-
-```text
-Growth
+$$
+\operatorname{NPV}
 =
-Π_j (1 + r_j × d_j / 360)
-```
+PV_{\mathrm{float}}
+-
+PV_{\mathrm{fixed}}.
+$$
 
-where:
+The par fixed rate is the rate for which the two leg values agree under the specified curve assumptions. Unit notional is used for calibration because a common notional scale does not change a par rate; valuation of supported instruments can use a different positive notional. Nonzero floating spreads are **not supported** by the current financial profile.
 
-```text
-r_j
+[Pricing implementation](../src/yield_curves/pricing.py) · [Calibration methodology](methodology.md)
+
+## Curve-construction conventions and market-data scope
+
+The controlled synthetic calibration example uses the following **project-selected** OIS maturities:
+
+`1M, 2M, 3M, 6M, 9M, 1Y, 2Y, 3Y, 4Y, 5Y, 7Y, 10Y, 15Y, 20Y, 30Y`.
+
+The 1M and 2M F-TIIE OIS inputs reflect the CME curve-input change effective **18 May 2026** [S3]. Longer-tenor references draw on the published F-TIIE conversion-curve methodology [S4], but the **complete calibration basket is a project choice**, not a claim to replicate the current CME production input universe.
+
+For synthetic generation, labels such as `3M` or `10Y` are resolved by calendar-month or calendar-year offsets from the effective date **before business-day adjustments**. This deterministic project convention has not been independently validated against CME's production maturity-generation rules.
+
+The project uses the final **payment date** of each swap as its calibration pillar. With a two-business-day payment lag, this avoids needing a curve value beyond the last pillar to price the instrument. It is a project construction choice, not a claim about CME's internal pillar placement.
+
+The validated 2026 holiday dataset and the **projected** future MXMC calendar serve different purposes. The latter supports controlled long-horizon synthetic experiments but must not be represented as an official long-dated market calendar.
+
+Calibrated state consists of nodal **discount factors**. Reported zero rates are continuously compounded and forward rates over explicit periods are simple ACT/360 rates:
+
+$$
+z(T)
 =
-applicable overnight F-TIIE fixing
+-\frac{\ln P(T_0,T)}{\tau(T_0,T)},
+\qquad T>T_0,
+$$
 
-d_j
+$$
+F(T_1,T_2)
 =
-number of calendar days to which that fixing applies
-```
+\frac{P(T_0,T_1)/P(T_0,T_2)-1}{\tau(T_1,T_2)}.
+$$
 
-**Provenance:** `SOURCE`
-**References:** S5, S7
+These reporting conventions do not redefine the market OIS quotation convention. **Interpolation belongs to the curve methodology, not the instrument contract**; the current selected representation is natural cubic interpolation of continuous zero rates, with other implemented alternatives described in [Interpolation](interpolation.md).
 
-The floating coupon on unit notional is therefore conceptually:
+Curve queries outside calibrated date coverage fail explicitly; automatic extrapolation is not supported.
 
-```text
-CF_float
-=
-Growth - 1
-```
+## Institutional boundary and source interpretation
 
-subject to the exact contractual implementation.
+Projection of overnight F-TIIE cash flows and discounting of those cash flows are distinct financial functions. The current implementation uses the same curve for both as a **model assumption**. Cleared MXN implied-discounting arrangements may instead depend on USD SOFR, USD/MXN instruments, and SOFR/F-TIIE cross-currency swaps [S4–S6]. No such multi-curve construction is implemented here.
 
----
+The reference sources establish the origin of specified market attributes; they do **not** certify that the whole implementation reproduces CME production curves, their holiday datasets, or their valuation methodology. Project choices and inferences remain identified as such.
 
-# 15. Weekends and Holidays
-
-F-TIIE is a business-day fixing.
-
-For non-business calendar days, the relevant previous fixing applies for
-the corresponding number of calendar days.
-
-Example:
-
-```text
-Friday fixing
-        ↓
-Friday
-Saturday
-Sunday
-```
-
-where appropriate under the MXMC calendar.
-
-Therefore, overnight compounding must use actual calendar-day weights rather
-than treating every fixing as exactly one day.
-
-**Provenance:** `SOURCE`
-**References:** S5, S7
+For the exact coded profile and the tests of its date/cash-flow behavior, see [`conventions.py`](../src/yield_curves/conventions.py), [validation](validation.md), and the [test coverage map](test-coverage-map.md).
 
 ---
 
-# 16. Fixed Leg
-
-For each fixed-leg coupon period:
-
-```text
-CF_fixed,i
-=
-N × K × alpha_i
-```
-
-where:
-
-```text
-N
-=
-notional
-
-K
-=
-fixed contractual rate
-
-alpha_i
-=
-ACT/360 accrual fraction
-```
-
-Core calibration uses:
-
-```text
-N = 1
-```
-
-**Provenance:** `PROJECT DECISION`
-
-### Rationale
-
-Par-rate calibration is invariant to a common notional scale.
-
-Unit notional therefore removes an unnecessary parameter from calibration.
-
----
-
-# 17. Floating Spread
-
-Canonical calibration instruments use:
-
-```text
-floating_spread = 0
-```
-
-**Provenance:** `PROJECT DECISION`
-
-### Rationale
-
-Core v1 calibrates standard par F-TIIE OIS rather than bespoke swaps
-containing an additional contractual spread.
-
-The instrument representation should nevertheless allow a floating spread
-to be added later.
-
----
-
-# 18. Calibration Instrument Universe
-
-Project calibration tenors:
-
-```text
-1M
-2M
-3M
-6M
-9M
-1Y
-2Y
-3Y
-4Y
-5Y
-7Y
-10Y
-15Y
-20Y
-30Y
-```
-
-The 1M and 2M F-TIIE OIS inputs reflect the CME curve-input change effective
-May 18, 2026.
-
-**Provenance for 1M / 2M:** `SOURCE`
-**Reference:** S3
-
-The longer OIS structure derives from the published F-TIIE conversion-curve
-methodology.
-
-**Provenance:** `SOURCE + INFERENCE`
-**References:** S3, S4
-
-For this implementation, the complete set above is frozen as the project
-calibration universe.
-
-**Provenance:** `PROJECT DECISION`
-
----
-
-## 19. Market-Tenor Resolution
-
-For the synthetic reference framework, calibration labels such as:
-
-```text
-1M
-2M
-3M
-...
-30Y
-```
-
-are mapped to unadjusted contractual maturity dates using calendar-month
-or calendar-year offsets from the effective date.
-
-Examples:
-
-```text
-effective date + 1M
-effective date + 12M
-effective date + 30Y
-```
-
-Business-day adjustment is then performed by the normal instrument
-schedule logic.
-
-**Provenance:** `PROJECT DECISION`
-
-This convention is sufficient for the controlled synthetic calibration
-experiment.
-
-It is not yet claimed to reproduce the exact maturity-generation logic
-used by CME's production curve helpers. The convention must be independently
-verified before using observed CME market quotes in the real-market case.
-
-
-## 20. Long-Horizon Calendar Policy
-
-The frozen `mxmc_2026.csv` dataset contains verified 2026 holiday data.
-
-Long-dated synthetic instruments require calendar coverage beyond currently
-verified annual datasets.
-
-For synthetic experiments only, the project therefore uses a deterministic:
-
-```text
-MXMC_PROJECTED
-```
-
-calendar that extrapolates recurring Mexican financial-sector holiday rules.
-
-**Provenance:** `PROJECT CALENDAR MODEL`
-
-The projected calendar:
-
-* reproduces the verified 2026 holiday set;
-* provides deterministic long-horizon schedule generation;
-* is not represented as an official CNBV, CME, or BMV calendar for future
-  years;
-* must not replace verified calendar data in the real-market implementation.
-
----
-
-# 21. Calibration Pillar Convention
-
-For Core-v1 sequential calibration, each OIS contributes one curve node at:
-
-```text
-pillar_date = final_payment_date
-```
-
-rather than at the adjusted maturity date.
-
-**Provenance:** `PROJECT DECISION`
-
-### Rationale
-
-The market-standard F-TIIE OIS profile includes a two-business-day payment
-lag.
-
-Therefore:
-
-```text
-adjusted maturity
-<
-final payment date
-```
-
-in general.
-
-Placing the calibration node at the final payment date ensures that every
-cash flow required to value the calibration instrument falls inside the
-curve domain.
-
-This avoids introducing implicit extrapolation during calibration.
-
-The convention is a project calibration design choice and is not claimed
-to reproduce CME's internal production curve-helper pillar methodology.
-
-
-# 22. Curve-State Representation
-
-The canonical calibrated curve state is represented using:
-
-```text
-discount factors
-```
-
-**Provenance:** `PROJECT DECISION`
-
-Par OIS quotes are calibration observations.
-
-They are not treated as the underlying curve state.
-
----
-
-# 23. Zero-Rate Convention
-
-Zero rates are reported using continuously compounded rates:
-
-```text
-R(T0,T)
-=
--ln(P(T0,T)) / tau(T0,T)
-```
-
-**Provenance:** `PROJECT DECISION`
-
-This is a reporting convention.
-
-It does not imply that F-TIIE OIS market quotes use continuous compounding.
-
----
-
-# 24. Forward-Rate Convention
-
-For a period:
-
-```text
-[T1,T2]
-```
-
-with ACT/360 year fraction:
-
-```text
-tau(T1,T2)
-```
-
-the simple forward derived from the curve is:
-
-```text
-F(T0;T1,T2)
-=
-[
-    P(T0,T1) / P(T0,T2)
-    - 1
-]
-/
-tau(T1,T2)
-```
-
-**Provenance:** mathematical definition used by the project.
-
-Every forward output must include its period and rate convention.
-
----
-
-# 25. Interpolation
-
-Canonical interpolation:
-
-```text
-target:
-ln(P(T))
-
-method:
-piecewise linear
-```
-
-Equivalent description:
-
-> log-linear interpolation of discount factors.
-
-**Provenance:** `PROJECT DECISION`
-
-### Rationale
-
-The method is selected as a transparent baseline because it is:
-
-* simple to inspect;
-* deterministic;
-* directly related to discount factors;
-* easy to test;
-* suitable for studying interpolation-induced forward behavior.
-
-It is not claimed to reproduce CME or Bloomberg production interpolation.
-
----
-
-# 26. Extrapolation
-
-Core-v1 policy:
-
-```text
-automatic extrapolation = disabled
-```
-
-**Provenance:** `PROJECT DECISION`
-
-Requests beyond the supported calibration horizon must fail explicitly.
-
-Expected condition:
-
-```text
-OUT_OF_CURVE_RANGE
-```
-
----
-
-# 27. Core-v1 Simplification Summary
-
-The canonical implementation deliberately assumes:
-
-```text
-F-TIIE projection curve
-=
-discount curve
-```
-
-This is:
-
-```text
-ASSUMPTION
-```
-
-not:
-
-```text
-CME methodology
-```
-
-The objective is to isolate and validate curve-construction mechanics before
-introducing the institutional multi-curve discounting architecture.
-
----
-
-# 28. Future Multi-Curve Extension
-
-The future architecture may separate:
-
-```text
-F-TIIE Projection Curve
-```
-
-from:
-
-```text
-MXN Implied Discount Curve
-```
-
-with the latter incorporating dependencies such as:
-
-```text
-USD SOFR
-USD/MXN FX
-SOFR/F-TIIE CCS
-```
-
-**Provenance:** `SOURCE-INSPIRED FUTURE DESIGN`
-**References:** S4, S5, S6
-
-This extension is explicitly outside Core v1.
-
----
-
-# 29. Implementation Requirement
-
-No material convention documented above should rely solely on a third-party
-library default.
-
-Code should make the intended value visible.
-
-For example, prefer conceptually:
-
-```python
-day_count = ACT_360
-payment_lag = 2
-payment_adjustment = FOLLOWING
-```
-
-over:
-
-```python
-swap = SomeLibrarySwap(...)
-```
-
-where important financial behavior is inherited implicitly.
-
----
-
-# 30. Testing Requirement
-
-Every convention that changes generated dates or cash flows should receive
-an explicit test.
-
-Minimum convention tests:
-
-```text
-T+2 effective date
-
-MXMC holiday handling
-
-28D schedule generation
-
-FOLLOWING adjustment
-
-ACT/360 year fraction
-
-2-business-day payment lag
-
-fixing-date logic
-
-weekend carry in overnight compounding
-```
-
-The test suite should verify financial behavior, not only code execution.
-
----
-
-# 31. Source Register
-
+## Source Register
 ## S1 — Banco de México — TIIE de Fondeo a un día
 
 [https://www.banxico.org.mx/SieInternet/consultarDirectorioInternetAction.do?accion=consultarCuadro&idCuadro=CF111](https://www.banxico.org.mx/SieInternet/consultarDirectorioInternetAction.do?accion=consultarCuadro&idCuadro=CF111)

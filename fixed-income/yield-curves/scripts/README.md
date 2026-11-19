@@ -1,76 +1,83 @@
-# Script Navigation
+# Repository Scripts — Usage and Research Navigation
 
-This directory separates operational workflows, manual assurance, the synthetic demo and historical research.
+The checkout scripts expose **execution workflows and reproducible financial experiments**. They are distinct from the in-memory Python curve interface. Begin with the intended purpose rather than the chronological order in which a script was developed.
 
-- **Use `operational/`** when consuming the project baseline.
-- **Use `assurance/`** when validating the current operational baseline.
-- **Use `demo/`** for the explicit synthetic baseline example.
-- **Use `experiments/`** when reproducing development research or historical diagnostics.
+| Need | Directory | What it does |
+|---|---|---|
+| Build and archive the selected baseline using explicit inputs | [`operational/`](operational/README.md) | Performs calibration and standard acceptance; promotes **only accepted** runs |
+| Independently assess an existing or newly rebuilt baseline | [`assurance/`](assurance/README.md) | Rebuilds without publication, or verifies archived nodes **without recalibration** |
+| Reproduce the frozen synthetic example | [`demo/`](demo/README.md) | Uses known synthetic quotations and a projected calendar; writes demo snapshots |
+| Study calibration and interpolation behavior | `experiments/` | Synthetic inputs, bootstrap, method comparisons, forward curves and sensitivities |
+| Capture test reference candidates | [`tests/`](tests/README.md) | Developer-maintained numerical references; not a publishing workflow |
 
-The current historical scripts are intentionally placed under `experiments/`.
+For usage commands, use [CLI workflows](../docs/cli.md); for downstream Python consumption, use the [integration contract](../docs/integration_contract.md). Research scripts are not stable API entry points for valuation consumers.
 
-See [architecture](../docs/architecture.md) for reusable boundaries and the
-[curated C04 evidence index](../docs/evidence/index.md) for published exhibits.
-The absence statements below refer to historical `outputs/research/` sections,
-not to curated exhibits under `evidence/c03/`. See the
-[reproduction contract](../docs/evidence/reproduce.md) before replay or recomputation.
+## Experimental workflow and source
 
-## Experiments
+Experiments use project research utilities, notably the **known synthetic reference curve**, the **projected MXMC calendar**, and the frozen quote file `data/synthetic/ftiie_ois_quotes_v1.csv`. They ask distinct questions:
 
-### `experiments/synthetic`
+- **Quote repricing:** can the recovered curve reproduce the input par rates?
+- **Known-curve recovery:** how closely do discount factors, zero rates and forwards match their generating synthetic curve?
+- **Interpolation behavior:** how do alternative curve representations change shapes and between-pillar rates?
+- **Sensitivity:** where do perturbations of individual OIS quotations propagate?
 
-| Script | Purpose | Inputs | Outputs | Depends on | Cost |
-|---|---|---|---|---|---|
-| `generate_synthetic_reference_data.py` | Generate a candidate synthetic F-TIIE OIS quote set for human review. | Projected MXMC calendar and the synthetic known-truth model. | Requires `--output`; writes a new candidate CSV and never overwrites `data/synthetic/ftiie_ois_quotes_v1.csv`. | `yield_curves.research.calendars`, `yield_curves.schedules`, `yield_curves.research.synthetic`. | MEDIUM |
-| `plot_synthetic_reference_data.py` | Plot the known-truth zero/forward curves and synthetic par quotes. | Existing synthetic quote CSV and known-truth model. | Writes figures and tables under `outputs/research/{figures,tables}/01_synthetic_reference/`. | `yield_curves.research.synthetic`, `reporting`. | LOW |
+The research directories contain a mix of **calculation producers, figure/report generators, and saved-data consumers**. Re-running all scripts is not required to inspect the curated evidence. Some original outputs live outside the current checkout; consult [evidence and reproduction scope](../docs/evidence/reproduce.md) before claiming a complete replay.
 
-### `experiments/bootstrap`
+### 1. Construct and inspect synthetic reference inputs
 
-These scripts use the historical sequential bootstrap engine. Their validation and diagnostics are development evidence; they are **not acceptance of the current simultaneous cubic baseline**.
+| Script (relative to `experiments/synthetic/`) | Purpose | Data and output |
+|---|---|---|
+| `generate_synthetic_reference_data.py` | Generate a **new synthetic quotation candidate** from the reference curve and projected calendar | Requires `--output`; **does not overwrite** the frozen input dataset |
+| `plot_synthetic_reference_data.py` | Illustrate the known zero curve, 28-day forwards and par OIS quotations | Writes figures/tables to `outputs/research/{figures,tables}/01_synthetic_reference/` |
 
-| Script | Purpose | Inputs | Outputs | Depends on | Cost |
-|---|---|---|---|---|---|
-| `bootstrap_synthetic_reference_data.py` | Bootstrap synthetic quotes and report nodal recovery. | `data/synthetic/ftiie_ois_quotes_v1.csv`. | Writes `outputs/research/{tables,text}/02_bootstrap_recovery/` when executed; corresponding historical outputs are currently present. | `yield_curves.bootstrap`, `calendars`, `synthetic`, `reporting`. | MEDIUM |
-| `plot_bootstrap_recovery.py` | Plot dense recovery of discount factors, zero rates and forwards. | Synthetic quote CSV and known-truth model. | Writes figures/tables under `outputs/research/{figures,tables}/02_bootstrap_recovery/`. | `yield_curves.bootstrap`, `synthetic`, `reporting`. | MEDIUM |
-| `report_bootstrap_recovery_metrics.py` | Calculate global and maturity-horizon recovery metrics. | Synthetic quote CSV and known-truth model. | Writes tables/text under `outputs/research/{tables,text}/02_bootstrap_recovery/`. | `yield_curves.bootstrap`, `recovery`, `synthetic`, `reporting`. | MEDIUM |
-| `validate_synthetic_bootstrap.py` | Validate the sequential bootstrap and independently reprice calibration instruments. | Synthetic quote CSV and projected calendar. | Writes tables/text under `outputs/research/{tables,text}/03_curve_validation/`. | `yield_curves.bootstrap`, `validation`, `reporting`. | MEDIUM |
-| `report_curve_diagnostics.py` | Diagnose forward-curve shape and log-linear segment jumps. | Synthetic quote CSV and projected calendar. | Writes tables/text under `outputs/research/{tables,text}/04_curve_diagnostics/`. | `yield_curves.bootstrap`, `diagnostics`, `reporting`. | MEDIUM |
-| `report_quote_sensitivity.py` | Measure one-sided quote shocks and sequential upstream invariance. | Synthetic quote CSV and projected calendar. | Writes outputs under `outputs/research/{tables,text}/05_quote_sensitivity/` when executed; this historical section is absent under `outputs/research/`; curated C04 exhibits are linked above. | `yield_curves.research.sensitivity`, `reporting`. | HIGH |
-| `report_central_quote_sensitivity.py` | Measure symmetric quote sensitivity and local curvature for the sequential engine. | Synthetic quote CSV and projected calendar. | Writes outputs under `outputs/research/{tables,text}/05_quote_sensitivity/` when executed; this historical section is absent under `outputs/research/`; curated C04 exhibits are linked above. | `yield_curves.research.sensitivity`, `reporting`. | HIGH |
+The source scenario is specified in [Synthetic reference data](../data/synthetic/README.md).
 
-### `experiments/interpolation`
+### 2. Sequential bootstrap, repricing and curve diagnostics
 
-This directory preserves historical comparisons of two and three interpolation methods. The `three` names are historical and are deliberately not generalized in this phase.
+These are **valid research uses of the implemented sequential bootstrap**, not acceptance results for the selected simultaneous/natural-cubic baseline.
 
-| Script | Purpose | Inputs | Outputs | Depends on | Cost |
-|---|---|---|---|---|---|
-| `compare_interpolation_methods.py` | Print global recovery/repricing comparison for two sequential methods. | Synthetic quote CSV and projected calendar. | Console output only. | `yield_curves.bootstrap`, `validation`, `recovery`. | MEDIUM |
-| `compare_interpolation_methods_by_horizon.py` | Print recovery comparison by maturity horizon for two sequential methods. | Synthetic quote CSV and projected calendar. | Console output only. | `yield_curves.bootstrap`, `recovery`. | MEDIUM |
-| `plot_interpolation_method_comparison.py` | Persist dense visual comparison of two sequential methods. | Synthetic quote CSV, projected calendar and known truth. | Writes the currently present `two_methods` figures/tables under `outputs/research/{figures,tables}/06_interpolation_comparison/`. | `yield_curves.bootstrap`, `synthetic`, `reporting`. | MEDIUM |
-| `compare_three_interpolation_methods.py` | Compare three methods with simultaneous nodal calibration. | Synthetic quote CSV, projected calendar and known truth. | Writes `three_method*`, diagnostics and metadata when executed; those historical outputs are absent under `outputs/research/`; curated C04 exhibits are linked above. | `yield_curves.calibration`, `recovery`, `reporting`. | HIGH |
-| `plot_three_interpolation_methods.py` | Plot dense recovery for three methods, including cubic instantaneous forward. | Synthetic quote CSV, projected calendar and known truth. | Writes `three_methods*` figures/tables when executed; those historical outputs are absent under `outputs/research/`; curated C04 exhibits are linked above. | `yield_curves.calibration`, `synthetic`, `reporting`. | HIGH |
+| Script (relative to `experiments/bootstrap/`) | Purpose | Research output |
+|---|---|---|
+| `bootstrap_synthetic_reference_data.py` | Recover nodal discount factors from synthetic quotes | Tables and text under `02_bootstrap_recovery/` |
+| `plot_bootstrap_recovery.py` | Compare recovered discount factors, zero rates and forwards with the known reference | Figures and tables under `02_bootstrap_recovery/` |
+| `report_bootstrap_recovery_metrics.py` | Summarize recovery errors globally and by maturity | Tables and text under `02_bootstrap_recovery/` |
+| `validate_synthetic_bootstrap.py` | Reconstruct and independently reprice calibration swaps | Tables and text under `03_curve_validation/` |
+| `report_curve_diagnostics.py` | Examine forward-curve shape and log-linear segment jumps | Tables and text under `04_curve_diagnostics/` |
+| `report_quote_sensitivity.py` | One-sided quote shocks and sequential upstream locality | Outputs under `05_quote_sensitivity/` **when run** |
+| `report_central_quote_sensitivity.py` | Central quote shocks and local curvature diagnostics | Outputs under `05_quote_sensitivity/` **when run** |
 
-### `experiments/sensitivity`
+Output paths in this table are relative to `outputs/research/`, with `figures/`, `tables/`, or `text/` subfolders depending on the script. The `05_quote_sensitivity/` research-output section is **not currently preserved** in that directory; curated sensitivity exhibits are linked in [Risk evidence](../docs/evidence/risk.md).
 
-| Script | Purpose | Inputs | Outputs | Depends on | Cost |
-|---|---|---|---|---|---|
-| `report_global_sensitivity.py` | Run and persist global quote-sensitivity comparisons for three methods. | Synthetic quote CSV, projected calendar, symmetric +/- 1 bp shocks. | Writes tables, figures, text and metadata under `outputs/research/{figures,tables,text,metadata}/07_global_sensitivity/`; existing outputs are consumed below. | `yield_curves.research.global_sensitivity`, `reporting`. | HIGH |
-| `plot_global_forward_sensitivity_heatmaps.py` | Plot forward-sensitivity propagation using persisted results. | Existing `global_forward_sensitivity_dense.csv` and `global_node_sensitivity_long.csv` from section 07. | Writes heatmaps and scale diagnostics under section 07. | Persisted section 07 CSVs; `yield_curves.tooling.reporting`. | MEDIUM |
-| `report_forward_sensitivity_locality.py` | Derive forward-sensitivity locality metrics from persisted results. | The same two section 07 CSVs. | Writes locality tables, figures, text and metadata under section 07. | Persisted section 07 CSVs; `yield_curves.research.global_sensitivity`, `reporting`. | MEDIUM |
+### 3. Compare interpolation choices
 
-The global sensitivity producer is expensive. The heatmap and locality scripts consume persisted CSVs and do not recalibrate curves.
+| Script (relative to `experiments/interpolation/`) | Financial comparison | Output behavior |
+|---|---|---|
+| `compare_interpolation_methods.py` | Two **sequentially calibrated** interpolation methods | Console comparison |
+| `compare_interpolation_methods_by_horizon.py` | Two sequential methods evaluated across maturity horizons | Console comparison |
+| `plot_interpolation_method_comparison.py` | Dense visual comparison of two sequential methods | Saves `two_methods` figures/tables under `06_interpolation_comparison/` |
+| `compare_three_interpolation_methods.py` | Three interpolations under **simultaneous nodal calibration** | Generates comparison tables/diagnostics and metadata when executed |
+| `plot_three_interpolation_methods.py` | Dense recovery and forward-shape comparison for the three simultaneous methods | Produces plots and data when executed |
 
-## Operational and assurance entrypoints
+The **calibration engine differs** between the two-method sequential and three-method simultaneous studies. Their results must not be mixed as if only interpolation had changed. The saved curated comparison can be inspected in [Methodology evidence](../docs/evidence/methodology.md); some original three-method files are not retained under the older research-output directory.
 
-The operational Python contract is:
+The script names refer to their **specific implemented experiment design**, not a constraint on the set of methods supported by the underlying Python curve library.
 
-```python
-from yield_curves.baseline import build_baseline_ftiie_curve
-```
+### 4. Quote-sensitivity propagation and locality
 
-The operational builder requires explicit inputs and destination. Assurance has
-separate `rebuild` and `snapshot` modes; the latter does not recalibrate. Synthetic
-defaults live in `demo/build_synthetic_baseline.py`.
-See [CLI workflows](../docs/cli.md) for commands.
+| Script (relative to `experiments/sensitivity/`) | Purpose | Dependencies |
+|---|---|---|
+| `report_global_sensitivity.py` | Recalibrate under symmetric **±1 bp quote shocks** and produce global sensitivity results for three methods | **Expensive producer**; writes section `07_global_sensitivity/` data, plots and metadata |
+| `plot_global_forward_sensitivity_heatmaps.py` | Plot signed forward-rate response matrices | **Saved-data consumer** of section 07 CSVs; no curve recalibration |
+| `report_forward_sensitivity_locality.py` | Summarize where and how strongly shocks propagate | **Saved-data consumer** of section 07 CSVs; no curve recalibration |
 
-No external consumer should depend on experiment scripts or historical reports.
+The heatmap and locality tools require the persisted `global_forward_sensitivity_dense.csv` and `global_node_sensitivity_long.csv` datasets. Generating these reports from saved data should not be described as re-executing the underlying financial calibration.
+
+[Risk analysis](../docs/evidence/risk.md) · [Saved-data replay requirements](../docs/evidence/reproduce.md)
+
+## Execution and evidence boundaries
+
+The scripts are **checkout workflows**, not a generic installed command-line distribution or an alternative to the consumer API.
+
+An experiment can depend on synthetic truth and research-only utilities; **the operational baseline and its consumers must not**. Snapshot publication, independent acceptance, stored-data replay and full research recomputation are different activities.
+
+Generated experiment files under `outputs/research/` and curated files under `evidence/c03/` are not interchangeable. The [evidence index](../docs/evidence/index.md) and [reproduction contract](../docs/evidence/reproduce.md) identify which results and dependencies are actually available.

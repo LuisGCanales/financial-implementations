@@ -1,4 +1,8 @@
-# Testing Guide
+# Testing and Numerical Reproducibility
+
+This guide describes how to run the project's **financial, numerical and software-contract tests**. Automated testing is distinct from the acceptance of an individual calibrated curve and from evidence of real-market pricing suitability.
+
+The [test coverage map](test-coverage-map.md) links specific modules to their validation contracts, while the [research evidence index](evidence/index.md) documents controlled calibration and sensitivity experiments.
 
 ## Installation
 
@@ -28,7 +32,7 @@ python -m pip install --no-deps --no-build-isolation -e .
 ```
 
 The lock targets glibc >=2.34 and includes Matplotlib for full collection.
-Reuse the canonical `.venv` for local work. Keep editable metadata: snapshots and
+Use a project-local `.venv` for reproducible local work; the pinned reference environment is described above. Keep editable metadata: snapshots and
 external baseline consumers read the installed project version. These build
 backend dependencies support local installation, not distribution certification.
 
@@ -37,7 +41,7 @@ whole-suite `-m 'not slow'` collection requires `plots`. With only `dev`, use
 `pytest --ignore=tests/tooling/test_reporting.py -m 'not slow'` or select individual
 non-plotting test files. PyYAML is not a runtime dependency.
 
-## Selection
+## Choosing ordinary and expensive tests
 
 ```bash
 pytest -q -m 'not slow'                 # normal development feedback
@@ -62,23 +66,19 @@ tests or establish passes. The [test coverage map](test-coverage-map.md) records
 the audited revision, module/function/case counts, contracts and tolerances.
 A non-slow selection is not a timing measurement or a code-coverage percentage.
 
-## Structural cost audit
+## Computational cost and slow tests
 
-| Test/group | Work performed | Marker before | Marker now | Reason |
-|---|---|---|---|---|
-| Quote sensitivity: `report`, 10 tests | Load 15 frozen quotes; 1 base + 15 sequential shock calibrations; weekly forward grids across 30Y; no plots | none | slow | Repeated full-curve recalibration |
-| Quote sensitivity: `central_report`, 7 tests | Load 15 quotes; 1 base + 30 sequential shock calibrations; weekly forwards; no plots | none | slow | Two-sided full-curve sweep |
-| Global sensitivity: `cubic_global_report`, 10 tests | Load 15 quotes; 1 base + 30 simultaneous calibrations; dense forward diagnostics; no plots | slow | slow | Expensive numerical experiment |
-| Small sensitivity contracts | Two short quotes, 3–5 small calibrations, or analytical helpers; no plots | none | none | Bounded work suitable for normal feedback |
-| Baseline regression | One shared 15-quote baseline build; frozen JSON comparison and repricing; no plots | none | none | Essential regression without a shock sweep |
-| Simultaneous/interpolation/bootstrap tests | Individual builds and method comparisons; short warm-start contract cases; some CSV loading; no plots | none | none | Direct engine coverage, no research-scale sweep |
-| Recovery/horizon/diagnostics/validation | Analytical curves or single sequential builds, grids and repricing; no shock recalibration loop or plots | none | none | Grid horizon alone does not justify slow |
-| Reporting/presentation helpers | Temporary plots or extracted date helpers; no calibration | none | none | Lightweight rendering/helper contracts |
-| Reference tooling | Output guards, small public baseline builds, serialization; no full reference generation | none | none | Safety coverage without a full experiment |
+The `slow` marker identifies **expensive repeated calibration and quote-sensitivity sweeps**, rather than every test that uses the simultaneous solver or a long-dated curve.
 
-This is a structural classification, not a timing benchmark. The global fixture
-prints progress through its callback with `-s`; the financial library itself does
-not print by default.
+| Test category | Work performed | Selected by |
+|---|---|---|
+| Sequential one-sided quote shocks | One base curve and 15 recalibrations with forward diagnostics across 30 years | `slow` |
+| Sequential central quote shocks | One base curve and 30 shocked recalibrations | `slow` |
+| Simultaneous global sensitivity | One base curve and 30 recalibrations with dense forward grids | `slow` |
+| Baseline regression and small method comparisons | Bounded builds, fixed numerical references and independent repricing | Non-slow |
+| Conventions, pricing, validations, reporting and CLI tooling | Unit financial identities, structural rejections and small plotting helpers | Non-slow |
+
+These classifications describe expected **computational structure**, not measured running times. The global sensitivity fixture reports progress when pytest output capture is disabled (`-s`); the financial library itself does not print by default.
 
 ## Numerical reference maintenance
 
@@ -106,7 +106,7 @@ irrelevant monorepo changes skip validation and still finish the aggregate check
 The exact required-check name is **`yield-curves-required`**. It always runs after
 scope and validation: scope must succeed; relevant changes require successful
 validation; irrelevant changes require skipped validation. Failed, cancelled or
-unknown results fail closed. No ruleset change is needed for this workflow.
+unknown results fail closed. The configured required check is part of the existing repository rules; this documentation update does not change branch protection.
 
 The manual `Yield curves numerical` workflow takes a full commit SHA, verifies
 the checkout identity and runs `python -m pytest -s -vv -m slow --durations=20`
@@ -122,5 +122,4 @@ do not upload generated datasets or snapshots. PR artifacts last 14 days and
 manual numerical artifacts 30 days. A cancelled job may not finish its upload.
 
 For comparable local runs, set the same thread/backend variables before starting
-Python and use new temporary output/cache directories. Historical recorded counts
-in the coverage map describe their audited revision, not a permanent CI contract.
+Python and use new temporary output/cache directories. Recorded counts in the coverage map describe a specified collected revision, not a permanent CI contract or a new test-execution claim.

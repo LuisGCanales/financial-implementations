@@ -1,15 +1,25 @@
-# General quote inputs and calendar coverage
+# OIS Quote Inputs and Calendar Coverage
 
-Stage 3 provides input helpers separately from the baseline Python API. Stage 4
-integrates operational input checks into construction and acceptance. The
-operational and assurance rebuild scripts use the general dataset loader with
-explicit classification, calendar CSV, coverage and source. Synthetic/projected
-defaults live only in the demo. See [CLI workflows](cli.md) and
-[snapshots.md](snapshots.md) for publication behavior.
+This guide describes how **F-TIIE OIS par quotations and business-day calendars** are supplied, classified, and checked before constructing a yield curve. Market data and calendars are **caller-provided** in the standard workflow; the frozen synthetic dataset and projected calendar are selected only by the separate demonstration.
 
-## CSV contract
+The [integration contract](integration_contract.md) describes the in-memory curve API, while [CLI workflows](cli.md) covers command-line execution and snapshot publication.
 
-Required columns (order is arbitrary):
+## 1. Financial inputs
+
+Each calibration quotation identifies a par-rate OIS through four required fields:
+
+| Field | Meaning | Example |
+|---|---|---|
+| `tenor` | Quote label, retained for identification | `1M` |
+| `trade_date` | Common trade date in ISO format | `2026-09-15` |
+| `contractual_maturity_date` | Unadjusted maturity supplied for the instrument | `2026-10-18` |
+| `par_rate` | Annual rate in **decimal units** | `0.08` = 8% |
+
+These fields supply the contract; they are **not** the resulting adjusted schedule or curve pillar dates. Instrument construction applies the relevant [F-TIIE OIS conventions](conventions.md), derives the common effective/reference date, adjusts the schedule, and determines each instrument's final **payment-date** calibration pillar.
+
+### CSV format
+
+The general CSV reader requires these four columns, in any order:
 
 ```csv
 tenor,trade_date,contractual_maturity_date,par_rate
@@ -17,36 +27,28 @@ tenor,trade_date,contractual_maturity_date,par_rate
 3M,2026-09-15,2026-12-18,0.081
 ```
 
-- Files use comma-separated UTF-8 text, with an optional UTF-8 BOM.
-- Required values must be nonempty; dates use `YYYY-MM-DD`.
-- Rates are finite decimal numbers: `0.08` means 8%; zero/negative rates are valid.
-  Percentage strings such as `8%` are rejected. No automatic unit conversion occurs.
-- Contractual maturity must follow trade date. Calendar-adjusted instrument
-  validity remains the responsibility of instrument construction.
-- Duplicate headers, missing columns, malformed quoting and mismatched row lengths
-  are rejected. Data errors include the file and physical CSV line number.
-- Input order is preserved; the reader does not sort or deduplicate quotes.
-  Existing calibration checks still require increasing pillars and a common
-  effective/reference date.
-- Extra columns are permitted. If `quote_type` is present, every value must be
-  `PAR_OIS_RATE`. Other instrument types require their own adapter.
+- UTF-8, optionally with a BOM; dates must use `YYYY-MM-DD`.
+- Rates must be finite decimal numbers. **Zero and negative rates are permitted**; values such as `8%` are not parsed or automatically converted.
+- Required fields must be nonempty; contractual maturity must follow trade date.
+- Additional columns are accepted. If `quote_type` is present, it must be `PAR_OIS_RATE`.
+- Rows retain their input order. The loader does **not** sort, deduplicate, or convert tenor labels into maturity dates.
+- Duplicate headers, malformed rows, invalid rates, and unsupported quote types produce explicit errors, with line information where applicable.
 
-To load only the calibration objects:
+For a set intended for the selected cubic baseline, supply at least **two** quotes with distinct tenor labels, one trade date, strictly increasing contractual maturities, and ultimately strictly increasing payment pillars.
+
+To obtain only quote objects:
 
 ```python
 from yield_curves.quote_io import read_ois_quotes_csv
 
-quotes = read_ois_quotes_csv("my_quotes.csv")  # tuple[OISQuote, ...]
+quotes = read_ois_quotes_csv("my_quotes.csv")
 ```
 
-This also reads `data/synthetic/ftiie_ois_quotes_v1.csv`. The minimal reader
-discards source-specific metadata, including `scenario_id` and `data_class`.
-Experiments that need that information continue to use
-`synthetic.read_synthetic_ois_quotes_csv`, which retains the original objects.
+This minimal reader does not preserve file-source metadata. The quote objects provide the financial fields consumed by calibration and repricing.
 
-## Explicit dataset provenance
+## 2. Dataset classification and provenance
 
-For operational input preparation, retain the dataset's identity:
+For workflows where the origin and classification of inputs must be retained, use the dataset loader:
 
 ```python
 from yield_curves.quote_io import QuoteSource, load_ois_quote_dataset_csv
@@ -54,25 +56,41 @@ from yield_curves.quote_io import QuoteSource, load_ois_quote_dataset_csv
 dataset = load_ois_quote_dataset_csv(
     "my_quotes.csv",
     classification=QuoteSource.UNKNOWN,
-    source="User-supplied OIS quotes",
+    source="User-supplied F-TIIE OIS quotations",
 )
+
 quotes = dataset.quotes
 provenance = dataset.provenance
 ```
 
-Classification is explicitly `SYNTHETIC_REFERENCE_DATA` (`QuoteSource.SYNTHETIC`),
-`OBSERVED_MARKET_DATA` (`QuoteSource.OBSERVED`), or `UNKNOWN`. Moving a file does
-not change its classification. OBSERVED is a caller declaration; the loader does
-not independently authenticate a market-data feed. If a CSV `data_class` value
-is present and nonempty, it must match the declared classification, including
-when UNKNOWN is declared.
+The three declarations are:
 
-Provenance retains the source label, resolved file path and SHA-256 of the exact
-bytes parsed. The path describes delivery; classification describes data nature.
-Changing whitespace or line endings changes the fingerprint even when the parsed
-quotes are equal. The loader does not infer source information from directories.
+| Classification | Code value | Interpretation |
+|---|---|---|
+| Synthetic reference data | `QuoteSource.SYNTHETIC` | `SYNTHETIC_REFERENCE_DATA` |
+| Observed market data | `QuoteSource.OBSERVED` | `OBSERVED_MARKET_DATA` |
+| Unknown origin | `QuoteSource.UNKNOWN` | `UNKNOWN` |
 
-## Calendar contract
+Classification is **explicit**, never inferred from a filename, path, or quote level. If the CSV contains a nonempty `data_class`, it must agree with the caller's declared classification. In particular, **`OBSERVED_MARKET_DATA` is a caller assertion, not external authentication** of a market feed.
+
+Provenance records the declared source label, resolved file path, and SHA-256 of the **exact input bytes**. The hash checks file identity, not financial truth; even a whitespace change can produce a different hash without changing the parsed quotations.
+
+The [synthetic research dataset](../data/synthetic/README.md) includes extra columns such as its scenario identifier and derived dates. The general reader retains only the common financial quote fields; the research-specific reader can retain the additional scenario information.
+
+## 3. Calendar inputs and coverage
+
+The OIS contracts require Mexico City (MXMC) business-day logic for effective dates, adjusted coupon boundaries, overnight fixing periods, and payment lags.
+
+A supplied calendar CSV requires a `date` column of ISO holiday dates. Optional descriptive columns are ignored by the calendar loader.
+
+```csv
+date
+2026-01-01
+2026-02-02
+2026-09-16
+```
+
+Build a calendar with **explicit inclusive coverage**:
 
 ```python
 from datetime import date
@@ -82,84 +100,76 @@ calendar = build_mxmc_calendar_from_csv(
     "holidays.csv",
     coverage_start=date(2026, 1, 1),
     coverage_end=date(2026, 12, 31),
-    source="Supplied holiday dataset for 2026",
+    source="Supplied holiday file for 2026",
 )
 ```
 
-The holiday CSV requires a `date` column. Coverage is caller-declared and inclusive;
-both bounds must be provided together and ordered. It cannot be inferred from
-the earliest and latest holidays: ordinary business days may lie before/after
-them. A declared range is a completeness assertion by the caller, not proof that
-the holiday data is authoritative or complete.
+Coverage is declared by the caller, **not inferred from the first or last holiday**. A declaration does not prove the holiday list is complete or officially sourced. The resulting calendar retains `PROVIDED` provenance and a fingerprint of the bytes used to construct it; `PROVIDED` is not a verification status.
 
-The CSV builder records PROVIDED provenance, the source label (the resolved path
-when omitted) and a fingerprint of the parsed bytes. PROVIDED does not mean
-verified. A projected calendar explicitly records PROJECTED provenance and its
-requested full-year coverage:
+Coverage must include **every date required to construct and value the instruments**, not just their contractual maturities. Business-day adjustments and the two-business-day payment lag can extend beyond the last contractual date. Out-of-range date operations raise `CalendarCoverageError`.
+
+For controlled research only, a separately labeled projected calendar is available:
 
 ```python
 from yield_curves.research.calendars import build_projected_mxmc_calendar
 
-demo_calendar = build_projected_mxmc_calendar(start_year=2026, end_year=2057)
+research_calendar = build_projected_mxmc_calendar(
+    start_year=2026,
+    end_year=2057,
+)
 ```
 
-With declared bounds, date queries and adjustments raise `CalendarCoverageError`
-outside coverage. This includes weekends, shifts across a boundary, offset zero
-and unadjusted date requests. Payment lags can therefore exceed coverage even
-when the contractual maturity is inside it.
+This generates reproducible **projected**, not official, future holidays. See [calendar sources and limitations](../data/calendars/README.md).
 
-For compatibility, `BusinessCalendar(...)` and holiday constructors may still
-omit coverage. Such legacy calendars retain their prior date behavior. They
-cannot pass `require_coverage` or the explicit operational preflight below.
-The baseline now requires declared coverage automatically, including when assessing
-an existing calibration. Shared non-baseline utilities retain legacy compatibility.
+A `BusinessCalendar` may be constructed without declared coverage for some lower-level utilities, but such a calendar **cannot pass the standard baseline's coverage requirements**.
 
-## Prepare inputs and build a curve
+## 4. Prepare and calibrate
 
-After loading the two files above:
+After loading `dataset` and `calendar`:
 
 ```python
-from yield_curves.inputs import validate_calendar_coverage
 from yield_curves.baseline import build_baseline_ftiie_curve
 
-validate_calendar_coverage(quotes=dataset.quotes, calendar=calendar)
-result = build_baseline_ftiie_curve(quotes=dataset.quotes, calendar=calendar)
+result = build_baseline_ftiie_curve(
+    quotes=dataset.quotes,
+    calendar=calendar,
+)
+
 if not result.accepted_for_use:
     raise RuntimeError(result.acceptance.issues)
+
 curve = result.curve
 ```
 
-The explicit coverage preflight in this example is optional when calling the
-baseline: construction now performs quote and calendar checks automatically.
-Call `inputs.prepare_baseline_inputs` to run the complete operational input check
-without calibration, or `validate_calendar_coverage` for coverage alone.
+The selected baseline **automatically validates the financial input set and calendar coverage before calibration**. When a separate preflight is useful:
 
-`prepare_baseline_inputs` requires string tenors and strips outer whitespace
-before capturing financial inputs, identifying valid tenors in issues and
-checking uniqueness. Thus `" 1M "` and `"1M"` share financial identity and, in
-the same quote set, raise `DUPLICATE_TENOR:1M`. Empty or whitespace-only strings
-and non-string tenors raise `INVALID_TENOR`. Case and internal whitespace are
-preserved; no tenor aliases or maturity conversions are applied.
+```python
+from yield_curves.inputs import (
+    prepare_baseline_inputs,
+    validate_calendar_coverage,
+)
 
-This baseline preparation rule applies equally to in-memory and CSV inputs.
-It preserves quote order, dates and rates without mutating caller objects.
-Execution context and snapshot quote artifacts use the prepared tenors; source
-declarations and raw-file hashes remain separate and unchanged.
+prepared = prepare_baseline_inputs(
+    quotes=dataset.quotes,
+    calendar=calendar,
+)
+# Or check calendar coverage alone:
+validate_calendar_coverage(
+    quotes=dataset.quotes,
+    calendar=calendar,
+)
+```
 
-Preflight reconstructs each OIS to visit actual required dates, including
-adjustments, payment lags and overnight observations. Coverage errors identify
-the quote tenor. Construction rejects invalid inputs before invoking the solver;
-standalone assessment returns a rejected acceptance with issue codes. See
-[validation.md](validation.md) for the error contract. Rates may be zero or
-negative; at least two quotes and strictly increasing unique maturities/payment
-pillars are required for the cubic baseline.
+Input preparation validates the shared trade date, maturity and pillar ordering, distinct tenors, finite rates, required covered dates, and reconstructable OIS instruments. It removes **outer whitespace** from tenor labels when capturing financial identity—so `" 1M "` and `"1M"` are duplicates—but does not change their case, rewrite internal whitespace, or infer tenor aliases. Caller quote objects are not mutated.
 
-Coverage checks do not authenticate the holiday source. No coverage is inferred
-from the filename, calendar name or sparse holiday dates.
+Invalid baseline quote sets raise `BaselineInputError` with issue codes; insufficient calendar coverage raises `CalendarCoverageError`. The baseline does not silently replace missing inputs with synthetic quotes or a projected calendar. Rejected numerical results must not be treated as accepted merely because an optimizer terminated successfully.
 
-## Verification
+Input validation confirms consistency with the *supplied* values. It does not certify data authenticity, market-calendar correctness, or financial suitability.
 
-`tests/unit/test_general_inputs.py` covers the CSV schema and errors, equality
-with synthetic calibration fields, explicit provenance, declared boundaries,
-payment dates beyond maturity and general CSV-to-baseline integration. Existing
-calendar/instrument tests and the stage 1 numerical reference remain applicable.
+## Related documentation
+
+- [Financial conventions](conventions.md) — how dates, coupons, fixings and payment dates are defined.
+- [Input and acceptance validation](validation.md) — issue codes and rejection conditions.
+- [Python integration contract](integration_contract.md) — curve results and downstream usage.
+- [CLI workflows](cli.md) — file-based calibration, assurance and synthetic demonstrations.
+- [Research-data provenance](../data/synthetic/README.md) — known-truth generation and experimental classification.

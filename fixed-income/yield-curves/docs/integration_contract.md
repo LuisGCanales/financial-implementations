@@ -1,15 +1,18 @@
-# Integration Contract
+# Python Integration — MXN F-TIIE OIS Curve
 
-This document defines the Python contract for downstream consumers such as the
-future `valuation-price-validation` flagship.
+This guide explains how an external Python consumer obtains, checks, and queries the project's **selected MXN F-TIIE OIS term structure**. The standard baseline uses **simultaneous calibration with natural cubic interpolation of continuously compounded zero rates**.
 
-## Python API
+It is an **in-memory financial interface**: the caller supplies OIS par quotations and a covered business calendar, and receives a calibrated curve together with calibration and acceptance diagnostics. File loading, execution provenance, and publishing artifacts belong to separate workflows.
+
+## 1. Construct the selected baseline
+
+Import the entry point explicitly:
 
 ```python
 from yield_curves.baseline import build_baseline_ftiie_curve
 ```
 
-The real signature is:
+Its Python signature is:
 
 ```python
 def build_baseline_ftiie_curve(
@@ -21,52 +24,25 @@ def build_baseline_ftiie_curve(
     ...
 ```
 
-The caller supplies quotes and a business calendar explicitly. An optional
-initial discount-factor vector can be supplied for a nearby calibration; the
-API otherwise obtains its own coherent initial guess.
+| Argument | Financial meaning |
+|---|---|
+| `quotes` | Ordered F-TIIE OIS **par quotations**, including a common trade date, tenor labels, contractual maturities, and decimal fixed rates |
+| `calendar` | The holiday/weekend calendar used to construct effective dates, 28-day schedules, overnight observations, and payment dates; **explicit coverage** is required |
+| `initial_discount_factors` | Optional positive nodal discount factors to initialize simultaneous calibration; if omitted, a **log-linear sequential bootstrap** supplies the starting values |
 
-The API does not read CSV, YAML, reports, or research scripts.
+The API selects the baseline's calibration method and interpolation representation; they are **not runtime switches** on this entry point. For other supported combinations, see [Interpolation](interpolation.md) and [Methodology](methodology.md).
 
-## Return object
+No CSV, YAML, report file, or synthetic reference function is read implicitly. For loading files and preserving source declarations, see [Input contract](input_contract.md).
 
-`BaselineResult` contains:
+## 2. Complete in-memory example
 
-- `calibration_result`: the underlying `GlobalCalibrationResult`, including the calibrated curve, solver diagnostics, calibration checks, method, and aggregate repricing diagnostics;
-- `acceptance`: the operational acceptance result and independent repricing checks;
-- `financial_context`: captured prepared financial inputs and the selected
-  construction policy, distinct from file/source provenance;
-- `curve`: a convenience property returning `calibration_result.curve`;
-- `accepted_for_use`: historical acceptance **and** a current value-binding check
-  against the calibration result and financial context.
+The following illustration uses **invented quotations and a weekend-only teaching calendar**. It exercises the Python consumer path, **not an official MXMC holiday dataset or an observed-market calibration**.
 
-Consumers should inspect `result.accepted_for_use` before downstream valuation.
-The live check includes curve nodes, mutable cubic spline state, solver declarations
-and acceptance policy; it does not recalibrate or reprice. The historical boolean
-`result.acceptance.accepted_for_use` alone does not establish that current values
-remain bound. An isolated assessment, including custom analytical tolerances,
-does not establish standard publication authority. See [architecture](architecture.md)
-and [snapshot authority](snapshots.md#execution-identity-and-publication-authority).
-
-The curve object provides:
-
-```python
-curve.discount_factor(target_date)
-curve.zero_rate(target_date)
-curve.forward_rate(start_date, end_date)
-```
-
-The curve does not support extrapolation beyond its calibrated node range.
-
-## Complete synthetic in-memory example
-
-Run from `fixed-income/yield-curves` with the package available in Python 3.11.
-This educational example uses two invented OIS quotes and an explicitly covered,
-weekend-only calendar. It makes no real-market holiday or MXMC data claim and
-requires neither research imports nor filesystem adapters. The supplied dates
-are contractual maturities; instrument construction derives payment pillars.
+Run from the `fixed-income/yield-curves` checkout with Python 3.11 and the project installed as described in the [README](../README.md#reproducibility).
 
 ```python
 from datetime import date
+
 from yield_curves.baseline import build_baseline_ftiie_curve
 from yield_curves.calendars import BusinessCalendar
 from yield_curves.quotes import OISQuote
@@ -75,6 +51,7 @@ quotes = (
     OISQuote("1M", date(2026, 9, 15), date(2026, 10, 19), 0.05),
     OISQuote("3M", date(2026, 9, 15), date(2026, 12, 17), 0.051),
 )
+
 calendar = BusinessCalendar(
     "WEEKENDS_ONLY_TEACHING_EXAMPLE",
     holidays=frozenset(),
@@ -82,69 +59,99 @@ calendar = BusinessCalendar(
     coverage_start=date(2026, 1, 1),
     coverage_end=date(2026, 12, 31),
 )
-result = build_baseline_ftiie_curve(quotes=quotes, calendar=calendar)
-print(f"accepted_for_use = {str(result.accepted_for_use).lower()}")
+
+result = build_baseline_ftiie_curve(
+    quotes=quotes,
+    calendar=calendar,
+)
+
 if not result.accepted_for_use:
     raise RuntimeError(result.acceptance.issues)
+
 curve = result.curve
-query_date = date(2026, 10, 1)
-forward_end = date(2026, 10, 29)
-assert curve.reference_date <= query_date < forward_end <= curve.node_dates[-1]
-print("discount_factor =", curve.discount_factor(query_date))
-print("zero_rate =", curve.zero_rate(query_date))
-print("forward_rate_28d =", curve.forward_rate(query_date, forward_end))
+start_date = date(2026, 10, 1)
+end_date = date(2026, 10, 29)
+
+assert curve.reference_date <= start_date < end_date <= curve.node_dates[-1]
+
+print("discount_factor =", curve.discount_factor(start_date))
+print("zero_rate =", curve.zero_rate(start_date))
+print("forward_rate_28d =", curve.forward_rate(start_date, end_date))
 ```
 
-Zero and forward rates are decimal rates; the forward is over 28 calendar days.
-All queries stay between the effective reference date and final payment pillar.
-This example exercises the public consumer path without issuing an execution
-envelope or publishing a snapshot. The checkout demo is
-[`scripts/demo/build_synthetic_baseline.py`](../scripts/demo/build_synthetic_baseline.py);
-there is no validated Jupyter notebook in this subproject.
+The curve reference date is the **common OIS effective date**, and the final supported pillar is the **last payment date**. Dates between them are evaluated using the selected interpolation. The zero rate is **continuously compounded**; the forward over the supplied interval is **simple ACT/360**. Rates are returned as decimals, not percentages.
 
-## Consumer responsibilities
+The example neither creates a persisted execution nor publishes a curve. A complete synthetic demonstration that **does** produce a run archive is available separately in [`scripts/demo/`](../scripts/demo/README.md).
 
-Consumers must:
+## 3. Understand the result and acceptance boundary
 
-- provide correctly classified and ordered quotes;
-- provide a calendar appropriate for those instruments;
-- check `accepted_for_use`;
-- respect the curve reference date and calibrated coverage;
-- handle rejected results explicitly;
-- keep projection and discounting assumptions visible in downstream workflows.
+`BaselineResult` provides several distinct layers:
 
-## What consumers should not depend on
+| Result field | What it means |
+|---|---|
+| `calibration_result` | Calibrated curve, numerical solver status/diagnostics, method, and per-quote calibration checks |
+| `acceptance` | Standard assessment of structural validity, independently reconstructed OIS repricing, tolerances, and issue codes |
+| `financial_context` | Captured financial inputs and selected methodology/policy, separate from file-source provenance |
+| `curve` | Convenience property exposing the calibrated curve |
+| `accepted_for_use` | Whether the result passed standard acceptance **and its currently held values remain consistent with the assessed payload** |
 
-The flagship must not depend on:
+**Check `result.accepted_for_use` immediately before downstream use.** The stored `result.acceptance.accepted_for_use` alone describes the original assessment; it is not the same as the live value-binding check. The live check verifies bound values and policy; it does **not** rerun calibration or independent repricing.
 
-- `scripts/experiments/`;
-- historical `outputs/research/`;
-- synthetic known-truth functions;
-- research metadata;
-- the execution order of experiment scripts.
+Construction validates financial inputs and declared calendar coverage before solving; invalid inputs can raise `BaselineInputError` or `CalendarCoverageError`. Solver errors can also propagate. If a result is returned but not accepted, inspect `result.acceptance.issues` rather than treating numerical convergence as sufficient.
 
-## Snapshot artifacts
+An accepted result is **not** proof of genuine market-data provenance, a correct future holiday calendar, unique true-curve recovery, or institutional production suitability.
 
-`scripts/operational/build_baseline_curve.py` requires the caller's explicit
-`--output-root`. For a caller-owned destination:
+[Acceptance and error contracts](validation.md) · [Scope and limitations](assumptions_limitations.md)
 
-```bash
-OUTPUT_ROOT="$(mktemp -d)"
-# Supply the other required quote/calendar flags described in cli.md:
-# python scripts/operational/build_baseline_curve.py ... --output-root "$OUTPUT_ROOT"
+## 4. Consumer responsibilities and boundaries
+
+Consumers should provide finance-appropriate quotes and calendar coverage, preserve the **single-curve projection/discounting assumption**, check acceptance, and request dates **only within the calibrated range**. Automatic extrapolation is unsupported.
+
+The public curve object supports:
+
+```python
+curve.discount_factor(target_date)
+curve.zero_rate(target_date)
+curve.forward_rate(start_date, end_date)
 ```
 
-Its layout is relative to that destination:
+For downstream valuation or risk processes, depend on the **financial curve interface and explicit input contracts**, not research scripts, reference-curve generators, saved experimental tables, or the order of experiment execution. Research reports help evaluate a method; they are **not** live curve inputs.
+
+## 5. Persisted executions are a separate interface
+
+When persistence and source provenance are needed, use the execution and snapshot workflow:
+
+```python
+from yield_curves.execution import build_baseline_execution
+from yield_curves.snapshots import export_baseline_snapshot
+
+execution = build_baseline_execution(
+    dataset=dataset,
+    calendar=calendar,
+)
+
+exported = export_baseline_snapshot(
+    execution=execution,
+    output_root=output_root,
+)
+```
+
+Here `dataset` is an explicitly loaded `OISQuoteDataset`, and `output_root` is a caller-owned destination. Publication requires the workflow-issued execution envelope and standard acceptance; it is not achieved by attaching provenance to an arbitrary curve result.
+
+The snapshot layout includes:
 
 ```text
-<output_root>/current.json
-<output_root>/runs/<run-id>/
+<output_root>/
+  current.json
+  runs/<run-id>/
+    input_quotes.csv
+    calendar.json
+    curve_nodes.csv
+    quote_repricing.csv
+    metadata.json
+    manifest.json
 ```
 
-Resolve `current.json` to the run before reading its payloads; see
-[snapshot layout](snapshots.md). The former flat schema-1.0 files are historical
-artifacts under `outputs/baseline/legacy/schema-1.0/`, with no current fallback.
+Only an **accepted** execution can replace `current.json`; a complete rejected standard execution may still be archived without promotion. The pointer resolves an accepted run with the supported snapshot schema; it is not an interface for arbitrary-date curve pricing.
 
-Run files provide an auditable operational snapshot and provenance. They are
-not the primary curve interface and do not replace the Python curve object for
-arbitrary-date interpolation or forward calculations.
+For command-line use and no-solve snapshot verification, see [CLI workflows](cli.md). For the complete persistence, integrity, and publication contract, see [Snapshots](snapshots.md).

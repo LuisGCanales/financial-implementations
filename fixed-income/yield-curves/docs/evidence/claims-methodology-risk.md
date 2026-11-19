@@ -1,25 +1,26 @@
-# Claims C07–C14: methodology and risk
+# Methodology and Curve-Risk — Claim Audit Register
 
-[Evidence index](index.md) · [Methodology](methodology.md) · [Risk](risk.md) · [Machine-readable manifest](../../evidence/c03/methodology-risk-manifest.json) · [Unified claims](claims.md) · [Reproduce](reproduce.md) · [Unified index](../../evidence/c03/index.json)
+This document preserves the **exact supported financial statements and original evidence identities** behind the project's interpolation and quote-sensitivity findings. It records what each experiment demonstrates, its units, supporting CSVs or figures, and limitations that prevent broader interpretation.
 
-Original C04a claim identities are preserved below. All claims concern previously validated C03 evidence from synthetic `FTIIE_KNOWN_TRUTH_V1`, projected MXMC 2026–2057, reference date 2026-09-18 and same-curve projection/discounting. C04c supplies authored interpretation and static curation, with no new financial results.
+For financial conclusions, start with [calibration and recovery](methodology.md) and [quote sensitivity and locality](risk.md). The IDs below are **stable audit references**, not a sequence of internal development stages.
 
-**Historical pre-PR review status: `C04C_READY_FOR_PR_REVIEW`.** H03/H04 are paired, human-approved presentation derivatives from unchanged validated financial matrices. Their footers are outside the data; the complete 30Y response row is visible. Only the out-of-domain 30Y payment-pillar marker is omitted. Robust clipping is **1.5023474%** of cubic cells; full-range clipping is **0%**. M04/G06/H02/L02 remain withheld for absolute local paths, with original hashes and expressly authored provenance summaries in the manifest. Their original files are not replaced by those summaries.
+[Research evidence overview](index.md) · [Claim navigation](claims.md) · [Source and rendering manifest](../../evidence/c03/methodology-risk-manifest.json) · [Reproduction procedure](reproduce.md) · [Unified machine index](../../evidence/c03/index.json)
 
-Original financial source commit for every record: **`bee31fd0883660f171ebe84817b98641239eae5b`**. Historical curation started from **`39f24aff2e2c5e13d2eb53ab43d4fee53cc18dae`** on branch `c04c-methodology-risk-evidence`; the base commit is not the financial execution identity. Exact original timestamps, source-script hashes, command-receipt hashes and separate curation time are in the manifest.
+## Experimental scope
 
-Each `C03…/…` evidence identifier below names a file relative to the retained external checkpoint archive. It is an archival identity, **not a public download or an inaccessible local hyperlink**. Public exhibit and source-code links resolve relative to this repository; original source hashes bind scripts to the historical financial source commit. The linked heatmap script now includes the C04c-F01 presentation-only revision; its rendering identity is separate from its original script hash.
+The saved studies concern **15 synthetic MXN F-TIIE OIS quotations, spanning 1M–30Y**, with curve reference date **18 September 2026**, a **projected 2026–2057 MXMC calendar**, and **one curve for projection and discounting**.
 
-For H03/H04, the **Original SHA-256** columns below identify historical C03b2a images retained externally; the public links resolve to the approved derivatives in this table. Classification: `PRESENTATION_DERIVATIVE_FROM_VALIDATED_DATA`. Both use unchanged saved matrices and source-data dependencies; observable public figures do not supply full research reproducibility. Rendering used project Python 3.11.15, Matplotlib 3.11.2, NumPy 2.4.6, SciPy 1.17.1 and Pillow 12.3.0. The rendering script SHA-256 is `3c3844dd9f133f88199fd4de1c2d48ede9de499ee1d0dabbcbc612b496a6c4e8`, an uncommitted C04c-F01 working-tree revision based on `39f24aff2e2c5e13d2eb53ab43d4fee53cc18dae`. Rendering timestamps, historical timestamps and integration/curation timestamps are separately recorded in the manifest.
+They distinguish **sequential bootstrap with log-linear discount-factor interpolation** from **simultaneous nodal calibration across three interpolation methods**. Signed and absolute responses, node-zero rates and forward sensitivities are different financial quantities and must be interpreted using their documented units.
 
-| Published derivative | Public bytes | Public PNG SHA-256 |
-| --- | ---: | --- |
-| [H03 robust common scale](../../evidence/c03/heatmaps/forward_sensitivity_heatmap_cubic_continuous_zero_robust_common_scale.png) | 151971 | `30c92c26b5ddc2774c0d8c700f3204636f09461f471be7c9f004d6fef875ed3a` |
-| [H04 full common scale](../../evidence/c03/heatmaps/forward_sensitivity_heatmap_cubic_continuous_zero_full_common_scale.png) | 145752 | `d83abfd9abb197eba45c5dad8d102a2c14ff4fed063ea3464da3abab850c1a04` |
+Evidence includes **17 unchanged original files and two reviewed figure derivatives**. Four original metadata files containing machine-specific paths remain external. The paired heatmaps are based on **unchanged financial matrices**; differences between their robust and full-range color scales are presentation choices, not extra financial calibrations.
 
-[C06: fit versus known-truth recovery](claims-valuation.md#c06) and [its original discussion](valuation.md#h-fit-versus-known-truth-recovery) remain unchanged. C01–C06 continue to use the existing C04b manifest.
+**How to use this register:** each claim retains its approved wording, evidence classification, original artifact identities, exact hashes and public/external availability. Archive paths such as `C03b2a/...` are **original checkpoint identifiers**, not URLs to downloadable files. The [saved-data replay](reproduce.md) does not reproduce the original calibration history.
 
-## C07
+## Supported methodology and risk claims
+
+<a id="c07"></a>
+
+## C07 — Curve roles and calibration approaches
 
 **Supported wording:** Core-v1 uses the same curve for projection and discounting; strict sequential freezing is used for local log-linear construction, while the cubic baseline solves nodes simultaneously.
 
@@ -53,7 +54,9 @@ For H03/H04, the **Original SHA-256** columns below identify historical C03b2a i
 
 **External evidence dependencies:** `C03b1/operational_snapshot/runs/ab8b26ab993140dca7dcbd7491c3a8c0/metadata.json`; `C03b2b/reports/C/compare_three_interpolation_methods/metadata/06_interpolation_comparison/experiment_metadata.json`; `C03c/coverage-matrix.json`.
 
-## C08
+<a id="c08"></a>
+
+## C08 — Interpolation-dependent recovery of the synthetic curve
 
 **Supported wording:** In the shared simultaneous three-method study, all three calibrations succeed; saved 28D-forward recovery RMSE is 3.811009931078169 bp for log-linear DF and 0.24931760566157052 bp for cubic continuous zero.
 
@@ -86,7 +89,9 @@ For H03/H04, the **Original SHA-256** columns below identify historical C03b2a i
 
 **External evidence dependencies:** `C03b2b/metadata/cross-workflow-consistency.json`; `C03b2b/reports/C/compare_three_interpolation_methods/metadata/06_interpolation_comparison/experiment_metadata.json`; `C03b2b/reports/C/plot_three_interpolation_methods/tables/06_interpolation_comparison/forward_28d_recovery_three_methods_dense.csv`.
 
-## C09
+<a id="c09"></a>
+
+## C09 — Structure of sequential quote-shock responses
 
 **Supported wording:** Section 05 one-sided and central workflows persist finite 15×15 node matrices with exact upstream zeros and matching own-node summary diagonals.
 
@@ -121,7 +126,9 @@ For H03/H04, the **Original SHA-256** columns below identify historical C03b2a i
 
 **External evidence dependencies:** `C03b2b/metadata/quote-sensitivity-validation.json`.
 
-## C10
+<a id="c10"></a>
+
+## C10 — One-sided and central zero-rate sensitivity and curvature
 
 **Supported wording:** The section 05 30Y one-sided own-node zero change is 2.497681564725407 bp for +1 bp; central sensitivity is 2.490478975129551 bp/bp and local curvature is 0.014405179191712136 bp/bp².
 
@@ -152,7 +159,9 @@ For H03/H04, the **Original SHA-256** columns below identify historical C03b2a i
 
 **External evidence dependencies:** None beyond the original execution/provenance records retained externally..
 
-## C11
+<a id="c11"></a>
+
+## C11 — Simultaneous shocked-calibration results
 
 **Supported wording:** The global study covers 3 base plus 90 shocked simultaneous calibrations, all successful within the existing 0.01 bp repricing policy; G01 retains 45 method/shock rows.
 
@@ -184,7 +193,9 @@ For H03/H04, the **Original SHA-256** columns below identify historical C03b2a i
 
 **External evidence dependencies:** `C03b2a/full-global-root/metadata/07_global_sensitivity/experiment_metadata.json`; `C03b2a/metadata/producer-structure-validation.json`.
 
-## C12
+<a id="c12"></a>
+
+## C12 — Node sensitivities versus forward-rate propagation
 
 **Supported wording:** Cubic forward responses spread across the curve; a small-looking nodal off-diagonal heatmap cell does not prove absence of forward propagation.
 
@@ -221,7 +232,9 @@ For H03/H04, the **Original SHA-256** columns below identify historical C03b2a i
 
 **External evidence dependencies:** `C03b2a/full-global-root/figures/07_global_sensitivity/node_zero_sensitivity_heatmap_cubic_continuous_zero.png`; `C03b2a/full-global-root/tables/07_global_sensitivity/global_forward_sensitivity_dense.csv`; `C03b2a/full-global-root/tables/07_global_sensitivity/global_node_sensitivity_long.csv`.
 
-## C13
+<a id="c13"></a>
+
+## C13 — Signed heatmap scales and clipping
 
 **Supported wording:** Robust heatmaps use a common pooled 99.5th-percentile cap of ±11.33194135019177 bp/bp; full scale is ±20.04398642012309 bp/bp. Cubic clipped fraction is 0.015023474178403756; full plots intentionally clip none.
 
@@ -254,7 +267,9 @@ For H03/H04, the **Original SHA-256** columns below identify historical C03b2a i
 
 **External evidence dependencies:** `C03b2a/full-global-root/metadata/07_global_sensitivity/forward_sensitivity_heatmap_metadata.json`; `C03b2a/full-global-root/tables/07_global_sensitivity/global_forward_sensitivity_dense.csv`; `C03b2a/full-global-root/tables/07_global_sensitivity/global_node_sensitivity_long.csv`.
 
-## C14
+<a id="c14"></a>
+
+## C14 — Maturity-dependent forward-sensitivity locality
 
 **Supported wording:** Locality depends on tenor and metric: cubic ±2Y sensitivity mass at the 30Y shock is 0.29034212262038983, and the selected all-method plot shows cubic above both challengers there.
 
@@ -283,6 +298,27 @@ For H03/H04, the **Original SHA-256** columns below identify historical C03b2a i
 - [scripts/experiments/sensitivity/report_forward_sensitivity_locality.py](../../scripts/experiments/sensitivity/report_forward_sensitivity_locality.py); workflow/original audit role `locality`; SHA-256 `15267683e7a5e6ac3070ebf47c98f1283384b760dcbdc4122110f20fd913088b`.
 
 **External evidence dependencies:** `C03b2a/full-global-root/metadata/07_global_sensitivity/forward_sensitivity_locality_metadata.json`; `C03b2a/full-global-root/tables/07_global_sensitivity/global_forward_sensitivity_dense.csv`; `C03b2a/full-global-root/tables/07_global_sensitivity/global_node_sensitivity_long.csv`.
+
+## Original source and presentation provenance
+
+The following records identify the original financial execution, public-exhibit selection and figure-rendering environments. Their branch names, review recommendations and development identifiers describe **the historical state at the time recorded**, not the current status of this repository or a required reader workflow.
+
+Original C04a claim identities are preserved below. All claims concern previously validated C03 evidence from synthetic `FTIIE_KNOWN_TRUTH_V1`, projected MXMC 2026–2057, reference date 2026-09-18 and same-curve projection/discounting. C04c supplies authored interpretation and static curation, with no new financial results.
+
+**Historical pre-PR review status: `C04C_READY_FOR_PR_REVIEW`.** H03/H04 are paired, human-approved presentation derivatives from unchanged validated financial matrices. Their footers are outside the data; the complete 30Y response row is visible. Only the out-of-domain 30Y payment-pillar marker is omitted. Robust clipping is **1.5023474%** of cubic cells; full-range clipping is **0%**. M04/G06/H02/L02 remain withheld for absolute local paths, with original hashes and expressly authored provenance summaries in the manifest. Their original files are not replaced by those summaries.
+
+Original financial source commit for every record: **`bee31fd0883660f171ebe84817b98641239eae5b`**. Historical curation started from **`39f24aff2e2c5e13d2eb53ab43d4fee53cc18dae`** on branch `c04c-methodology-risk-evidence`; the base commit is not the financial execution identity. Exact original timestamps, source-script hashes, command-receipt hashes and separate curation time are in the manifest.
+
+Each `C03…/…` evidence identifier below names a file relative to the retained external checkpoint archive. It is an archival identity, **not a public download or an inaccessible local hyperlink**. Public exhibit and source-code links resolve relative to this repository; original source hashes bind scripts to the historical financial source commit. The linked heatmap script now includes the C04c-F01 presentation-only revision; its rendering identity is separate from its original script hash.
+
+For H03/H04, the **Original SHA-256** columns below identify historical C03b2a images retained externally; the public links resolve to the approved derivatives in this table. Classification: `PRESENTATION_DERIVATIVE_FROM_VALIDATED_DATA`. Both use unchanged saved matrices and source-data dependencies; observable public figures do not supply full research reproducibility. Rendering used project Python 3.11.15, Matplotlib 3.11.2, NumPy 2.4.6, SciPy 1.17.1 and Pillow 12.3.0. The rendering script SHA-256 is `3c3844dd9f133f88199fd4de1c2d48ede9de499ee1d0dabbcbc612b496a6c4e8`, an uncommitted C04c-F01 working-tree revision based on `39f24aff2e2c5e13d2eb53ab43d4fee53cc18dae`. Rendering timestamps, historical timestamps and integration/curation timestamps are separately recorded in the manifest.
+
+| Published derivative | Public bytes | Public PNG SHA-256 |
+| --- | ---: | --- |
+| [H03 robust common scale](../../evidence/c03/heatmaps/forward_sensitivity_heatmap_cubic_continuous_zero_robust_common_scale.png) | 151971 | `30c92c26b5ddc2774c0d8c700f3204636f09461f471be7c9f004d6fef875ed3a` |
+| [H04 full common scale](../../evidence/c03/heatmaps/forward_sensitivity_heatmap_cubic_continuous_zero_full_common_scale.png) | 145752 | `d83abfd9abb197eba45c5dad8d102a2c14ff4fed063ea3464da3abab850c1a04` |
+
+[C06: fit versus known-truth recovery](claims-valuation.md#c06) and [its original discussion](valuation.md#h-fit-versus-known-truth-recovery) remain unchanged. C01–C06 continue to use the existing C04b manifest.
 
 ## Artifact inventory
 
@@ -335,7 +371,7 @@ The following archived records support grid/validation/provenance context; they 
 
 ## Dense dependencies and current availability
 
-The compact selection is not the full 49-file global replay archive. The two original global inputs below are now included as verified lossless gzip computational dependencies in the C04d2 local review change set; see the [transport manifest](../../evidence/c03/replay-inputs.json) and [validated extraction/replay contract](reproduce.md). Both must be restored under `tables/07_global_sensitivity/` in the same new explicit reports root. Original global identifiers in the claim dependency lists above retain their historical archival meaning; their bytes are now available through these two archives, while metadata/audit records remain external. The M05 dense CSV remains external; its plot script recalibrates and writes that file, with no saved-data reader mode.
+The curated selection is not the full 49-file global replay archive. The two original global inputs below are available in this repository as verified lossless gzip **computational dependencies**, not additional curated financial exhibits; see the [transport manifest](../../evidence/c03/replay-inputs.json) and [validated extraction/replay contract](reproduce.md). Both must be restored under `tables/07_global_sensitivity/` in the same new explicit reports root. Original global identifiers in the claim dependency lists above retain their historical archival meaning; their bytes are now available through these two archives, while metadata/audit records remain external. The M05 dense CSV remains external; its plot script recalibrates and writes that file, with no saved-data reader mode.
 
 | External evidence identity | Bytes / data rows | SHA-256 |
 | --- | ---: | --- |
@@ -347,4 +383,4 @@ The compact selection is not the full 49-file global replay archive. The two ori
 
 Reject claims of observed-market calibration, real portfolio monetary DV01, portfolio P&L/gamma, hedge effectiveness, multi-curve validation or production readiness. The evidence also rejects universal cubic superiority/locality rankings, historical Section 05 identity, a complete public consumer replay archive and cross-platform bitwise guarantees. G07 is excluded; signed tables support the retained interpretation. Saturated heatmap colors do not reveal exact tail responses. A normalized absolute sensitivity mass is not a probability.
 
-C04b and C04c are merged on main; see the [current publication state](index.md#publication-state). Historical pre-PR records and original rendering identities remain unchanged. C04d2 locally integrates the verified computational dependencies and scoped saved-data replay, pending external PR review. No staging, commit, push, PR creation, release or website deployment occurred in this task; C05/C06 remain separate.
+The [evidence index](index.md#publication-state) describes what is publicly inspectable in this repository. The source manifests preserve earlier integration, review and rendering identities as **historical provenance**; their pending-review wording refers to the state at the time recorded, not the present checkout. The verified computational dependencies and recorded saved-data replay do not establish an additional financial recalibration, formal software release, website deployment, or validation of future curve architectures.

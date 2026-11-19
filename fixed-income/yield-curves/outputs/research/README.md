@@ -1,58 +1,46 @@
-# Research Outputs
+# Research Outputs — Curve Construction, Recovery and Sensitivity
 
-This directory contains reproducible analytical, diagnostic, and historical
-research outputs generated during development of the yield-curve
-implementation.
+This directory organizes **plots, numerical comparisons and diagnostics** from controlled experiments with the MXN F-TIIE OIS term-structure implementation. It is a workspace for **financial-methodology research**, not the mechanism for publishing an accepted operational curve.
 
-It is not the operational curve-delivery mechanism. The current operational
-snapshot is resolved through `outputs/baseline/current.json` into `runs/`.
-Legacy schema-1.0 flat snapshots are archived under
-`outputs/baseline/legacy/schema-1.0/`.
+The current experiments use **synthetic OIS quotations** and, where long dated, a **projected MXMC calendar**. Their outputs should not be described as observed market data, an official market curve or an independently certified valuation.
 
-## Structure
+## How results are organized
 
-- `figures/` — rendered analytical figures.
-- `tables/` — machine-readable CSV outputs used in reports and figures.
-- `text/` — human-readable console-style reports.
-- `metadata/` — experiment configuration and execution metadata.
+| Output type | Purpose |
+|---|---|
+| `figures/` | Plots of term structures, interpolation comparisons and sensitivities |
+| `tables/` | Machine-readable CSV metrics and saved series used by reports or figures |
+| `text/` | Readable diagnostic and result summaries |
+| `metadata/` | Experiment configuration, execution details and input/output references |
 
-## Data classification
+Within these categories, files are grouped by **research question**. The numeric directory prefixes are preserved as stable filesystem paths and do not define a sequence that a reader must follow.
 
-Outputs generated from the current reference experiment are based on
-synthetic F-TIIE OIS quotes and must not be interpreted as observed
-market data.
+| Research area | Existing output directory | Main question |
+|---|---|---|
+| Synthetic reference curve | `01_synthetic_reference/` | What curve and par-rate observations generate the controlled calibration problem? |
+| Sequential bootstrap recovery | `02_bootstrap_recovery/` | Can the sequentially constructed curve reprice and recover the synthetic reference? |
+| Repricing and structure validation | `03_curve_validation/` | Are calibrated instruments repriced independently, and do the nodes pass method-specific checks? |
+| Forward-curve diagnostics | `04_curve_diagnostics/` | What shapes and segment discontinuities arise under log-linear construction? |
+| Sequential quote sensitivity | `05_quote_sensitivity/` | How do one-sided and central quote shocks affect nodes? **No retained output section is currently present here.** |
+| Interpolation comparison | `06_interpolation_comparison/` | How do alternative representations affect fit, recovery and forward behavior? Retained files cover only the available original comparisons. |
+| Global quote sensitivity | `07_global_sensitivity/` | How do shocked quotations propagate through nodes and forward rates under simultaneous calibration? |
 
-## Reproducibility
+These names locate stored outputs in the repository; **they are not a claim that every original result or input is present**. In particular, some full experiments and original metadata exist only in separately archived evidence.
 
-Current producers under `scripts/experiments/` write to `outputs/research/`
-through the reporting helpers. Explicit `reports_root` overrides remain supported.
-Historical artifacts record the code and inputs of their original execution;
-this relocation does not claim that current scripts reproduce every historical byte.
+## Relationship to published research exhibits
 
-For computationally expensive experiments, the underlying plotted
-series are also persisted as CSV so figures can later be reconstructed
-without recalibrating the curves.
+[Research evidence](../../docs/evidence/index.md) provides a **reader-oriented selection** of the valuation, interpolation and sensitivity findings with public original CSVs, figures and explicit limitations. Its curated exhibits under `evidence/c03/` are **not interchangeable with the full original reports directories**.
 
-## Historical sections
+[Experiment scripts](../../scripts/README.md) identify which processes recalibrate, generate plots or consume **previously saved numerical data**. For expensive sensitivity experiments, stored matrices allow some visualizations and locality summaries to be generated **without rerunning the financial optimizer**.
 
-The sections currently present are:
+Consult the [reproduction contract](../../docs/evidence/reproduce.md) for the verified scope. A successful saved-data replay does **not** imply a full financial reconstruction of every research result.
 
-- `01_synthetic_reference/` — experimental evidence for the frozen synthetic known-truth scenario.
-- `02_bootstrap_recovery/` — mixed historical sequential-bootstrap and recovery evidence.
-- `03_curve_validation/` — historical sequential-bootstrap assurance and independent repricing.
-- `04_curve_diagnostics/` — historical log-linear curve-shape diagnostics.
-- `05_quote_sensitivity/` — no persisted section currently available.
-- `06_interpolation_comparison/` — historical interpolation-comparison evidence; persisted files reflect the available comparison outputs.
-- `07_global_sensitivity/` — simultaneous-calibration sensitivity, propagation, and locality evidence.
+## Reproduction and file provenance
 
-The reports are based on synthetic inputs where documented and must not be
-interpreted as observed-market data or as the operational baseline contract.
+Research producer scripts usually write their outputs under `outputs/research/` through reporting helpers, with an explicit `reports_root` override in supported workflows. Reuse of the **same financial inputs, date grids, method, and numerical environment** matters when comparing results.
 
-## Historical relocation
+The saved research outputs were moved from an earlier `reports/` location **without changing the file bytes or rerunning their experiments**. Paths embedded in original metadata may still describe that original execution context; they are preserved as provenance, not presented as present-day lookup locations.
 
-The existing figures, tables, text and metadata were moved mechanically from
-`reports/` with their bytes preserved. No experiment was rerun. Paths embedded
-in historical metadata (including `reports/...`) describe the original execution
-location and were intentionally retained; they are not current lookup paths.
-The relative category/section/filename beneath `outputs/research/` is unchanged.
-Reference inputs remain under `data/calendars/` and `data/synthetic/`.
+Input datasets are documented separately under [`data/`](../../data/README.md). Operational accepted runs, by contrast, are managed through a caller-selected **snapshot output root**, with `current.json` resolving a run archive; they are not selected from research figures or tables.
+
+[Financial methodology](../../docs/methodology.md) · [Evidence overview](../../docs/evidence/index.md) · [Snapshot and publication contract](../../docs/snapshots.md)

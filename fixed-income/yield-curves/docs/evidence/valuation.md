@@ -1,65 +1,129 @@
-# Valuation and assurance evidence
+# Valuation, Repricing and Acceptance Evidence
 
-[Evidence index](index.md) · [Claims C01–C06](claims-valuation.md) · [Provenance manifest](../../evidence/c03/valuation-manifest.json) · [Unified claims](claims.md) · [Reproduce](reproduce.md) · [Unified index](../../evidence/c03/index.json)
+This study examines whether the implemented MXN F-TIIE OIS curve construction **reproduces the par quotations used for calibration**, whether the resulting curve satisfies the project's defined acceptance criteria, and what can be learned about recovery of the underlying synthetic term structure.
 
-**Repository evidence status:** C04b subset; snapshot publication `BLOCKED_PENDING_REVIEW`. Eleven original exhibits are included, including standalone original payloads S03/S05/S06. The complete accepted snapshot remains unchanged and externally archived; S01/S02/S04/S07 and original audit records are not distributed. The versioned evidence subset is available on `main` through merged C04b PR #14; this is not a formal tagged release or website deployment. Results below describe C03 computations; C04b ran no financial computation, repricing or assurance CLI.
+The numerical results were produced in an earlier recorded financial execution. This document **interprets saved evidence**; it does not claim to have recalibrated or independently rerun that execution.
 
-## A. Financial problem and Core-v1 scope
+[Evidence overview](index.md) · [Exact valuation claims and provenance](claims-valuation.md) · [Original artifact manifest](../../evidence/c03/valuation-manifest.json)
 
-The project constructs a synthetic MXN F-TIIE OIS curve and asks whether it fits its calibration instruments, satisfies explicit project acceptance rules and preserves an auditable valuation state. Core-v1 uses one curve for both projection and discounting. This assumption does not demonstrate an institutional multi-curve architecture. The sequential benchmark and simultaneous cubic baseline answer related questions with different calibration engines.
+<a id="a-financial-problem-and-core-v1-scope"></a>
+
+## A. Financial question and assumptions
+
+A curve built from swap par quotations must reproduce the pricing implications of each input instrument. However, **instrument repricing and recovery of an unobserved term structure are separate tests**.
+
+The project constructs F-TIIE OIS cash flows using MXN settlement/calendar rules, ACT/360 and compounded overnight payments. The current model uses **one curve for both overnight projection and discounting**, an explicit simplification rather than a full collateral-specific multi-curve model.
+
+The saved evidence covers two implemented construction approaches: **simultaneous calibration with a natural cubic interpolation of continuously compounded zero rates**, the selected baseline, and **sequential bootstrapping with log-linear discount-factor interpolation** as a separate method comparison.
+
+[Instrument conventions](../conventions.md) · [Construction methodology](../methodology.md)
 
 ## B. Synthetic financial inputs
 
-`FTIIE_KNOWN_TRUTH_V1` supplies **15 synthetic quotes**, from 1M to 30Y. Trade date is **2026-09-15**; the common effective date and curve reference date are **2026-09-18**. The existing [frozen quote source](../../data/synthetic/ftiie_ois_quotes_v1.csv) has SHA-256 `38469f91b95ad5afad4a593a39c791a49e34ca435fc461f88d3b2039b717a5e6`. Its source format differs from [S03: the 15 normalized synthetic calibration inputs](../../evidence/c03/valuation/input_quotes.csv), now public as an unchanged standalone exhibit.
+The experiment starts with **15 synthetic F-TIIE OIS par quotations**, spanning 1M to 30Y, generated from a smooth reference term structure. Its trade date is **15 September 2026**, and its common effective/curve reference date is **18 September 2026**.
 
-[I01: supplied holiday CSV](../../evidence/c03/inputs/projected_mxmc_2026_2057.csv) preserves the projected MXMC model input, with declared coverage **2026-01-01 through 2057-12-31**. The original serialized calendar S04 records `PROVIDED` provenance: supplied projected-model bytes, with no official future-calendar status. The original demo/explicit-input comparison found identical financial input, node and repricing rows; metadata/provenance identity was different ([C04](claims-valuation.md#c04)). The comparison record remains external.
+The original frozen [synthetic quote file](../../data/synthetic/ftiie_ois_quotes_v1.csv) is distinct from the [normalized inputs archived for the baseline execution](../../evidence/c03/valuation/input_quotes.csv). The original frozen file's SHA-256 is `38469f91b95ad5afad4a593a39c791a49e34ca435fc461f88d3b2039b717a5e6`.
 
-Rates are annual decimals unless labeled otherwise. Columns named `market_quote` in the research CSVs are synthetic calibration observations, never observed market prices.
+The [projected MXMC calendar supplied to the original execution](../../evidence/c03/inputs/projected_mxmc_2026_2057.csv) covers **1 January 2026 through 31 December 2057**. This is **not a verified official future holiday calendar**. Original serialized calendar provenance records the supplied projected-model bytes; it does not certify the dates.
 
-## C. Calibration
+Rates labeled `market_quote` in saved reports remain **synthetic calibration observations**, not observed market rates. The synthetic generating curve is used **after calibration** to evaluate recovery.
 
-The accepted original baseline is `FTIIE_CUBIC_SIMULTANEOUS_V1`: simultaneous nodal least squares with **`CUBIC_CONTINUOUS_ZERO`**, natural spline boundaries and 15 discount-factor nodes. [S05: all 15 calibrated nodes](../../evidence/c03/valuation/curve_nodes.csv) are public as an unchanged standalone exhibit. Continuous zero rates satisfy `z(t) = -ln(P(t))/tau`, using ACT/360 time. Automatic extrapolation is disabled; each pillar is the instrument's final payment date.
+## C. Simultaneous baseline calibration
 
-The captured Core-v1 policy uses T+2 MXMC business-day effectiveness, ACT/360 accrual, 28-day payment/calculation/reset periods, FOLLOWING date adjustments and a two-business-day payment lag. Overnight fixing uses zero business-day offset and PRECEDING adjustment; compounding is `ISDA_STANDARD`, spread exclusive, with zero spread and unit calibration notional. See existing [conventions](../conventions.md) and [methodology](../methodology.md); the archived cubic policy governs this baseline, while historical sequential interpolation is described separately.
+The selected baseline jointly calibrates 15 nodal discount factors to the synthetic OIS par rates, using **natural cubic interpolation of continuously compounded zero rates**.
 
-Solver success establishes numerical termination. Financial acceptance additionally requires structural validity and independent instrument repricing under `FTIIE_STANDARD_BASELINE_ACCEPTANCE_V1`. Original S07 records `calibration_success=true`, `structural_valid=true` and `accepted_for_use=true`. These are separate assertions ([C01](claims-valuation.md#c01)); none was recomputed during curation.
+For ACT/360 time $t$ from the effective reference date:
+
+$$
+z(t)=-\frac{\ln P(t)}{t},
+\qquad
+P(t)=e^{-t z(t)}.
+$$
+
+The model's calibration pillars are the **final payment dates** of the OIS instruments, and extrapolation beyond the last pillar is disabled. [Calibrated discount factors and zero rates](../../evidence/c03/valuation/curve_nodes.csv) are available as original saved rows.
+
+The recorded solver completed successfully. That result alone is **not acceptance**: the standard baseline must also pass the defined structural conditions and independent instrument repricing checks. Its supported acceptance policy is `FTIIE_STANDARD_BASELINE_ACCEPTANCE_V1`.
 
 ## D. Independent repricing
 
-Original S06/S07 record **15 independent PASS results**, with maximum absolute par-rate error **4.3853809472693683e-11 bp**, against the standard **0.01 bp PASS tolerance** (FAIL threshold 0.1 bp). The repricer reconstructs instruments and recomputes par rates independently of solver residuals **inside the same codebase**. This is no independent-vendor valuation opinion.
+The recorded baseline provides **15 PASS results** when the final curve is used to reconstruct and reprice the 15 synthetic OIS instruments. The maximum absolute repricing discrepancy is **4.3853809472693683 × 10⁻¹¹ bp**, versus the standard **0.01 bp PASS tolerance**.
 
-[S06: all 15 independent repricing observations](../../evidence/c03/valuation/quote_repricing.csv) are public as an unchanged standalone exhibit, with 15 saved PASS statuses. [C01](claims-valuation.md#c01) identifies the original hash and the external acceptance-metadata boundary. Public B02 below is the separate sequential benchmark, and cannot substitute for cubic S06.
+[Inspect all 15 independent repricing observations](../../evidence/c03/valuation/quote_repricing.csv).
 
-## E. Accepted snapshot
+The independent calculation reconstructs the instruments and recalculates their par rates **without relying on the optimizer's saved residuals**. This is independence *within the same implementation*, not a second vendor model or an independent market-pricing opinion.
 
-The original CLI locally published run **`ab8b26ab993140dca7dcbd7491c3a8c0`**, schema **3.0**, created at **2026-11-04T18:58:20.039772+00:00**. S01 `current.json` points to its relative run directory and binds S02 `manifest.json` by SHA-256. The manifest binds five payloads: S03 inputs, S04 calendar, S05 nodes, S06 repricing and S07 metadata. Original `accepted_for_use=true` remains unchanged ([C02](claims-valuation.md#c02)). Acceptance concerns this synthetic scenario under project policy, with no public-market certification.
+[Validation and acceptance contract](../validation.md) · [Recorded valuation claim](claims-valuation.md#c01)
 
-**Complete snapshot archive publication remains `BLOCKED_PENDING_REVIEW`.** S07 contains two absolute local paths at JSON pointers `/execution/quote_provenance/path` and `/quote_provenance/path`. The original accepted seven-file archive remains complete, unchanged and externally archived. Under the approved C04b-F01 distribution policy, S03/S05/S06 are separate, byte-identical original payload exhibits; S01/S02/S04/S07 are not distributed. These exhibits are not a partial snapshot archive, cannot be passed to snapshot assurance and create no replacement run identity. Static pointer/manifest/five-payload closure passed **on the original external source only**. The snapshot's acceptance and execution bindings are not fully independently inspectable from the public collection.
+## E. Accepted snapshot and public-data boundary
 
-## F. Subsequent assurance
+The original workflow recorded an **accepted schema-3.0 execution**, with run identifier `ab8b26ab993140dca7dcbd7491c3a8c0`. Its recorded acceptance fields indicate successful calibration, valid structure and acceptance for use under the project's specified policy.
 
-Original C03b1 build, subsequent rebuild assurance and subsequent snapshot assurance each exited 0. The rebuild recalibrated the explicit inputs; snapshot mode reconstructed saved nodes without calibration. Original before/after receipts record exact snapshot identity across inventory, sizes, SHA-256, pointer bytes, modes and file modification times ([C03](claims-valuation.md#c03)).
+The run originally comprised a `current.json` pointer, a `manifest.json`, and five bound payload files: input quotes, calendar, curve nodes, quote repricing and execution metadata.
 
-**No new assurance was executed in C04b.** Original receipts/logs remain in external audit evidence, identified by checkpoint and hash on the claims page and manifest. A public reader can inspect the eleven copied exhibits and compact provenance, including instrument-level cubic input/node/repricing rows. The complete original cubic archive, acceptance metadata, execution bindings and assurance logs remain external; the public exhibits do not independently establish original assurance. Hashes establish consistency, with no authentication or trusted-timestamp guarantee.
+**The complete accepted snapshot is not publicly distributed.** Original metadata contain two machine-specific absolute paths. The unchanged original seven-file archive remains externally preserved; only **three standalone original payloads**—quotes, nodes and repricing—are published here.
 
-## G. Sequential bootstrap benchmark
+Those three files are **not an executable partial snapshot**. They cannot be used as input to the standard persisted-snapshot assurance workflow, and they do not publicly expose the complete original acceptance/execution binding. The original manifest and [claim register](claims-valuation.md#c02) preserve identities and the disclosure limitation.
 
-The separate **`LOG_LINEAR_DF`** benchmark solves each terminal node sequentially with prior nodes fixed. [B01 validation summary](../../evidence/c03/bootstrap/curve_validation_summary.csv) records **`VALID`**, 15 quotes, 15 nodes, 15 converged steps, **15 independent PASS checks** and **zero critical issues**. Saved maximum repricing error is **4.170969125638635e-09 bp**. [B02](../../evidence/c03/bootstrap/independent_repricing.csv) contains instrument-level checks. [B03](../../evidence/c03/bootstrap/validation_issues.csv) intentionally retains its header with zero issue rows ([C05](claims-valuation.md#c05)). This historical validation contract is distinct from the cubic operational acceptance policy.
+## F. Rebuild and persisted-snapshot assurance
+
+The recorded execution was followed by two distinct assessments:
+
+- **Rebuild assurance** recalibrated from explicitly supplied financial inputs.
+- **Snapshot assurance** reconstructed the archived curve nodes and independently repriced instruments **without rerunning the optimizer**.
+
+The original records report successful completion of the build, rebuild assessment and snapshot assessment, with matching before/after snapshot inventory and integrity receipts. **Those receipts and the complete archive remain external**; no new assurance is claimed from publication of these narrative documents.
+
+Public payload checks allow inspection of saved quotes, curve nodes and repricing results, but cannot independently establish the whole original archive's acceptance history.
+
+[Snapshot semantics](../snapshots.md) · [Original assurance claims](claims-valuation.md#c03)
+
+<a id="g-sequential-bootstrap-benchmark"></a>
+
+## G. Sequential calibration comparison
+
+The project also implements **sequential bootstrapping with log-linear discount-factor interpolation**. It solves the next node while retaining previously calibrated nodes and is a valid construction method in its supported setting, not merely a superseded internal baseline.
+
+The saved [sequential validation summary](../../evidence/c03/bootstrap/curve_validation_summary.csv) reports **15 calibrated nodes, 15 converged steps, 15 independent PASS results, zero critical issues**, and maximum absolute repricing error of **4.170969125638635 × 10⁻⁹ bp**.
+
+[Instrument-level checks](../../evidence/c03/bootstrap/independent_repricing.csv) · [Recorded issues (no issue rows)](../../evidence/c03/bootstrap/validation_issues.csv).
+
+These sequential checks and the simultaneous baseline use **different overall validation contracts**. The sequential results should not be represented as proof that a separate cubic baseline execution was accepted.
 
 ## H. Fit versus known-truth recovery
 
-Fitting 15 par quotes constrains instrument values; it does not identify the latent curve at every point between pillars. Known truth is introduced after calibration for comparison. [B04 node recovery](../../evidence/c03/bootstrap/bootstrap_node_recovery.csv) records 30Y DF difference **-4.418431951883073e-05**. [B05 global metrics](../../evidence/c03/bootstrap/recovery_metrics_global.csv) records 28-day forward RMSE **3.8110099310701564 bp** across **1,563** forward observations. [B06 horizon metrics](../../evidence/c03/bootstrap/recovery_metrics_by_horizon.csv) separates 0–1Y, 1–5Y, 5–10Y and 10Y–curve-end; retain each metric's saved observation count.
+Matching OIS par quotations does not determine a unique forward curve between maturity pillars. The synthetic generating curve provides an independent reference *for this controlled scenario*.
 
-![B07: synthetic sequential log-linear DF forward recovery](../../evidence/c03/bootstrap/forward_28d_recovery.png)
+The saved sequential log-linear study records:
 
-**B07 — Synthetic sequential LOG_LINEAR_DF; 28-day simple ACT/360 forward, weekly starts; curve recovery is separate from quote repricing. Dense source remains external.** Scenario `FTIIE_KNOWN_TRUTH_V1`, trade/reference dates 2026-09-15/2026-09-18, projected MXMC 2026–2057; original workflow `plot_bootstrap_recovery`, C03b2b. Horizontal axis: forward start time from reference in ACT/360 years. Vertical axis: annual simple forward percent. Original source/output hashes and execution times are in the manifest.
+| Recovery measure | Saved result |
+|---|---:|
+| 30Y discount-factor difference | −0.00004418431951883073 |
+| Dense 28-day forward RMSE | **3.8110099310701564 bp** |
+| Forward periods in this recovery grid | **1,563** |
 
-The diagnostic is `F(T1,T2) = (P(T1)/P(T2) - 1) / ACT360(T1,T2)` for a 28-day period. Plot and metrics workflows use seven-day sampling but distinct terminal-start handling; do not require identical grids or transplant values across workflows. The zero-rate plot in the broader archive starts at reference+1 day and is not included here. DF differences are dimensionless, relative DF errors are ppm, and zero/forward errors are bp; figure levels use percent. These approximation errors describe recovery and interpolation, **without reversing operational acceptance** ([C06](claims-valuation.md#c06)).
+[Node recovery](../../evidence/c03/bootstrap/bootstrap_node_recovery.csv) · [Global recovery metrics](../../evidence/c03/bootstrap/recovery_metrics_global.csv) · [Recovery by horizon](../../evidence/c03/bootstrap/recovery_metrics_by_horizon.csv)
 
-## I. Limitations and next evidence layers
+![Saved 28-day forward recovery under sequential log-linear discount-factor interpolation](../../evidence/c03/bootstrap/forward_28d_recovery.png)
 
-The recorded reference environment is **Python 3.11.15, NumPy 2.4.6, SciPy 1.17.1, Matplotlib 3.11.2 and yield-curves 0.1.0**, at source commit **`bee31fd0883660f171ebe84817b98641239eae5b`**. Environment receipts remain external. C04b's curation time is separate from original workflow timestamps in the manifest.
+*Sequential log-linear interpolation, seven-day sampled starts, 28-calendar-day simple ACT/360 forward rates. The horizontal axis is forward-start time in ACT/360 years; the vertical axis is annual forward percent. The generating reference curve is used only for the recovery comparison.*
 
-Original curve computation, independent repricing, snapshot/rebuild assurance, synthetic known-truth comparison and C04b byte copying are distinct activities. Historical comparison scope is per artifact in the manifest; no cross-platform or dependency-version bitwise guarantee follows. This subset is insufficient for complete research replay: bootstrap dense figure inputs and original audits remain external, and the complete snapshot archive is withheld. Any separately authorized reproduction must use the recorded source and reference environment, verified inputs and **new external output, temporary and cache roots**, leaving original checkpoints preserved. The [reproduction contract](reproduce.md) now validates the separate global heatmap/locality saved-data scope; bootstrap dense sources and original audit records remain external.
+The rate over dates $T_1$ and $T_2$ is
 
-The integrated [methodology](methodology.md) and [risk](risk.md) layers add interpolation and sensitivity evidence. Observed-market validation, verified future calendars, multi-curve discounting and production deployment require separate evidence and review.
+$$
+F(T_1,T_2)=
+\frac{P(T_1)/P(T_2)-1}{\tau_{\mathrm{ACT/360}}(T_1,T_2)}.
+$$
+
+Discount-factor differences are dimensionless, relative DF errors use ppm, and zero/forward-rate errors use bp. The saved plot and metrics do **not** use identical terminal-start rules for every sampled series; their observation counts must not be silently interchanged.
+
+This evidence supports a distinction between repricing and recovery, **not rejection of the sequential method or universal superiority of the selected cubic representation**. The controlled comparison of three interpolation choices appears in [Methodology evidence](methodology.md).
+
+<a id="i-limitations-and-next-evidence-layers"></a>
+
+## I. Limitations and provenance
+
+The recorded financial computation used source revision `bee31fd0883660f171ebe84817b98641239eae5b`, Python **3.11.15**, NumPy **2.4.6**, SciPy **1.17.1**, and Matplotlib **3.11.2** (project version **0.1.0**). The [valuation manifest](../../evidence/c03/valuation-manifest.json) records artifact identities, saved-execution context, and unavailable original audit material.
+
+The eleven public original exhibits are a **selected subset**. Original source files, denser numerical series, some execution metadata and assurance receipts are external. The [reproduction contract](reproduce.md) specifies what can be inspected or replayed and what requires new computation.
+
+The results do not establish **observed-market accuracy, authoritative long-dated calendars, independent vendor valuation, multi-curve performance or production readiness**. Hashes provide integrity information within their recorded scope, not source authenticity or trusted execution times.
