@@ -1,223 +1,99 @@
-# Synthetic Reference Data
+# Synthetic F-TIIE OIS Reference Data
 
-This directory contains deterministic synthetic datasets used to validate
-the yield-curve calibration framework.
+This directory contains a **frozen, reproducible synthetic calibration dataset** designed to distinguish the ability to reprice OIS quotations from the ability to recover an underlying interest-rate term structure.
 
-Synthetic data must not be represented as observed market data.
+The dataset is **not observed Mexican market data**, a forecast of policy rates, an official CME curve, or an estimate of current fair-value quotations.
 
----
+## Research question and construction
 
-## Scenario: FTIIE_KNOWN_TRUTH_V1
+A calibrated curve can reproduce every quoted OIS while differing from another fitted curve **between observed maturities**. To study that identification problem, the project begins with a deliberately **smooth, non-flat, known reference zero-rate curve**, then generates synthetic F-TIIE OIS par quotations from it.
 
-The first canonical scenario follows:
-
-```text
-Known Parametric Curve
-        ↓
-F-TIIE OIS Valuation
-        ↓
-Par Rates
-        ↓
-Synthetic OIS Quote Dataset
+```mermaid
+flowchart TD
+    A["Known synthetic zero-rate curve"] --> B["Discount factors"]
+    B --> C["Construct F-TIIE OIS and calculate par rates"]
+    C --> D["Frozen synthetic OIS quote dataset"]
+    D --> E["Calibrate without reference-curve access"]
+    E --> F["Compare repricing and term-structure recovery"]
+    A -. "Reference used only for recovery evaluation" .-> F
 ```
 
-The objective is to create a calibration problem for which the underlying
-curve is known exactly.
+The *calibration engine* receives quotations and the required business calendar, **not the reference-curve function**. Knowledge of the original curve is retained for subsequent research comparisons.
 
-The historical bootstrap and current simultaneous-calibration workflows
-receive only the synthetic OIS quotes and attempt to reconstruct the
-underlying curve.
+## Known reference curve
 
----
+For ACT/360 time $t$ measured from the common OIS effective date, the continuously compounded zero-rate function is
 
-## Known-Truth Zero Curve
-
-The continuously compounded zero curve is:
-
-```text
-z(t)
+$$
+z_{\mathrm{true}}(t)
 =
-L
-+
-S exp(-t / tau_s)
-+
-H t exp(-t / tau_h)
-```
+L+S e^{-t/\tau_s}+H t e^{-t/\tau_h},
+$$
 
-with:
+with discount factors
 
-```text
-L      = 0.0720
-S      = 0.0060
-tau_s  = 1.50 years
-
-H      = -0.0030
-tau_h  = 4.00 years
-```
-
-Discount factors are:
-
-```text
-P(T0,T)
+$$
+P_{\mathrm{true}}(t)
 =
-exp[-z(t)t]
-```
+e^{-t z_{\mathrm{true}}(t)}.
+$$
 
-where project time is measured using ACT/360.
+The frozen scenario uses the following model parameters:
 
----
+| Parameter | Value | Interpretation |
+|---|---:|---|
+| $L$ | 0.0720 | Long-run zero-rate level (7.20%) |
+| $S$ | 0.0060 | Short-end adjustment (0.60 percentage points) |
+| $\tau_s$ | 1.50 years | Short-end decay scale |
+| $H$ | -0.0030 | Medium-horizon curvature coefficient |
+| $\tau_h$ | 4.00 years | Curvature decay scale |
 
-## Economic Interpretation
+The resulting term structure starts at a relatively elevated short end, declines through intermediate maturities, and gradually normalizes at long horizons. This deliberate smoothness enables a controlled comparison, **but may favor interpolation approaches that reproduce similar smoothness**.
 
-The parameterization creates a deliberately non-flat shape:
+The implementation is in [`research/curves.py`](../../src/yield_curves/research/curves.py) and [`research/synthetic.py`](../../src/yield_curves/research/synthetic.py).
 
-```text
-higher short end
-        ↓
-declining medium-term zero rates
-        ↓
-moderate long-end normalization
-```
+## Frozen OIS quotation dataset
 
-This shape was selected to exercise:
+[`ftiie_ois_quotes_v1.csv`](ftiie_ois_quotes_v1.csv) contains **15 synthetic par quotations** across the following project-selected maturities:
 
-* non-flat calibration;
-* forward-rate reconstruction;
-* interpolation behavior;
-* short / medium / long curve recovery.
+`1M, 2M, 3M, 6M, 9M, 1Y, 2Y, 3Y, 4Y, 5Y, 7Y, 10Y, 15Y, 20Y, 30Y`.
 
-It is a:
+Its trade date is **15 September 2026**, with a common effective/reference date of **18 September 2026**. Contractual dates, adjusted dates, final payment dates, and coupon counts are captured alongside the synthetic par quotations.
 
-```text
-PROJECT SYNTHETIC SCENARIO
-```
+Each quotation is generated using the same project's F-TIIE OIS conventions:
 
-It is not:
+1. Resolve the contractual tenor and construct the OIS schedule and overnight observations.
+2. Project the floating coupon cash flows from the known discount-factor curve.
+3. Discount the fixed- and floating-leg cash flows under the **same-curve projection/discounting assumption**.
+4. Determine the fixed rate that equates the two present values.
 
-```text
-observed Mexican market data
+Thus each generated contract is at par under the generating curve:
 
-a forecast of Mexican rates
-
-CME curve methodology
-
-an estimate of fair-value market levels
-```
-
----
-
-## Core-v1 Architecture
-
-The known-truth scenario uses:
-
-```text
-projection curve
+$$
+PV_{\mathrm{float}}
 =
-discount curve
-=
-synthetic known-truth curve
-```
+PV_{\mathrm{fixed}},
+\qquad
+\operatorname{NPV}=0,
+$$
 
-consistent with the explicit Core-v1 same-curve assumption.
+up to numerical precision.
 
----
+The dataset uses the **projected MXMC calendar** for the long horizon (2026–2057), not an independently verified future holiday source.
 
-## Quote Dataset
+The CSV retains a `scenario_id` (`FTIIE_KNOWN_TRUTH_V1`) and `data_class` (`SYNTHETIC_REFERENCE_DATA`). These are research metadata, not market-feed identifiers. The calibration-facing financial fields are `tenor`, `trade_date`, `contractual_maturity_date`, and decimal `par_rate`.
 
-File:
+## What the experiment establishes
 
-```text
-ftiie_ois_quotes_v1.csv
-```
+The known curve permits two separate evaluations:
 
-The dataset contains synthetic par OIS quotes for:
+| Question | Evaluation |
+|---|---|
+| **Repricing** | Does the reconstructed curve reproduce the **synthetic par quotations** used in calibration? |
+| **Recovery** | Does the reconstructed curve reproduce the **known generating discount factors, zero rates, and forward rates**, including between pillars? |
 
-```text
-1M
-2M
-3M
-6M
-9M
-1Y
-2Y
-3Y
-4Y
-5Y
-7Y
-10Y
-15Y
-20Y
-30Y
-```
+These questions are not equivalent. Different representations can achieve near-exact quote repricing while recovering different between-pillar forward curves.
 
-Each quote is generated by:
+The experiments also study how quote shocks propagate through each representation. Results depend on the smooth reference scenario, calibration approach, date grid, and sensitivity definition; they **do not establish real-market robustness**.
 
-```text
-construct OIS
-        ↓
-project floating leg from known curve
-        ↓
-discount floating cash flows
-        ↓
-calculate fixed-leg annuity
-        ↓
-solve par fixed rate
-```
-
-The resulting instrument therefore satisfies:
-
-```text
-PV_fixed
-≈
-PV_floating
-
-NPV
-≈
-0
-```
-
-The known-truth function is used by research workflows for recovery analysis.
-The current operational baseline does not depend on that function; it consumes
-quotes and a calendar through the public baseline API.
-
-Future research may use multiple synthetic known-truth scenarios with
-different shape, smoothness, or regime characteristics. Such scenarios would
-remain research inputs and would not automatically change the operational
-baseline.
-
-under the known-truth curve.
-
----
-
-## Calibration Separation
-
-The future bootstrap engine must operate only on the quote dataset.
-
-Conceptually:
-
-```text
-true curve
-      X
-      X   not visible to bootstrap
-      X
-
-synthetic OIS quotes
-        ↓
-bootstrap
-        ↓
-recovered curve
-```
-
-The true curve remains available only for validation after calibration.
-
-This allows two independent questions to be tested:
-
-```text
-1. Repricing
-   Does the recovered curve reproduce the calibration quotes?
-
-2. Recovery
-   Does the recovered curve reproduce the curve that generated them?
-```
-
-These are not equivalent tests.
+[Curve methodology](../../docs/methodology.md) · [Interpolation comparison](../../docs/evidence/methodology.md) · [Sensitivity evidence](../../docs/evidence/risk.md) · [Data-input contract](../../docs/input_contract.md)

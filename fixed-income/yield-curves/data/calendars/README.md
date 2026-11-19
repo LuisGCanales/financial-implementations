@@ -1,130 +1,78 @@
-# Calendar Data
+# MXMC Calendar Data and Coverage
 
-## MXMC — Mexico City Calendar
+The F-TIIE OIS contract uses the **Mexico City (MXMC)** business-day calendar for effective dates, coupon boundaries, fixing observations, and payment lags. Calendar accuracy matters because adjustments can change accrual fractions, compounded coupons, cash-flow dates, and the resulting calibration pillars.
 
-The canonical MXN F-TIIE OIS specification references the:
+CME identifies MXMC as the market-standard calendar family for spot-starting F-TIIE OIS [S2-equivalent source below], but its published instrument-attribute document does not itself supply a complete, date-by-date copy of the underlying CME holiday dataset.
 
-> **Mexico City (MXMC)**
+## Sourced 2026 holiday mapping
 
-calendar.
+[`mxmc_2026.csv`](mxmc_2026.csv) is the project's explicit **2026 financial-sector holiday mapping**. Its closure dates are based on the Comisión Nacional Bancaria y de Valores (CNBV) financial-sector calendar and were cross-checked against the 2026 Grupo BMV holiday calendar.
 
-CME identifies MXMC as the market-standard holiday calendar for
-spot-starting MXN F-TIIE OIS.
+This means the project can reproduce date calculations from a frozen, inspectable file. It **does not** mean the file is certified as an exact copy of CME Clearing's internal MXMC data.
 
-However, the public market-standard-attributes document does not provide
-the complete underlying holiday-date dataset inside the specification.
+A published CME example also treats **16 September 2026** as an MXMC holiday, with **15 September** and **17 September** as the surrounding business days. This agrees with the project's 2026 mapping.
 
-For reproducibility, this project maintains explicit frozen calendar data.
+## File structure and loading
 
----
+The sourced CSV has three columns:
 
-## 2026 Dataset
+| Column | Meaning |
+|---|---|
+| `date` | ISO `YYYY-MM-DD` holiday date |
+| `name` | Human-readable description |
+| `source` | Source identifier, e.g. `CNBV_2026` |
 
-File:
+For example:
 
-```text
-mxmc_2026.csv
+```csv
+date,name,source
+2026-01-01,New Year's Day,CNBV_2026
+2026-02-02,Constitution Day Observance,CNBV_2026
+2026-09-16,Independence Day,CNBV_2026
 ```
 
-The 2026 holiday set is based primarily on the official Mexican
-financial-sector closure calendar published by the Comisión Nacional
-Bancaria y de Valores (CNBV).
+The loader requires the `date` column; `name` and `source` are descriptive. Saturday and Sunday are handled by the calendar's weekend-day definition, so they need not be listed as holiday rows.
 
-The dates were cross-checked against the 2026 Grupo BMV holiday calendar.
+To construct the calendar from the provided file:
 
-Both sources identify the same relevant 2026 financial-market closure
-dates.
+```python
+from datetime import date
+from yield_curves.calendar_io import build_mxmc_calendar_from_csv
 
-### Classification
-
-```text
-PROJECT DATA MAPPING
+calendar = build_mxmc_calendar_from_csv(
+    "data/calendars/mxmc_2026.csv",
+    coverage_start=date(2026, 1, 1),
+    coverage_end=date(2026, 12, 31),
+    source="CNBV/BMV-based project holiday mapping for 2026",
+)
 ```
 
-This means:
+The calendar records a `PROVIDED` source declaration and file fingerprint. The declaration is **not** source certification; users remain responsible for the suitability of supplied holidays.
 
-> The project uses the official Mexican financial-sector holiday calendar
-> as its explicit implementation of MXMC for the covered year.
+## Long-horizon research calendar
 
-It does **not** mean:
+OIS maturities spanning decades require holiday information well beyond the verified 2026 file. For **controlled synthetic experiments**, the project provides a deterministic rule-based projection of recurring Mexican financial-sector holidays:
 
-> This CSV is claimed to be a copy of CME Clearing's internal MXMC
-> calendar dataset.
+```python
+from yield_curves.research.calendars import build_projected_mxmc_calendar
 
-The distinction is intentional.
-
----
-
-## CME Cross-Check
-
-CME published examples explicitly treat:
-
-```text
-2026-09-16
+calendar = build_projected_mxmc_calendar(
+    start_year=2026,
+    end_year=2057,
+)
 ```
 
-as an MXMC holiday, with:
+This model carries `PROJECTED` provenance and a declared full-year range. Its future-year dates are **project assumptions**, not official CNBV, BMV, or CME holiday observations. It should not be silently substituted for a verified market calendar when calibrating observed market quotations.
 
-```text
-2026-09-15
-```
+## Coverage and financial consequences
 
-as the previous business day and:
+Coverage boundaries are **inclusive and explicitly declared**. The first and last holiday rows do not define those boundaries: many covered dates are ordinary business days.
 
-```text
-2026-09-17
-```
+A calendar used by the standard baseline must cover all required schedule operations, including adjustments, overnight observation dates, and **payment lags past contractual maturities**. The project raises `CalendarCoverageError` for uncovered dates rather than using implicit extrapolation or assuming that future holidays are known.
 
-as the following business day.
+This distinction matters particularly for long-dated OIS: a curve may have a supported calibration maturity while the supplied calendar lacks the dates necessary to determine its last cash flows.
 
-This behavior is consistent with the project calendar dataset.
-
----
-
-## Data Schema
-
-```text
-date
-    ISO-8601 holiday date.
-
-name
-    Human-readable description.
-
-source
-    Identifier for the source used to establish the holiday.
-```
-
-Weekends are not required in the CSV because Saturday and Sunday are
-handled structurally by `BusinessCalendar`.
-
-A holiday that happens to fall on a weekend may remain in the source file
-when the official source explicitly identifies it as a holiday.
-
----
-
-## Coverage Policy
-
-Calendar coverage must be explicit.
-
-A calendar dataset covering 2026 must not silently be assumed to provide
-correct holiday information for:
-
-```text
-2027
-2030
-2050
-```
-
-Future long-dated calibration requires either:
-
-1. additional verified yearly calendar data; or
-2. a separately specified rule-based calendar with explicit year-specific
-   overrides and limitations.
-
-The project should fail rather than silently assume that an incomplete
-holiday dataset represents the full MXMC calendar.
-
----
+[Input contract](../../docs/input_contract.md) · [Financial conventions](../../docs/conventions.md) · [Calendar and projected-holiday implementations](../../src/yield_curves/calendars.py)
 
 ## Sources
 
