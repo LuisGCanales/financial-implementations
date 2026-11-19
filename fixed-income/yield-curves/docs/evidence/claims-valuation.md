@@ -1,14 +1,26 @@
-# Valuation claims C01–C06
+# Valuation and Acceptance — Claim Audit Register
 
-[Evidence index](index.md) · [Valuation narrative](valuation.md) · [Provenance manifest](../../evidence/c03/valuation-manifest.json) · [Unified claims](claims.md) · [Reproduce](reproduce.md) · [Unified index](../../evidence/c03/index.json)
+This record supports the project's **valuation and calibration claims** with their exact approved wording, method, units, original artifact identities, SHA-256 values and public-inspection limits. It is an **audit companion**, not the introductory explanation of the financial experiment.
 
-Original C04a claim IDs and exact supported wording are preserved. Every statement is scoped to synthetic `FTIIE_KNOWN_TRUTH_V1`, trade/reference dates 2026-09-15/2026-09-18, projected MXMC coverage 2026–2057 and same-curve Core-v1. Original sources use commit `bee31fd0883660f171ebe84817b98641239eae5b`.
+Begin with the [valuation narrative](valuation.md) for the financial problem and its interpretation. Each claim below provides the evidence needed to verify a particular statement.
 
-**Availability:** S03/S05/S06 are public as unchanged standalone original payload exhibits. The complete accepted seven-file snapshot remains complete, unchanged and externally archived; its publication is `BLOCKED_PENDING_REVIEW` because S07 contains two machine-specific paths. S01/S02/S04/S07 are not distributed. The three exhibits are not a partial snapshot archive or valid snapshot-assurance input; original acceptance and execution bindings are not fully independently inspectable from this public collection. Original assurance logs and audit records remain external and are **not publicly distributed**. Rows marked external identify evidence by checkpoint and SHA-256 without pretending to provide a download. Included links resolve to versioned evidence in this public repository; the subset is available on `main` through merged C04b PR #14. Repository evidence publication is not a formal tagged release or website deployment; complete snapshot publication remains `BLOCKED_PENDING_REVIEW`.
+[Evidence overview](index.md) · [Claim navigation](claims.md) · [Original valuation manifest](../../evidence/c03/valuation-manifest.json) · [Reproduction instructions](reproduce.md) · [Machine-readable index](../../evidence/c03/index.json)
+
+## Scope and evidence availability
+
+The original experiment uses **15 synthetic MXN F-TIIE OIS par quotations**, trade date **15 September 2026**, effective/curve reference date **18 September 2026**, a **projected 2026–2057 MXMC calendar**, and **one curve for projection and discounting**. Its original financial-execution source revision is `bee31fd0883660f171ebe84817b98641239eae5b`.
+
+The selected simultaneous baseline and the sequential bootstrap are **different calibration workflows** with distinct validation/acceptance contracts. Independent instrument repricing means reconstruction and calculation **within the same codebase**, not a separate vendor or independent model validator.
+
+**Public files versus archived evidence:** the original input quotations (`S03`), calibrated curve nodes (`S05`), and independent repricing observations (`S06`) are public as **unchanged standalone payload files**. The full **seven-file accepted schema-3.0 snapshot** is **not publicly distributed** because its metadata contain machine-specific absolute paths; its `S01`, `S02`, `S04` and `S07` files and related assurance receipts remain externally archived. Those three public payloads **cannot be passed to snapshot assurance as a complete archive** and do not independently expose original execution/acceptance bindings.
+
+The identifiers `C01`–`C06` and `S01`–`S07` are **stable artifact/claim audit keys**, not a required development chronology. Paths such as `C03b1/...` in tables below are **external checkpoint identities**, not public download URLs. Exact approved claim wording and numerical evidence are retained; later documentation edits do not imply fresh financial computation.
+
+## Supported claims
 
 <a id="c01"></a>
 
-## C01
+## C01 — Accepted simultaneous calibration and OIS repricing
 
 **Claim type:** observed result.
 
@@ -33,7 +45,7 @@ Original C04a claim IDs and exact supported wording are preserved. Every stateme
 
 <a id="c02"></a>
 
-## C02
+## C02 — Persisted execution integrity and snapshot closure
 
 **Claim type:** observed result.
 
@@ -61,7 +73,7 @@ Original C04a claim IDs and exact supported wording are preserved. Every stateme
 
 <a id="c03"></a>
 
-## C03
+## C03 — Rebuild and saved-snapshot assurance
 
 **Claim type:** observed result.
 
@@ -88,7 +100,7 @@ Original C04a claim IDs and exact supported wording are preserved. Every stateme
 
 <a id="c04"></a>
 
-## C04
+## C04 — Consistency between synthetic demo and explicit inputs
 
 **Claim type:** observed result.
 
@@ -114,7 +126,7 @@ Original C04a claim IDs and exact supported wording are preserved. Every stateme
 
 <a id="c05"></a>
 
-## C05
+## C05 — Sequential bootstrap and independent repricing
 
 **Claim type:** observed result.
 
@@ -138,7 +150,7 @@ Original C04a claim IDs and exact supported wording are preserved. Every stateme
 
 <a id="c06"></a>
 
-## C06
+## C06 — Instrument quote fit versus synthetic curve recovery
 
 **Claim type:** interpretation.
 
