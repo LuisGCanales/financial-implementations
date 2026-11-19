@@ -1,99 +1,119 @@
-# Baseline command-line workflows
+# Command-Line Workflows — Calibration and Assurance
 
-Operational inputs, manual assurance and the synthetic demo are separate workflows.
-Run these repository scripts from `fixed-income/yield-curves` in a checkout after
-installing the checkout editably; see the [README Quickstart](../README.md#quick-start).
-Keep the checkout available for scripts, fixtures and frozen demo datasets.
+Repository scripts provide **three deliberately separate workflows**: construction and archival from explicit inputs, manual validation without publishing, and a self-contained synthetic demonstration. They use the **selected simultaneous/natural-cubic baseline**, not an automatically chosen alternative interpolation method.
 
-## Operational build
+Run commands from the `fixed-income/yield-curves` directory in a checkout with **Python 3.11** and the project installed:
 
-All inputs and the destination are required:
+```bash
+cd fixed-income/yield-curves
+python -m pip install -e '.[dev,plots]'
+```
+
+See the [project README](../README.md#reproducibility) for a virtual-environment setup.
+
+## Which command should I use?
+
+| Goal | Entry point | Recalibrates? | Writes or publishes? |
+|---|---|---|---|
+| Build a baseline with caller-supplied inputs | `scripts/operational/build_baseline_curve.py` | Yes | Archives a complete standard result; **promotes only if accepted** |
+| Validate a fresh construction without publication | `scripts/assurance/validate_baseline_curve.py rebuild` | Yes | **No writes** |
+| Check an existing accepted snapshot | `scripts/assurance/validate_baseline_curve.py snapshot` | **No** | **No writes** |
+| Run the frozen research demonstration | `scripts/demo/build_synthetic_baseline.py` | Yes | Archives the synthetic run; **promotes only if accepted** in its demo destination |
+
+The ordinary Python API has its own in-memory acceptance path; **manual assurance is not a prerequisite** for calling `build_baseline_ftiie_curve()`.
+
+## 1. Build from explicit quotes and calendar
 
 ```bash
 python scripts/operational/build_baseline_curve.py \
-  --quotes my_quotes.csv --classification OBSERVED_MARKET_DATA \
+  --quotes my_quotes.csv \
+  --classification OBSERVED_MARKET_DATA \
   --source "Quote provider and valuation date" \
-  --calendar holidays.csv --calendar-start 2026-01-01 --calendar-end 2057-12-31 \
+  --calendar holidays.csv \
+  --calendar-start 2026-01-01 \
+  --calendar-end 2057-12-31 \
   --calendar-source "Holiday provider and version" \
   --output-root outputs/baseline
 ```
 
-Quotes use the [general CSV contract](input_contract.md). Classification must be
-`SYNTHETIC_REFERENCE_DATA`, `OBSERVED_MARKET_DATA` or `UNKNOWN`, consistent with any
-CSV `data_class`. Calendar CSVs have a `date` column containing ISO holiday dates;
-a header-only CSV explicitly declares no holidays beyond weekends. Coverage is
-inclusive, declared by the caller, and must include observation and payment dates.
-The provided-calendar label is provenance, not certification of completeness.
-The CLI does not generate projected holidays or infer coverage from holiday extrema.
+**All seven input declarations and the output destination are required:** quote CSV, classification, quote source, holiday CSV, start/end coverage, and calendar source. The script does not silently load the frozen synthetic quotes or a projected future calendar.
 
-The script exports each result and publishes accepted runs as described in
-[snapshots.md](snapshots.md). Its Python helper takes `dataset`, `calendar`
-and `output_root`; the public baseline Python API is unchanged.
+`OBSERVED_MARKET_DATA` is a **caller declaration**, not a verification that `my_quotes.csv` contains authentic market observations. Likewise, declaring calendar coverage through 2057 requires a genuinely appropriate dataset; the CLI does not generate or certify those future holiday dates.
 
-## Manual assurance
+Inputs are documented in the [quote/calendar contract](input_contract.md). Financial preflight checks instrument dates, calendar coverage, quotes, and increasing payment pillars before calibration.
 
-These modes never publish, export or modify the input snapshot.
+The builder creates an execution envelope with captured financial inputs and source declarations, calibrates the curve, performs standard acceptance, and archives the completed run. **Only accepted executions** replace `current.json` at the destination.
 
-To calibrate from inputs again, use `rebuild` with the same seven input flags as
-above (omit `--output-root`):
+## 2. Rebuild and assess without publishing
+
+Recalibrate explicit quotes and a supplied calendar, then print acceptance diagnostics:
 
 ```bash
 python scripts/assurance/validate_baseline_curve.py rebuild \
-  --quotes my_quotes.csv --classification OBSERVED_MARKET_DATA \
+  --quotes my_quotes.csv \
+  --classification OBSERVED_MARKET_DATA \
   --source "Quote provider and valuation date" \
-  --calendar holidays.csv --calendar-start 2026-01-01 --calendar-end 2057-12-31 \
+  --calendar holidays.csv \
+  --calendar-start 2026-01-01 \
+  --calendar-end 2057-12-31 \
   --calendar-source "Holiday provider and version"
 ```
 
-To assess the persisted current run without running calibration:
+This **runs calibration again** and performs standard in-memory acceptance; it does **not** export a new snapshot or change the current published run.
+
+Alternatively, inspect the **persisted accepted run** without a solver:
 
 ```bash
-python scripts/assurance/validate_baseline_curve.py snapshot --output-root outputs/baseline
+python scripts/assurance/validate_baseline_curve.py snapshot \
+  --output-root outputs/baseline
 ```
 
-Snapshot mode resolves the pointer once and loads a supported bound schema-3.0
-archive. It verifies hashes, stored baseline-policy identity and the standard
-`FTIIE_STANDARD_BASELINE_ACCEPTANCE_V1` identity, including PASS `0.01` bp and FAIL
-`0.10` bp tolerances. It reconstructs the cubic curve from persisted dates and
-discount factors without solving, verifies financial context and payload bindings,
-and repeats structural checks and independent repricing with the archived quotes
-and calendar under those same supported historical V1 rules. Fresh acceptance and
-repricing must match historical acceptance and repricing evidence. It does not
-silently apply a new policy or reinterpret historical acceptance; unsupported
-historical policies and schemas are rejected explicitly.
+Snapshot mode resolves `current.json` once, checks the supported **schema 3.0** archive, its manifests, hashes, stored financial inputs, policy identity, and acceptance bindings, then reconstructs the persisted **natural-cubic curve** from its nodes and independently reprices the archived OIS.
 
-Stored solver success is a historical declaration, not an independently repeated
-optimization. Hashes check integrity, not authenticity. This mode validates a
-published accepted run; it does not load legacy flat files or select
-unpublished/rejected runs. It performs no writes or recalibration.
+This is **not a recalibration**: it does not solve for new discount factors, reinterpret older policies under a new standard, modify archives, or publish a result. The currently supported standard acceptance rules include a **0.01 bp PASS tolerance** and **0.10 bp FAIL threshold**. Unsupported or unbound older schemas are rejected rather than silently migrated.
 
-Both assurance modes return 0 for accepted and 1 for rejected assessments.
-Missing CLI arguments return 2. Invalid files, integrity failures and insufficient
-coverage before calibration raise with a nonzero process exit. Assurance performs
-no publication. In the operational builder, validation errors and failures before
-pointer replacement preserve the previous current run (a complete unpublished
-archive may remain). Publication commits at `os.replace(..., current.json)`;
-a later exception, including directory fsync failure, can leave the accepted run
-already current. A nonzero exit alone therefore does not prove no publication.
-See [snapshot failure semantics](snapshots.md#publication-and-failure-behavior).
+Saved solver success is an archived declaration, not a repeated optimization. Hash and binding checks establish internal consistency and byte integrity, **not authenticity of externally supplied market data**.
 
-Automatic in-memory acceptance still occurs whenever the public baseline build
-API runs; this manual script is not called by that API or the operational builder.
-
-## Explicit synthetic demo
+## 3. Reproduce the synthetic demonstration
 
 ```bash
-python scripts/demo/build_synthetic_baseline.py
-python scripts/assurance/validate_baseline_curve.py snapshot --output-root outputs/demo/baseline
+python scripts/demo/build_synthetic_baseline.py \
+  --output-root outputs/demo/baseline
+
+python scripts/assurance/validate_baseline_curve.py snapshot \
+  --output-root outputs/demo/baseline
 ```
 
-The demo alone selects the frozen synthetic CSV and projected 2026–2057 calendar.
-Its default destination is `outputs/demo/baseline`, separate from operational
-outputs. `--output-root` overrides that destination explicitly.
+The demo explicitly selects the **frozen synthetic F-TIIE OIS quotations** and a **projected 2026–2057 MXMC calendar**. Its output root defaults to `outputs/demo/baseline`; passing `--output-root` overrides it.
 
-## Required inputs and subcommands
+Unlike an ordinary operational invocation, the demo intentionally uses known synthetic research inputs. Its results do **not** establish observed-market calibration or certified future MXMC holidays.
 
-The former no-argument operational and assurance commands are replaced by the
-explicit demo and the assurance subcommands above. No operational default paths,
-synthetic datasets or projected calendars remain in those two entrypoints.
-Historical flat outputs and the numerical reference fixture are unchanged.
+[Research scenario](../data/synthetic/README.md) · [Calendar data](../data/calendars/README.md)
+
+## 4. What is saved?
+
+Under the chosen output root, an accepted run is addressed through `current.json`:
+
+```text
+<output_root>/
+  current.json
+  runs/<run-id>/
+    input_quotes.csv
+    calendar.json
+    curve_nodes.csv
+    quote_repricing.csv
+    metadata.json
+    manifest.json
+```
+
+A **completed rejected** standard execution can leave a full run archive without changing the accepted pointer. Invalid inputs that fail before an execution result is produced do not yield an archive.
+
+The export process publishes the pointer through an atomic replacement after writing a complete run. **An error after pointer replacement can occur even when the new accepted run is already current**; a nonzero process exit does not by itself prove that publication was rolled back. See the full [snapshot failure semantics](snapshots.md#publication-and-failure-behavior).
+
+## 5. Return codes and errors
+
+For the assurance modes and ordinary completed runs, `0` indicates accepted and `1` indicates rejected. Missing or invalid command arguments exit through `argparse` with code `2`. File/coverage errors, archive integrity failures, or raised numerical exceptions may instead terminate with a nonzero error before a normal acceptance result is printed.
+
+These CLI scripts do not implicitly select experimental calibration methods. Their role is to build, assess, and optionally archive the selected baseline under explicit inputs.
+
+[In-memory integration](integration_contract.md) · [Acceptance conditions](validation.md) · [Snapshot integrity and publication](snapshots.md)
