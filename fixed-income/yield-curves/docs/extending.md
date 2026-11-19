@@ -64,7 +64,7 @@ The baseline accepts **F-TIIE OIS quotes only**. The four-field
 [`OISCalibrationQuote`](../src/yield_curves/quotes.py) protocol is an OIS contract,
 not a multi-product interface. [`quote_io.py`](../src/yield_curves/quote_io.py)
 accepts only `PAR_OIS_RATE` when quote type is supplied; current preparation,
-engines and shared repricing rebuild Core-v1 OIS. Conventions form a closed
+engines and shared repricing reconstruct the currently supported F-TIIE OIS contracts. Conventions form a closed
 profile, floating spread is zero, and calibration uses unit notional.
 A downstream position's positive notional scales valuation; it is conceptually
 separate from the calibration notional and does not extend the product profile.
