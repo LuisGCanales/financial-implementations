@@ -1,9 +1,8 @@
-# Test coverage map
+# Test Coverage by Financial and Technical Contract
 
-This is a contract navigation map based on the C05a **collection** at revision
-`666a38bd8078a482dcb9182e8c07b9c53dab4a7b` (2026-11-06). Representative source
-names below locate contracts; they are not an exhaustive assertion dump or a new
-test execution report. Source/tests are authoritative for exact expressions.
+This document maps the project's automated tests to financial conventions, calibration methods, curve behavior, consumer interfaces, publication guarantees and research diagnostics. It is a **navigation and audit aid**, not proof of market-data authenticity or institutional production readiness.
+
+The counts below refer to **pytest collection on 6 November 2026**, at repository commit `666a38bd8078a482dcb9182e8c07b9c53dab4a7b`. They are specific to that revision, not a fresh run or a permanent count guarantee. Representative test names locate contracts; current code and executed test results remain authoritative.
 
 ## Counts and evidence meanings
 
@@ -21,8 +20,8 @@ case is a pytest node ID after parameter expansion. Marker selection chooses
 cases (`1008 + 27 = 1035`); `not slow` is not a timing guarantee. Actual execution
 runs selected cases and produces outcomes. Code coverage requires separate
 instrumentation of executed source lines/branches; these counts establish
-neither executed passes nor line/branch coverage percentages. C05b runs only the
-published small public example, not this suite. See [testing](testing.md) for
+neither executed passes nor line/branch coverage percentages. A separate
+small public-example check does not establish passes for this full suite. See [testing](testing.md) for
 commands, environment/plot dependencies, marker rules and ordinary CI.
 
 ## Fixtures and reading the map
@@ -47,7 +46,7 @@ contracts often use analytical flat curves or explicit nodes, not market quotes.
 
 | Test module (functions / cases) | Contract and representative tests | Inputs / fixture assumptions | Tolerance or rejection condition | Selection | Authority |
 |---|---|---|---|---|---|
-| [tests/unit/test_conventions.py](../tests/unit/test_conventions.py) (9 / 174) | Closed Core-v1 field values/types; ACT/360 day count. `test_every_noncanonical_field_is_rejected`; `test_direct_callers_validate_profile`. | Every dataclass field; altered values/types, nonfinite numbers and direct primitive callers. | Reject every noncanonical profile; actual days / 360; reversed dates raise. | Non-slow | [Contract](conventions.md) |
+| [tests/unit/test_conventions.py](../tests/unit/test_conventions.py) (9 / 174) | Closed F-TIIE OIS convention field values/types; ACT/360 day count. `test_every_noncanonical_field_is_rejected`; `test_direct_callers_validate_profile`. | Every dataclass field; altered values/types, nonfinite numbers and direct primitive callers. | Reject every noncanonical profile; actual days / 360; reversed dates raise. | Non-slow | [Contract](conventions.md) |
 
 ## Calendars and coverage
 
@@ -56,7 +55,7 @@ contracts often use analytical flat curves or explicit nodes, not market quotes.
 | [tests/unit/test_calendars.py](../tests/unit/test_calendars.py) (8 / 8) | Weekend/holiday exclusions and signed business-day arithmetic. `test_add_negative_business_days`; `test_zero_business_day_offset_does_not_adjust`. | Small injected holiday sets and weekend-only calendars. | Exact dates; zero offset does not adjust. | Non-slow | [Contract](input_contract.md) |
 | [tests/unit/test_mxmc_calendar.py](../tests/unit/test_mxmc_calendar.py) (10 / 17) | Frozen 2026 facts, T+2 and raw-byte provenance. `test_t_plus_two_skips_independence_day`; `test_checksum_tracks_file_bytes_even_when_calendar_values_match`. | data/calendars/mxmc_2026.csv; temporary CSV variants, invalid/missing files. | Exact holiday/date/hash equality; malformed CSV and missing file raise. | Non-slow | [Contract](conventions.md) |
 | [tests/research/test_projected_mxmc_calendar.py](../tests/research/test_projected_mxmc_calendar.py) (5 / 5) | Projected holiday model equals frozen 2026 set and provides declared long coverage. `test_projected_2026_matches_verified_2026_holidays`; `test_projected_calendar_covers_long_horizon`. | Projected 2026 / 2026–2057 calendar and frozen 2026 CSV. | Exact set/known dates; no authentication of future official holidays. | Non-slow | [Contract](assumptions_limitations.md) |
-| [tests/unit/test_general_inputs.py](../tests/unit/test_general_inputs.py) (21 / 47) | CSV shape/units/provenance; H01 identity; inclusive date coverage and baseline preflight. `test_invalid_csv_reports_schema_or_row_context`; `test_coverage_check_includes_payment_lag_after_contractual_maturity`; `test_same_calendar_name_does_not_imply_same_financial_identity`. | Temporary CSV/BOM/optional columns; 17 malformed CSV cases; 7 date-operation cases; short covered quotes. | Rates remain decimal; classification conflicts reject; uncovered payments raise; only outer tenor whitespace canonicalizes. | Non-slow | [Contract](input_contract.md) |
+| [tests/unit/test_general_inputs.py](../tests/unit/test_general_inputs.py) (21 / 47) | CSV shape/units/provenance; tenor-label identity; inclusive date coverage and baseline preflight. `test_invalid_csv_reports_schema_or_row_context`; `test_coverage_check_includes_payment_lag_after_contractual_maturity`; `test_same_calendar_name_does_not_imply_same_financial_identity`. | Temporary CSV/BOM/optional columns; 17 malformed CSV cases; 7 date-operation cases; short covered quotes. | Rates remain decimal; classification conflicts reject; uncovered payments raise; only outer tenor whitespace canonicalizes. | Non-slow | [Contract](input_contract.md) |
 
 ## Schedules and observations
 
@@ -102,8 +101,8 @@ contracts often use analytical flat curves or explicit nodes, not market quotes.
 
 | Test module (functions / cases) | Contract and representative tests | Inputs / fixture assumptions | Tolerance or rejection condition | Selection | Authority |
 |---|---|---|---|---|---|
-| [tests/calibration/test_baseline.py](../tests/calibration/test_baseline.py) (7 / 7) | Frozen numerical regression; current cubic simultaneous policy; fixed keyword-only public API. `test_baseline_matches_pre_separation_reference`; `test_solver_failure_is_distinct_from_acceptance`; `test_public_in_memory_consumer_needs_only_provider_contract`. | One shared frozen 15-quote baseline/projected calendar; tests/fixtures/ftiie_baseline_reference_v1.json; isolated public-consumer process. | Regression tolerances below, with rel=0; success alone is insufficient; absent curve rejects. | Non-slow | [Contract](integration_contract.md) |
-| [tests/calibration/test_baseline_acceptance.py](../tests/calibration/test_baseline_acceptance.py) (29 / 119) | Preflight and H01 reject malformed inputs before financial work. `test_bad_inputs_never_reach_solver`; `test_assessment_rejects_bad_inputs_without_repricing`; `test_h01_invalid_tenors_reject_before_solver_or_repricing`. | 17 bad-input cases for both build/assessment; five invalid tenor cases; small shared accepted result. | Build raises BaselineInputError; assessment records issues; solver/repricing no-call guards. | Non-slow | [Contract](validation.md) |
+| [tests/calibration/test_baseline.py](../tests/calibration/test_baseline.py) (7 / 7) | Frozen numerical regression; selected cubic simultaneous policy; fixed keyword-only public API. `test_baseline_matches_pre_separation_reference`; `test_solver_failure_is_distinct_from_acceptance`; `test_public_in_memory_consumer_needs_only_provider_contract`. | One shared frozen 15-quote baseline/projected calendar; tests/fixtures/ftiie_baseline_reference_v1.json; isolated public-consumer process. | Regression tolerances below, with rel=0; success alone is insufficient; absent curve rejects. | Non-slow | [Contract](integration_contract.md) |
+| [tests/calibration/test_baseline_acceptance.py](../tests/calibration/test_baseline_acceptance.py) (29 / 119) | Preflight and tenor inputs reject malformed inputs before financial work. `test_bad_inputs_never_reach_solver`; `test_assessment_rejects_bad_inputs_without_repricing`; `test_h01_invalid_tenors_reject_before_solver_or_repricing`. | 17 bad-input cases for both build/assessment; five invalid tenor cases; small shared accepted result. | Build raises BaselineInputError; assessment records issues; solver/repricing no-call guards. | Non-slow | [Contract](validation.md) |
 | [tests/calibration/test_baseline_acceptance.py](../tests/calibration/test_baseline_acceptance.py) (29 / 119) | Curve geometry, solver declarations, nonfinite/empty checks and pricing errors. `test_corrupt_structure_is_rejected_before_pricing`; `test_valid_structure_still_requires_checks_and_no_issues`; `test_pricing_domain_error_becomes_rejection`. | Seven structure corruptions; nonempty-check and domain-failure injections. | Reject wrong class/reference/pillars/counts/DFs; skipped/failed repricing has infinite max, not zero fit. | Non-slow | [Contract](validation.md) |
 | [tests/calibration/test_baseline_acceptance.py](../tests/calibration/test_baseline_acceptance.py) (29 / 119) | Standard versus custom policy and tolerance boundaries. `test_standalone_identity_depends_on_explicit_path`; `test_standard_threshold_boundaries_preserve_baseline_acceptance`. | Omitted versus explicit tolerances (six cases); six threshold-boundary cases. | Any explicit override is custom; standard PASS 0.01 / FAIL 0.10 bp; REVIEW rejects baseline use; invalid configuration raises. | Non-slow | [Contract](snapshots.md) |
 
@@ -239,7 +238,8 @@ defects and not promises of additional current capability.
 | T03 | Smooth synthetic known-truth recovery and limited shocks do not establish broad market/scenario robustness. PCHIP implementation tests do not supply approved comparative selection evidence. | Separately scoped sparse/noisy/regime-changing and observed-market research, PCHIP comparisons and any new product/curve architecture validation. |
 
 Use [extension roadmaps](extending.md) to separate future engineering and financial
-validation. The canonical [evidence index](evidence/index.md) and
-[reproduction levels](evidence/reproduce.md) retain C04 authority. This map does
+validation. The [research evidence index](evidence/index.md) and
+[reproduction levels](evidence/reproduce.md) separately establish which experimental
+artifacts and validated reproduction procedures are available. This map does
 not execute historical producers, generate reference candidates, establish
 multi-curve/FX/XVA evidence or establish additional financial validation.

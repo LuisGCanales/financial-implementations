@@ -1,40 +1,33 @@
-# Technical architecture
+# Technical Architecture and Component Boundaries
 
-This is a navigation layer for the implemented MXN F-TIIE OIS Core-v1 library.
-The operational baseline is simultaneous nodal calibration with
-`CUBIC_CONTINUOUS_ZERO`, not the historical sequential curve. The financial
-specifications remain in [conventions](conventions.md), [methodology](methodology.md)
-and [interpolation](interpolation.md); acceptance and persistence details remain
-in [validation](validation.md) and [snapshots](snapshots.md).
+This guide explains how **MXN F-TIIE OIS financial inputs become calibrated curves**, which modules carry out the pricing, calibration and validation responsibilities, and why the in-memory API, operational execution and research tools have separate interfaces.
 
-## Scope and consumer boundary
+The selected baseline uses **simultaneous nodal calibration** with **natural cubic interpolation of continuously compounded zero rates**. Sequential bootstrapping and other interpolation methods are also implemented for compatible construction and research.
 
-The public in-memory entrypoint is
-[`baseline.build_baseline_ftiie_curve`](../src/yield_curves/baseline.py).
-It takes explicit quotes and a covered `BusinessCalendar`, returning a
-`BaselineResult` with curve, historical acceptance and financial context.
-The [complete consumer example](integration_contract.md#complete-synthetic-in-memory-example)
-needs no files, provenance adapters or synthetic research utilities. Check the
-live `result.accepted_for_use` before querying DF, continuous zero or forward
-rates within the supported reference-date-to-terminal-pillar interval.
+## Consumer and execution boundaries
 
-There is no root-package re-export façade and no generic instrument plugin
-registry. Reusable module interfaces are distinct from internal underscore
-helpers, mutable spline internals and the internal engine capability table.
-Checkout scripts are operational or research tooling, not installed console
-commands. Use a complete editable checkout for scripts and version metadata;
-financial research and engineering define the project scope.
+| Path | Entry point | Financial responsibility |
+|---|---|---|
+| **In-memory curve** | [`baseline.build_baseline_ftiie_curve`](../src/yield_curves/baseline.py) | Build and assess the selected curve from caller-supplied quotes and a covered calendar |
+| **Alternative calibration methods** | [`bootstrap.py`](../src/yield_curves/bootstrap.py), [`calibration.py`](../src/yield_curves/calibration.py) | Construct supported alternative curves for methodological analysis |
+| **Bound execution** | [`execution.build_baseline_execution`](../src/yield_curves/execution.py) | Capture financial inputs and provenance before calculation |
+| **Archive and publication** | [`snapshots.export_baseline_snapshot`](../src/yield_curves/snapshots.py) | Persist a run and promote only accepted standard results |
+| **Read-only archive assurance** | [`snapshot_assurance.assess_current_snapshot`](../src/yield_curves/snapshot_assurance.py) | Reconstruct saved curve nodes and independently reprice **without solving** |
+
+The in-memory consumer receives a `BaselineResult`; it should check **`result.accepted_for_use`** before querying discount factors, zero rates or forwards within the supported curve dates. This property checks the live financial payload binding but does not recalibrate.
+
+CSV, YAML, saved research results and projected calendar generators are **not implicit dependencies of the in-memory API**. Python package modules, checkout scripts, and research/operational adapters have different responsibilities; the project is a financial research implementation rather than a generic instrument/plugin framework.
+
+[Financial methodology](methodology.md) · [Python consumer example](integration_contract.md#2-complete-in-memory-example) · [CLI](cli.md) · [Snapshots](snapshots.md)
 
 ## Module responsibilities
 
-The following accounts for all **38 Python source modules**, including the three
-namespace initializers. Paths are relative to `src/yield_curves/`; grouped rows
-list every module explicitly. The source remains authoritative for behavior.
+This inventory covers the **38 implemented Python source modules**, including namespace initializers. Paths are relative to `src/yield_curves/`; the source code remains authoritative for behavior.
 
 | Layer | Modules | Responsibility and boundary |
 |---|---|---|
 | Namespaces (3) | [`__init__.py`](../src/yield_curves/__init__.py), [`research/__init__.py`](../src/yield_curves/research/__init__.py), [`tooling/__init__.py`](../src/yield_curves/tooling/__init__.py) | Namespace docstrings; no API re-exports or workflow execution. |
-| Financial definitions (2) | [`conventions.py`](../src/yield_curves/conventions.py), [`quotes.py`](../src/yield_curves/quotes.py) | Closed Core-v1 descriptors, ACT/360, zero-spread guard; four-field OIS quote protocol/value and neutral quote bumps. |
+| Financial definitions (2) | [`conventions.py`](../src/yield_curves/conventions.py), [`quotes.py`](../src/yield_curves/quotes.py) | Fixed F-TIIE OIS descriptors, ACT/360, zero-spread guard; four-field OIS quote protocol/value and neutral quote bumps. |
 | Dates and contracts (5) | [`calendars.py`](../src/yield_curves/calendars.py), [`schedules.py`](../src/yield_curves/schedules.py), [`observations.py`](../src/yield_curves/observations.py), [`instruments.py`](../src/yield_curves/instruments.py), [`tenors.py`](../src/yield_curves/tenors.py) | Injected holidays/coverage, T+2, 28D periods/stubs/payment lags, overnight weights and realized compounding, aligned OIS legs, synthetic tenor offsets. No loaders in calendar domain. |
 | Curve and valuation (3) | [`curves.py`](../src/yield_curves/curves.py), [`pricing.py`](../src/yield_curves/pricing.py), [`repricing.py`](../src/yield_curves/repricing.py) | DF protocol and representations; projected coupon/PV/par math; independent quote-to-instrument reconstruction and status classification without consuming solver residual containers. |
 | Sampling and diagnostics (3) | [`date_grids.py`](../src/yield_curves/date_grids.py), [`diagnostics.py`](../src/yield_curves/diagnostics.py), [`log_linear_diagnostics.py`](../src/yield_curves/log_linear_diagnostics.py) | Inclusive versus complete-forward-period grids, sampled forward summaries and exact log-linear segment/jump math. No acceptance policy. |
@@ -42,7 +35,7 @@ list every module explicitly. The source remains authoritative for behavior.
 | Financial policy (2) | [`inputs.py`](../src/yield_curves/inputs.py), [`baseline.py`](../src/yield_curves/baseline.py) | Covered input preparation/immutable financial identity; fixed cubic construction, independent acceptance, captured policy and live payload binding. No file I/O. |
 | I/O and execution (5) | [`quote_io.py`](../src/yield_curves/quote_io.py), [`calendar_io.py`](../src/yield_curves/calendar_io.py), [`execution.py`](../src/yield_curves/execution.py), [`snapshots.py`](../src/yield_curves/snapshots.py), [`snapshot_assurance.py`](../src/yield_curves/snapshot_assurance.py) | Parse/hash input bytes, separate provenance, workflow-issued envelopes, archive/publication/resolution, supported historical no-solve reassessment. |
 | Synthetic research (3) | [`research/calendars.py`](../src/yield_curves/research/calendars.py), [`research/curves.py`](../src/yield_curves/research/curves.py), [`research/synthetic.py`](../src/yield_curves/research/synthetic.py) | Projected holidays, smooth known truth, generated quotes and synthetic CSV read/write. These are research tools, not operational dependencies. |
-| Research assessment (3) | [`research/validation.py`](../src/yield_curves/research/validation.py), [`research/diagnostics.py`](../src/yield_curves/research/diagnostics.py), [`research/recovery.py`](../src/yield_curves/research/recovery.py) | Historical sequential VALID/REVIEW/INVALID, combined diagnostics, global/horizon known-truth recovery. Separate from current baseline acceptance. |
+| Research assessment (3) | [`research/validation.py`](../src/yield_curves/research/validation.py), [`research/diagnostics.py`](../src/yield_curves/research/diagnostics.py), [`research/recovery.py`](../src/yield_curves/research/recovery.py) | Sequential research VALID/REVIEW/INVALID, combined diagnostics, global/horizon known-truth recovery. Separate from current baseline acceptance. |
 | Research shocks (2) | [`research/sensitivity.py`](../src/yield_curves/research/sensitivity.py), [`research/global_sensitivity.py`](../src/yield_curves/research/global_sensitivity.py) | Sequential one-sided/central and simultaneous central quote sweeps; response/curvature/locality diagnostics. |
 | Checkout tooling (4) | [`tooling/cli_inputs.py`](../src/yield_curves/tooling/cli_inputs.py), [`tooling/project_paths.py`](../src/yield_curves/tooling/project_paths.py), [`tooling/reporting.py`](../src/yield_curves/tooling/reporting.py), [`tooling/reference_candidates.py`](../src/yield_curves/tooling/reference_candidates.py) | Explicit CLI adapters, checkout discovery, saved reports and exclusive numerical-candidate output. No financial calibration logic in reporting. |
 
@@ -104,7 +97,7 @@ defines transitive constraints, not merely a preferred visual arrangement:
   imports or repository-default input discovery.
 - Research/tooling consume reusable interfaces from outside these boundaries.
   Research is not universally pure: synthetic CSV adapters perform file I/O.
-  Historical comparison method tuples stay explicit.
+  Research method-comparison sets remain explicit.
 
 An import is not evidence that financial calibration executed. Assurance imports
 calibration result/check types and baseline policy; those imports transitively
@@ -134,15 +127,16 @@ consumer stops at the accepted, live-bound baseline result.
    Schedules distinguish contractual maturity, adjusted period ends and payment
    dates; observations carry overnight fixing weights across weekends/holidays.
    Pillars are final payment dates, not contractual maturities.
-3. `calibration.calibrate_ftiie_ois_curve_simultaneously` solves `x_i = log(P_i)`;
-   the factory maps `exp(x_i)` to the selected curve. Residuals are
-   `(model_quote - market_quote) * repricing_scale_bp` (default `10_000`).
+3. `calibration.calibrate_ftiie_ois_curve_simultaneously` optimizes the **logarithms
+   of nodal discount factors**, $x_i=\ln P_i$, yielding $P_i=e^{x_i}>0$.
+   The objective uses model-minus-quoted par-rate residuals in basis points
+   (default scale $10^4$).
    Pricing passes the same curve for projection and discounting. Default initial
-   DFs come from the historical log-linear sequential bootstrap; explicit valid
+   DFs come from the log-linear sequential bootstrap; explicit valid
    starts bypass it. Invalid starts and engine failures have no silent fallback.
-4. The baseline selects the natural cubic continuous-zero representation:
-   `z_i = -log(P_i)/t_i`, `P(t) = exp(-z(t)*t)`, instantaneous `f = z + t*z'`.
-   Time is ACT/360; the origin zero anchor is the first nodal zero. Queries cannot
+4. The selected baseline uses natural cubic interpolation of continuous zero rates:
+   $z_i=-\ln(P_i)/t_i$, $P(t)=e^{-t z(t)}$, and instantaneous forward
+   $f(t)=z(t)+t z'(t)$. Time is ACT/360; the origin zero anchor is the first nodal zero. Queries cannot
    extrapolate beyond the final pillar or before the reference date.
 5. `repricing.reprice_calibration_instruments` reconstructs OIS from quotes and
    recalculates par rates from the final curve. Independence is from solver
@@ -203,13 +197,13 @@ commit/failure semantics; [CLI](cli.md) owns commands.
 
 Current solvers and shared repricing are same-curve, OIS-only. A pricing interface
 with separate projection/discount parameters does not constitute integrated
-multi-curve calibration. PCHIP is experimental and does not change the V1 baseline.
+multi-curve calibration. PCHIP is experimental and not part of the selected baseline.
 Synthetic recovery and shock studies do not establish broad market robustness,
 real-calendar certification or production readiness.
 
 Use [extension roadmaps](extending.md), [test contracts](test-coverage-map.md),
 [testing/reference maintenance](testing.md), [limitations](assumptions_limitations.md)
-and the canonical [C04 evidence index](evidence/index.md) for further work.
+and the [research evidence index](evidence/index.md) for further work.
 No validated Jupyter notebook exists; the runnable checkout demonstration is
 [`build_synthetic_baseline.py`](../scripts/demo/build_synthetic_baseline.py).
 Package `0.1.0`, baseline/acceptance V1 and snapshot schema `3.0` remain separate
