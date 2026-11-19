@@ -1,29 +1,59 @@
-# C04 valuation, methodology and risk evidence
+# Yield-Curve Research Evidence
 
-Versioned repository evidence for the synthetic MXN F-TIIE OIS Core-v1 project. **C04b valuation evidence** contains eleven original exhibits. **C04c methodology and risk evidence** distributes 19 exhibits from 23 selected candidates: 17 byte-identical originals and two approved presentation derivatives; four original metadata files are withheld for local paths. These distribution counts do not add financial datasets. Original financial computations belong to C03. C04c-F01 rendered persisted data; C04c-F02 integrates approved images with static checks. C04d2 adds two verified compressed computational dependencies and a validated [Level-2 saved-data recipe](reproduce.md) as a recorded C04d2 reference-environment validation event; availability follows the branch or revision being viewed. The 30-exhibit package remains a curated selection, not a complete financial audit archive.
+This collection presents **financial and numerical evidence** for the MXN F-TIIE OIS curve-construction project. The experiments ask what it means to reproduce quoted instruments, how interpolation affects the resulting term structure, and how quote changes propagate through curve risk.
 
-**Historical pre-PR recommendation: `C04C_READY_FOR_PR_REVIEW`.** H03/H04 are human-approved **presentation derivatives from unchanged validated financial matrices**, shown together in the [risk narrative](risk.md#c-paired-forward-heatmap-presentation-derivatives). Robust clipping is **1.5023474%** of cubic cells; full-range clipping is **0%**. Both show the complete 30Y response row, with footers outside the data. Only the out-of-domain 30Y payment-pillar marker is omitted. The manifest separately records historical originals, rendering source/environment and external numerical-data dependencies. Observable public figures do not provide full research replay. Four withheld metadata originals remain external with exact identities and authored provenance summaries.
+The common research setting consists of **15 synthetic F-TIIE OIS par quotations (1M–30Y)**, a **projected MXMC calendar for 2026–2057**, and one curve for both projection and discounting. Results describe a controlled model experiment, **not observed-market validation or production certification**.
+
+## Research questions and findings
+
+| Financial question | Evidence and interpretation |
+|---|---|
+| **Can the curve reproduce its OIS calibration quotations?** | [Valuation and acceptance](valuation.md) — 15 independent PASS checks for the selected simultaneous/natural-cubic baseline, with separately documented acceptance and snapshot limits |
+| **Does perfect repricing determine the rates between pillars?** | [Calibration and interpolation](methodology.md) — three simultaneous calibration methods show extremely small par-rate errors but different discount-factor, zero-rate and 28-day-forward recovery |
+| **Where does a quotation shock affect the curve?** | [Quote sensitivity and locality](risk.md) — signed responses to ±1 bp shocks, forward heatmaps and maturity-dependent locality, including an exception to a uniform cubic-versus-local ranking |
+
+### Forward-curve recovery
+
+![Three interpolation methods compared with a known synthetic 28-day forward curve](../../evidence/c03/methodology/forward_28d_recovery_three_methods.png)
+
+*The [method comparison](methodology.md#g-original-forward-illustration-and-model-sensitivity) holds the simultaneous calibration engine and synthetic instruments fixed while changing the interpolation representation.*
+
+### Quote-to-forward sensitivity
+
+![Signed sensitivity of 28-day forwards to individual OIS quotation shocks under natural cubic interpolation](../../evidence/c03/heatmaps/forward_sensitivity_heatmap_cubic_continuous_zero_full_common_scale.png)
+
+*The [risk analysis](risk.md#c-paired-forward-heatmap-presentation-derivatives) examines the signed central response of 28-day forwards to ±1 bp OIS quote shocks. This full-range panel displays the complete saved sensitivity range without clipping.*
+
+## Inspect the underlying evidence
+
+The repository contains **30 selected public exhibits**: 11 original valuation files and 19 methodology/risk files (17 original files and two reviewed figure-presentation derivatives). The two derivatives alter presentation, **not the financial matrices**.
+
+| Source | Inspect |
+|---|---|
+| Calibration inputs and fitted pillars | [Synthetic quotations](../../evidence/c03/valuation/input_quotes.csv) · [Calibrated nodes](../../evidence/c03/valuation/curve_nodes.csv) |
+| Independent repricing | [Selected baseline](../../evidence/c03/valuation/quote_repricing.csv) · [Sequential method](../../evidence/c03/bootstrap/independent_repricing.csv) |
+| Recovery comparisons | [Three methods](../../evidence/c03/methodology/three_method_global_recovery.csv) · [By maturity horizon](../../evidence/c03/methodology/three_method_recovery_by_horizon.csv) |
+| Signed sensitivities | [Global summary](../../evidence/c03/global/global_sensitivity_summary.csv) · [Cubic node responses](../../evidence/c03/global/node_zero_sensitivity_matrix_cubic_continuous_zero.csv) |
+| Forward sensitivity and locality | [Heatmap scales](../../evidence/c03/heatmaps/forward_sensitivity_heatmap_scale_diagnostics.csv) · [Locality metrics](../../evidence/c03/locality/forward_sensitivity_locality.csv) |
+
+This is a **curated subset**, not the full original research archive. Some original metadata contain machine-specific absolute paths and were withheld. The **complete accepted execution snapshot is also not distributed**: the three public quote/node/repricing payloads are standalone exhibits and cannot, by themselves, be passed to snapshot assurance.
+
+## Reproducibility and provenance
+
+The original financial computation, the later selection of public artifacts, and subsequent saved-data replay are **separate activities**. The recorded saved-data replay verifies selected heatmap and locality consumers using two compressed input matrices **without recalibrating**; it does not establish a full financial recomputation.
+
+[Reproduction instructions](reproduce.md) distinguish inspecting public artifacts, rerunning selected saved-data consumers, and optional full financial recomputation.
+
+| Detailed record | What it preserves |
+|---|---|
+| [Claim and limitation register](claims.md) | Scope of verifiable financial statements |
+| [Valuation claims](claims-valuation.md) · [Methodology/risk claims](claims-methodology-risk.md) | Exact result identifiers, original checks and file hashes |
+| [Unified machine index](../../evidence/c03/index.json) | Selection and publication information at curation time |
+| [Valuation manifest](../../evidence/c03/valuation-manifest.json) · [Methodology/risk manifest](../../evidence/c03/methodology-risk-manifest.json) | Original inputs, artifact identities, figure derivation and withheld files |
+| [Saved-data transport manifest](../../evidence/c03/replay-inputs.json) | Compressed consumer inputs and recovered raw-file checksums |
 
 <a id="publication-state"></a>
 
-**Publication history and checkout availability:** C04b valuation evidence was merged through [PR #14](https://github.com/LuisGCanales/financial-implementations/pull/14) at `39f24aff2e2c5e13d2eb53ab43d4fee53cc18dae`; C04c methodology/risk evidence was merged through [PR #15](https://github.com/LuisGCanales/financial-implementations/pull/15) at `d9a79eac35a8224ee8633b56b8441d0a53d0a74c`. All 30 curated exhibits are on main. C04d2 recorded successful verification of both gzip dependencies and one calibration-free heatmap/locality replay, with exact H01/L01 saved-value equality in the reference environment. C04d2 file availability follows the branch or revision actually being viewed. The [unified index](../../evidence/c03/index.json) records validation and integration context at curation time while preserving original manifests byte for byte; its null C04d2 integration commit is an at-curation fact, independent of later Git integration. Their pre-PR/pending-merge and external-input wording is historical. Original financial execution remains `bee31fd0883660f171ebe84817b98641239eae5b`. H03/H04 were rendered with an uncommitted working-tree source revision at rendering time; its later integration preserves that history. C04d2 performed no formal tagged release or website deployment; those are separate publication events. C05/C06 were outside its scope.
+**Publication boundary:** Only selected exhibits are publicly inspectable. Original acceptance metadata, the full bound snapshot and some audit receipts remain in the external archive. Checksums and manifests support integrity and provenance within their stated scope, **not source authentication, independent vendor pricing or trusted execution timestamps**.
 
-**Snapshot publication: `BLOCKED_PENDING_REVIEW`.** Two machine-specific absolute paths in S07 prevent distributing the complete accepted snapshot unchanged. The original accepted seven-file snapshot remains complete, unchanged and externally archived. S03, S05 and S06 are available as standalone original payload exhibits; they are not a partial snapshot archive and cannot be passed to snapshot assurance. Original acceptance metadata, execution bindings and assurance logs remain external, so acceptance and execution bindings are not fully independently inspectable from this public collection.
-
-| Read | Purpose |
-| --- | --- |
-| [Unified claims](claims.md) | Canonical C01–C14 navigation and scoped C15–C17 proposal statements |
-| [Reproduce](reproduce.md) | Three levels, verified extraction and actual calibration-free consumer commands |
-| [Unified machine index](../../evidence/c03/index.json) | At-curation publication history and original manifest references |
-| [Replay transport manifest](../../evidence/c03/replay-inputs.json) | Two compressed computational dependencies with original provenance and exact raw/archive hashes |
-| [Valuation narrative](valuation.md) | Synthetic inputs, construction, independent repricing, acceptance, original assurance and recovery limits |
-| [Claims C01–C06](claims-valuation.md) | Supported wording, public availability, methods, units and original source hashes |
-| [Valuation manifest](../../evidence/c03/valuation-manifest.json) | Portable provenance, eleven copied exhibits, four undistributed originals, withheld archive status and original workflow identities |
-| [Methodology narrative](methodology.md) | Sequential versus simultaneous calibration, three interpolations, fit/recovery, workflow-specific grids and horizon errors |
-| [Risk narrative](risk.md) | Section 05 finite differences, signed global response, paired heatmaps and locality exceptions |
-| [Claims C07–C14](claims-methodology-risk.md) | Original claim IDs, public/external support, hashes, units and limitations; C06 cross-reference |
-| [Methodology/risk manifest](../../evidence/c03/methodology-risk-manifest.json) | 23 candidate identities, 17 original copies, two approved presentation derivatives, four withheld metadata originals, historical workflows, rendering provenance and input hashes |
-
-Publicly inspectable exhibits include the [15 synthetic calibration inputs S03](../../evidence/c03/valuation/input_quotes.csv), [15 calibrated nodes S05](../../evidence/c03/valuation/curve_nodes.csv), [15 independent repricing observations S06](../../evidence/c03/valuation/quote_repricing.csv), [projected calendar input I01](../../evidence/c03/inputs/projected_mxmc_2026_2057.csv), [bootstrap validation B01](../../evidence/c03/bootstrap/curve_validation_summary.csv), [independent repricing B02](../../evidence/c03/bootstrap/independent_repricing.csv), [zero-issue table B03](../../evidence/c03/bootstrap/validation_issues.csv), and [recovery tables and figure B04–B07](valuation.md#h-fit-versus-known-truth-recovery). “Publicly inspectable” means included at versioned repository-relative paths in this public repository; this evidence subset is available on `main`. This repository evidence publication is not a formal tagged release or website deployment. Complete snapshot publication remains `BLOCKED_PENDING_REVIEW`.
-
-Original sources use commit `bee31fd0883660f171ebe84817b98641239eae5b`. Independent repricing is within one codebase. All results use `FTIIE_KNOWN_TRUTH_V1`, synthetic quotes, a projected MXMC calendar and same-curve projection/discounting. They support project-scoped evidence, with no observed-market certification or production-readiness conclusion. Original logs and assurance receipts are retained externally and are not public downloads. Reproduction limits appear in the [valuation narrative](valuation.md#i-limitations-and-next-evidence-layers).
+The recorded financial-execution source revision is `bee31fd0883660f171ebe84817b98641239eae5b`; the reference environment is documented in the [reproduction contract](reproduce.md). The source revision is retained for audit, not as a development stage the reader must understand.
